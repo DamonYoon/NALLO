@@ -31,7 +31,38 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Verify compliance with NALLO Constitution principles:
+
+### I. Code Quality
+- [ ] Linting and formatting tools configured and passing
+- [ ] Code style guide identified/defined
+- [ ] Documentation standards established (docstrings, type hints)
+- [ ] Complexity management strategy defined
+
+### II. Testing Standards
+- [ ] Testing framework selected and configured
+- [ ] Test coverage target defined (minimum 80% for business logic)
+- [ ] TDD approach confirmed (tests written first)
+- [ ] Contract testing strategy defined for external APIs
+- [ ] Integration testing approach defined
+
+### III. User Experience Consistency
+- [ ] UI/UX pattern library or design system identified
+- [ ] Error message standards defined
+- [ ] Accessibility requirements confirmed (WCAG 2.1 Level AA)
+- [ ] Terminology consistency approach (Glossary/Concept system usage)
+- [ ] Responsive design requirements defined
+
+### IV. Performance Requirements
+- [ ] Performance targets defined (API response times, page load times)
+- [ ] Database query optimization strategy
+- [ ] Graph operation performance targets (< 1s for 100 nodes)
+- [ ] Frontend performance targets (60fps for interactive elements)
+- [ ] Caching strategy identified
+- [ ] Performance budget defined (bundle size, API response time)
+- [ ] AI operation time limits defined (< 5s for standard operations)
+
+**Compliance Status**: [ ] All checks passed | [ ] Violations documented in Complexity Tracking section below
 
 ## Project Structure
 

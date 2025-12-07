@@ -103,13 +103,32 @@
 ## Success Criteria *(mandatory)*
 
 <!--
-  ACTION REQUIRED: Define measurable success criteria.
+  ACTION REQUIRED: Define measurable success criteria aligned with Constitution principles.
   These must be technology-agnostic and measurable.
+  
+  Constitution Alignment:
+  - Performance Requirements (Principle IV): Include performance targets
+  - User Experience Consistency (Principle III): Include UX consistency metrics
+  - Testing Standards (Principle II): Include testability criteria
 -->
 
-### Measurable Outcomes
+### Performance Criteria (Constitution Principle IV)
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-PERF-001**: [API performance, e.g., "Search endpoint responds within 500ms (p95)"]
+- **SC-PERF-002**: [Page load performance, e.g., "Page load completes within 2 seconds"]
+- **SC-PERF-003**: [Graph operation performance, e.g., "Graph operations complete within 1s for 100 nodes"]
+- **SC-PERF-004**: [AI operation performance, e.g., "AI operations complete within 5s for standard tasks"]
+- **SC-PERF-005**: [Resource usage, e.g., "Memory usage remains below [X]MB under normal load"]
+
+### User Experience Criteria (Constitution Principle III)
+
+- **SC-UX-001**: [User task completion, e.g., "90% of users successfully complete primary task on first attempt"]
+- **SC-UX-002**: [Consistency metric, e.g., "100% of error messages follow established patterns"]
+- **SC-UX-003**: [Accessibility compliance, e.g., "All UI components meet WCAG 2.1 Level AA standards"]
+- **SC-UX-004**: [Terminology consistency, e.g., "100% of user-facing text uses Glossary/Concept system"]
+
+### Functional Outcomes
+
+- **SC-FUNC-001**: [Core functionality, e.g., "Users can complete account creation in under 2 minutes"]
+- **SC-FUNC-002**: [System capacity, e.g., "System handles 1000 concurrent users without degradation"]
+- **SC-FUNC-003**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]

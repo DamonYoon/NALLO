@@ -1,192 +1,142 @@
+<!--
+Sync Impact Report:
+Version change: N/A → 1.0.0
+Modified principles: N/A (initial creation)
+Added sections:
+  - Code Quality (Principle I)
+  - Testing Standards (Principle II)
+  - User Experience Consistency (Principle III)
+  - Performance Requirements (Principle IV)
+  - Development Workflow
+  - Quality Gates
+Removed sections: N/A
+Templates requiring updates:
+  - ✅ updated: .specify/templates/plan-template.md (Constitution Check section)
+  - ✅ updated: .specify/templates/spec-template.md (Success Criteria alignment)
+  - ✅ updated: .specify/templates/tasks-template.md (Testing standards alignment)
+Follow-up TODOs: None
+-->
+
 # NALLO Constitution
 
 ## Core Principles
 
-### I. GraphDB-First Architecture
-GraphDB (Neo4j) MUST be the primary data store for all structural relationships:
-- Document, Page, Version, Concept, Tag, Attachment nodes and their relationships
-- All structural queries MUST use Cypher queries through GraphDB
-- RDB (PostgreSQL) is ONLY for document content storage (markdown, OAS files)
-- Document metadata and relationships MUST be stored in GraphDB, never duplicated in RDB
-- GraphDB schema changes require explicit migration plans documented in `graphDB_draft.md`
+### I. Code Quality (NON-NEGOTIABLE)
 
-### II. Glossary-Driven Consistency (NON-NEGOTIABLE)
-Concept (Glossary) nodes MUST be the single source of truth for terminology:
-- Concept definition changes MUST automatically propagate to all connected Documents
-- Documents MUST link to Concepts via `USES_CONCEPT` relationships, not hardcode definitions
-- AI-assisted term extraction MUST suggest Concept connections before document publication
-- Impact analysis MUST show affected documents in graph view before Concept updates
-- No document should contain standalone term definitions without Concept linkage
+All code MUST adhere to established quality standards before integration. Code quality is not negotiable and MUST be verified through automated tooling and peer review.
 
-### III. Document Layer Architecture
-Documents MUST be structured in three layers:
-- **Layer 1**: Core concepts extracted and mapped to Concept nodes (for AI context, SEO, recommendations)
-- **Layer 2**: AI-generated summary stored in Document.summary field (for quick preview, search)
-- **Layer 3**: Full original content stored in RDB (for rendering, versioning)
-- Layer generation MUST be automated via AI during document creation/update
-- Layer 1 and Layer 2 MUST be kept in sync with Layer 3 through automated processes
+**Requirements:**
+- All code MUST pass linting and formatting checks (zero warnings/errors)
+- Code MUST follow project-specific style guides and conventions
+- Functions MUST be single-purpose with clear, descriptive names
+- Code complexity MUST be justified; cyclomatic complexity SHOULD remain below 15 per function
+- All public APIs MUST have comprehensive documentation (docstrings, type hints, examples)
+- Code MUST be self-documenting; comments explain "why", not "what"
+- Dead code, unused imports, and commented-out code MUST be removed before merge
+- Dependencies MUST be justified; avoid unnecessary external dependencies
 
-### IV. Phase-Based Development
-Features MUST be developed in defined phases with clear dependencies:
-- **Phase 1**: Core features (document management, glossary, version/page management, basic search)
-- **Phase 2**: AI features (AI writing assistance, quality checks, AI chat, recommendations)
-- **Phase 3**: Collaboration features (team management, workflow, review system)
-- **Phase 4**: Advanced features (SEO, i18n, metrics, content blocks)
-- No Phase N+1 feature implementation until Phase N core features are complete and tested
-- Phase boundaries MUST be documented in `functional_specification.md` with priority levels (P0/P1/P2)
+**Rationale:** High code quality reduces technical debt, improves maintainability, and enables faster feature development. Automated quality gates prevent quality degradation over time.
 
-### V. AI Integration Standards
-AI features MUST follow consistent patterns:
-- All AI operations MUST use GraphDB context (connected Documents, Concepts, Tags)
-- AI responses MUST include source references (Document IDs, Concept IDs)
-- AI-assisted content MUST be reviewable and editable by humans before publication
-- AI quality checks MUST run before document status changes to "publish"
-- AI service failures MUST degrade gracefully (fallback to manual processes, clear error messages)
-- AI context size MUST be optimized using Layer 1 (concepts) and Layer 2 (summaries) to reduce token costs
+### II. Testing Standards (NON-NEGOTIABLE)
 
-### VI. Version and Page Hierarchy
-Version and Page structure MUST follow strict hierarchy:
-- Version nodes group Pages; Pages display Documents; Documents contain content
-- One Document CAN be displayed by multiple Pages, but one Page displays one Document at a time
-- Page hierarchy MUST use `CHILD_OF` relationships, not flat structures
-- Version `is_main` MUST be unique per team (only one main version at a time)
-- Version `is_public` controls external access; internal visibility controlled by Page `visible` property
+Testing is mandatory for all features. Tests MUST be written, reviewed, and passing before code integration.
 
-### VII. Working Copy Pattern for Published Documents
-Published documents (status: "publish") MUST use Working Copy pattern for modifications:
-- Working Copy Document created with `WORKING_COPY_OF` relationship to original
-- Working Copy MUST go through review workflow (draft → in_review → done) before merge
-- Merge MUST update original Document's `storage_key` and preserve history
-- Working Copy can be archived or deleted after successful merge
-- Direct modification of published documents is FORBIDDEN
+**Requirements:**
+- Test-Driven Development (TDD) SHOULD be followed: write tests first, ensure they fail, then implement
+- All user stories MUST have corresponding acceptance tests that verify independent functionality
+- Unit tests MUST cover all business logic with minimum 80% code coverage
+- Integration tests MUST verify contract compliance for all external-facing APIs
+- Contract tests MUST be written for inter-service communication and shared schemas
+- Tests MUST be independent, repeatable, and fast (< 1 second per test)
+- Test failures MUST block merges; no test may be skipped without documented justification
+- Test code MUST follow the same quality standards as production code
+- Mocking SHOULD be used for external dependencies; avoid real external services in unit tests
 
-## Technology Stack Requirements
+**Rationale:** Comprehensive testing ensures reliability, prevents regressions, and enables confident refactoring. Independent testability allows parallel development and incremental delivery.
 
-### Backend
-- **Framework**: NestJS with TypeScript (MUST)
-- **GraphDB**: Neo4j with official `neo4j-driver` and `@nestjs/neo4j` (MUST)
-- **RDB**: PostgreSQL with TypeORM or Prisma (MUST)
-- **Cache**: Redis for session management and caching (SHOULD)
-- **File Storage**: AWS S3 or MinIO (S3-compatible) (MUST)
-- **API**: REST API with Swagger/OpenAPI documentation (MUST)
-- **Authentication**: JWT-based with `@nestjs/jwt` and `@nestjs/passport` (MUST)
+### III. User Experience Consistency
 
-### Frontend
-- **Framework**: Next.js 14+ with App Router and TypeScript (MUST)
-- **Styling**: Tailwind CSS with shadcn/ui or Radix UI components (MUST)
-- **State Management**: Zustand or Jotai for client state; TanStack Query for server state (MUST)
-- **Markdown Rendering**: `react-markdown` with `remark-gfm` and `rehype-highlight` (MUST)
-- **Graph Visualization**: Neo4j NVL (Neo4j Visualization Library) for graph views (MUST)
-- **OAS Rendering**: `@stoplight/elements` or `swagger-ui-react` (MUST)
+User-facing features MUST provide consistent, predictable experiences across all interfaces and interactions.
 
-### AI/ML Services
-- **LLM**: OpenAI API or Anthropic Claude API (MUST for Phase 2+)
-- **Embeddings**: OpenAI Embeddings or Cohere (SHOULD for Phase 2+)
-- **NER**: spaCy or OpenAI API for term extraction (SHOULD for Phase 2+)
+**Requirements:**
+- UI/UX patterns MUST be consistent across all pages and features
+- Error messages MUST be user-friendly, actionable, and consistent in tone
+- Loading states, error states, and empty states MUST be handled consistently
+- Navigation patterns MUST be predictable and follow established conventions
+- Terminology MUST be consistent across all user-facing text (use Glossary/Concept system)
+- Accessibility standards (WCAG 2.1 Level AA) MUST be met for all user interfaces
+- Responsive design MUST work across target device sizes and browsers
+- User feedback mechanisms (success/error notifications) MUST follow consistent patterns
+- AI-generated content MUST maintain consistent tone and style per project settings
 
-### Development Tools
-- **Version Control**: Git with GitHub or GitLab (MUST)
-- **Testing**: Jest for unit tests; Supertest for API tests; Playwright/Cypress for E2E (MUST)
-- **Code Quality**: ESLint + Prettier (MUST)
-- **CI/CD**: GitHub Actions or GitLab CI (MUST)
-- **Monitoring**: Sentry or Datadog for error tracking (SHOULD)
+**Rationale:** Consistent UX reduces cognitive load, improves usability, and builds user trust. Inconsistent experiences lead to confusion and increased support burden.
+
+### IV. Performance Requirements
+
+System performance MUST meet defined performance targets. Performance is a feature, not an afterthought.
+
+**Requirements:**
+- API endpoints MUST respond within defined SLA targets (e.g., < 500ms for search, < 2s for page load)
+- Database queries MUST be optimized; N+1 queries are prohibited
+- Graph operations MUST complete within acceptable time limits (< 1s for 100 nodes)
+- Frontend rendering MUST achieve target frame rates (60fps for interactive elements)
+- Resource usage (memory, CPU) MUST be monitored and optimized
+- Caching strategies MUST be implemented for frequently accessed data
+- Lazy loading MUST be used for non-critical resources
+- Performance budgets MUST be defined and enforced (bundle size, API response time)
+- Performance regressions MUST be caught by automated performance tests
+- AI operations MUST complete within acceptable time limits (< 5s for standard operations)
+
+**Rationale:** Performance directly impacts user satisfaction and system scalability. Proactive performance management prevents costly rewrites and ensures system reliability under load.
 
 ## Development Workflow
 
-### Document Creation Workflow
-1. Admin selects or creates Version
-2. Document metadata entered (title, type, tags)
-3. AI suggests outline (Phase 2+)
-4. Content written with AI assistance (Phase 2+)
-5. First save creates Document node in GraphDB with status "draft"
-6. AI extracts concepts and suggests Concept connections (Phase 2+)
-7. Admin approves/rejects Concept connections
-8. AI quality check runs (Phase 2+)
-9. Issues fixed, then document proceeds to review/publish workflow
+All development MUST follow the established workflow to ensure quality and consistency.
 
-### Concept (Glossary) Update Workflow
-1. Concept definition updated in GraphDB
-2. System queries all Documents with `USES_CONCEPT` relationship
-3. Impact analysis shows affected documents in graph view
-4. Admin reviews impact and approves
-5. System automatically updates affected document content in RDB
-6. Change log recorded for audit
+**Requirements:**
+- Feature development MUST start with specification (spec.md) and implementation plan (plan.md)
+- Constitution compliance MUST be verified before Phase 0 research begins
+- Code reviews MUST verify constitution compliance before approval
+- All PRs MUST include tests, documentation updates, and performance considerations
+- Breaking changes MUST be documented with migration guides
+- Version control commits MUST follow conventional commit message format
+- Feature branches MUST be kept up-to-date with main branch
+- Documentation MUST be updated alongside code changes
 
-### Review and Publication Workflow (Phase 3+)
-1. Document status: "draft" → "in_review" (review request)
-2. Reviewers approve/reject with comments
-3. All approvals → status: "done"
-4. Admin with publish permission → status: "publish"
-5. Published documents visible to end users based on Version `is_public` flag
+**Rationale:** Structured workflows ensure consistency, reduce errors, and enable parallel development while maintaining quality standards.
 
-### Code Review Requirements
-- All PRs MUST include tests for new features
-- GraphDB schema changes MUST include migration scripts
-- API changes MUST update OpenAPI/Swagger documentation
-- Frontend changes MUST follow component library patterns (shadcn/ui or Radix UI)
-- AI feature changes MUST include fallback behavior documentation
+## Quality Gates
 
-## Data Model Constraints
+Quality gates MUST be passed before code integration. These are non-negotiable checkpoints.
 
-### GraphDB Node Requirements
-- All nodes MUST have `id` (UUID), `created_at`, `updated_at` properties
-- Node types MUST match exactly: Version, Page, Document, Attachment, Concept, Tag, Block (Phase 4), SEOProperties (Phase 4)
-- Relationship types MUST match exactly as defined in `graphDB_draft.md`
-- No ad-hoc node types or relationships without schema update in `graphDB_draft.md`
+**Requirements:**
+- **Linting/Formatting**: All code MUST pass automated linting (zero errors/warnings)
+- **Tests**: All tests MUST pass; coverage thresholds MUST be met
+- **Constitution Compliance**: All principles MUST be verified in code review
+- **Performance**: Performance benchmarks MUST meet defined targets
+- **Documentation**: All public APIs and user-facing features MUST have documentation
+- **Security**: Security scans MUST pass; vulnerabilities MUST be addressed
+- **UX Review**: User-facing changes MUST be reviewed for consistency and accessibility
 
-### RDB Table Requirements
-- Document content MUST be stored with `document_id` linking to GraphDB Document node
-- User interaction data (favorites, page_views, feedbacks) MUST be in RDB
-- Team and permission data (Phase 3+) MUST be in RDB
-- All RDB tables MUST have audit fields (`created_at`, `updated_at`)
-
-### Storage Key Pattern
-- Document content: `/{team_id}/documents/{document_id}/content.md` (or `.yaml` for API docs)
-- Attachments: `/{team_id}/attachments/{attachment_id}/{filename}`
-- Storage keys MUST be stored in GraphDB Document/Attachment nodes, not duplicated in RDB
-
-## Performance Standards
-
-- Document search response time: < 500ms (MUST)
-- AI response time: < 5 seconds (SHOULD, with timeout handling)
-- Page loading time: < 2 seconds (MUST)
-- Graph view rendering: < 1 second for 100 nodes (SHOULD)
-- API endpoints MUST implement rate limiting
-- GraphDB queries MUST be optimized (index usage, query profiling)
-
-## Security Requirements
-
-- JWT-based authentication REQUIRED for all admin endpoints
-- RBAC (Role-Based Access Control) REQUIRED for team features (Phase 3+)
-- Document access control based on Version `is_public` and Page `visible` flags
-- File upload validation (type, size, virus scanning) REQUIRED
-- API rate limiting REQUIRED
-- Sensitive data (API keys, tokens) MUST use secrets management (AWS Secrets Manager, Vault)
+**Rationale:** Quality gates prevent technical debt accumulation and ensure all code meets minimum standards before integration. Automated gates catch issues early when they are cheapest to fix.
 
 ## Governance
 
-This constitution supersedes all other development practices and documentation. All team members MUST comply with these principles.
+This constitution supersedes all other development practices and guidelines. All team members and contributors MUST comply with these principles.
 
-**Amendment Process**:
-- Constitution changes require team review and approval
-- Version number MUST follow semantic versioning (MAJOR.MINOR.PATCH)
-- MAJOR version: Backward-incompatible principle changes
-- MINOR version: New principles or major section additions
-- PATCH version: Clarifications, wording improvements, non-breaking changes
-- All amendments MUST be documented with rationale and migration impact
-- Dependent documentation (`functional_specification.md`, `graphDB_draft.md`, `development_tools.md`) MUST be updated in sync
+**Amendment Procedure:**
+- Constitution amendments MUST be documented with rationale
+- Version MUST be incremented according to semantic versioning:
+  - **MAJOR**: Backward incompatible principle removals or redefinitions
+  - **MINOR**: New principle/section added or materially expanded guidance
+  - **PATCH**: Clarifications, wording, typo fixes, non-semantic refinements
+- Amendments MUST be reviewed and approved before adoption
+- Migration plans MUST be provided for breaking changes
 
-**Compliance Verification**:
-- All PRs MUST be checked against constitution principles
-- Code reviews MUST verify constitution compliance
-- Architecture decisions MUST reference relevant constitution principles
-- Violations MUST be caught in CI/CD pipeline or code review, not in production
+**Compliance:**
+- All PRs and code reviews MUST verify constitution compliance
+- Constitution violations MUST be addressed before merge
+- Complexity additions MUST be justified in plan.md Complexity Tracking section
+- Regular compliance reviews SHOULD be conducted to ensure adherence
 
-**Reference Documentation**:
-- `functional_specification.md`: Detailed feature specifications and phase breakdown
-- `graphDB_draft.md`: Complete GraphDB schema definition
-- `development_tools.md`: Technology stack and tooling requirements
-- `features_draft.md`: Feature descriptions and user flows
-- `service_overview_draft.md`: High-level service overview and pain points
-
-**Version**: 1.0.0 | **Ratified**: 2025-01-XX | **Last Amended**: 2025-01-XX
+**Version**: 1.0.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-07
