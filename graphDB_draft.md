@@ -113,7 +113,7 @@
 | **created_at** | datetime | ✅ | datetime() | 생성 시각 |
 | **updated_at** | datetime | ✅ | datetime() | 최종 수정 시각 |
 
-## 1-8. SEOProperties Node
+## 1-8. SEOPoperties Node
 
 | **Property** | **Type** | **Required** | **Default** | **Description** |
 | --- | --- | --- | --- | --- |

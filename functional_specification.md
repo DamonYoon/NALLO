@@ -61,7 +61,7 @@
 |---------|--------|----------|
 | DOC-001 | 문서 작성 및 관리 (기본) | P0 |
 | DOC-002 | 문서 Import (마크다운, OAS) | P0 |
-| DOC-004 | 문서 수정 (기본) | P0 |
+| DOC-004 | 문서 수정 및 Working Copy 관리 | P0 |
 | DOC-006 | 문서 그래프 뷰 | P1 |
 
 #### 2.1.2. 용어집(Glossary) 관리 기능 (Admin)
@@ -154,7 +154,6 @@
 |---------|--------|----------|
 | TEAM-002 | 워크플로우 관리 (Draft/In Review/Done/Publish) | P2 |
 | TEAM-003 | 리뷰 시스템 | P2 |
-| DOC-004-WC | Working Copy 관리 | P2 |
 
 ### 2.4. Phase 4: 고급 기능 (Advanced Features)
 
@@ -1002,54 +1001,6 @@ API 문서에서 직접 API를 호출해볼 수 있는 기능
 
 ### 3.3. Phase 3: 협업 및 워크플로우 (Collaboration & Workflow)
 
-#### DOC-004-WC: Working Copy 관리
-
-**기능 개요**
-publish된 문서를 수정하기 위한 Working Copy 생성 및 병합 기능
-
-**상세 명세**
-
-##### 3.3.1.1. Working Copy 생성
-
-**입력**
-- `original_document_id` (UUID, required): 원본 문서 ID
-
-**처리 로직**
-1. 원본 Document의 `status`가 "publish"인지 확인
-2. 새 Document 노드 생성 (status: "draft")
-3. `WORKING_COPY_OF` 관계 생성
-4. 원본 Document의 content 복사
-
-**출력**
-- `working_copy_id` (UUID): 생성된 Working Copy ID
-
-**예외 처리**
-- 원본 문서가 publish 상태가 아닌 경우: "publish된 문서만 Working Copy를 생성할 수 있습니다" 에러 반환
-
-**관련 데이터 모델**
-- Document Node (GraphDB)
-- WORKING_COPY_OF Edge (GraphDB)
-
-##### 3.3.1.2. Working Copy 병합
-
-**입력**
-- `working_copy_id` (UUID, required): Working Copy 문서 ID
-- `original_document_id` (UUID, required): 원본 문서 ID
-
-**처리 로직**
-1. Working Copy와 원본 Document의 `WORKING_COPY_OF` 관계 확인
-2. 리뷰 승인 여부 확인 (Phase 3의 리뷰 시스템)
-3. 원본 Document의 `storage_key`를 Working Copy의 값으로 업데이트
-4. 원본 Document의 메타데이터 업데이트
-5. Working Copy 삭제 또는 보관 (설정에 따라)
-
-**출력**
-- `merged_document_id` (UUID): 병합된 문서 ID
-
-**예외 처리**
-- Working Copy가 존재하지 않는 경우: "Working Copy를 찾을 수 없습니다" 에러 반환
-- 리뷰가 완료되지 않은 경우: "리뷰가 완료되지 않았습니다" 에러 반환
-
 #### TEAM-001: 팀 관리
 
 **기능 개요**
@@ -1080,7 +1031,7 @@ publish된 문서를 수정하기 위한 Working Copy 생성 및 병합 기능
 
 **상세 명세**
 
-##### 3.3.3.1. 리뷰 요청
+##### 3.3.2.1. 리뷰 요청
 
 **입력**
 - `document_id` (UUID, required): 문서 ID
@@ -1093,7 +1044,7 @@ publish된 문서를 수정하기 위한 Working Copy 생성 및 병합 기능
 **출력**
 - `review_request_id` (UUID): 생성된 리뷰 요청 ID
 
-##### 3.3.3.2. 리뷰 승인/거부
+##### 3.3.2.2. 리뷰 승인/거부
 
 **입력**
 - `review_request_id` (UUID, required): 리뷰 요청 ID
