@@ -16,17 +16,38 @@ Backend API foundation for NALLO document management system.
 npm install
 ```
 
-2. Copy environment variables:
+2. Create `.env` file:
 ```bash
-cp .env.example .env
+# Create .env file in backend/ directory with the following variables:
+# - Database Configuration (PostgreSQL, Neo4j)
+# - JWT Configuration
+# - Application Configuration
+# See DB_SETUP.md for detailed instructions
 ```
 
-3. Update `.env` with your database credentials
+3. Setup databases:
+```bash
+# Option 1: Using Docker Compose (recommended)
+docker-compose up -d
+./scripts/init-databases.sh
 
-4. Run database migrations (when available):
+# Option 2: Manual setup
+# See DB_SETUP.md for detailed instructions
+```
+
+4. Verify database connections:
+```bash
+npm run dev
+# In another terminal:
+curl http://localhost:3000/health
+```
+
+5. Run database migrations (when available):
 ```bash
 npm run migration:run
 ```
+
+**📖 자세한 데이터베이스 설정 방법은 [DB_SETUP.md](./DB_SETUP.md)를 참조하세요.**
 
 ## Development
 
