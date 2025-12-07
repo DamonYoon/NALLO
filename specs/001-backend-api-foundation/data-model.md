@@ -63,8 +63,8 @@ The system uses a dual-database architecture:
 **Relationships**:
 - `(:Document)-[:USES_CONCEPT]->(:Concept)`: Documents using this concept
 - `(:Concept)-[:SYNONYM_OF]->(:Concept)`: Synonym relationship (same language)
-- `(:Concept)-[:IS_A]->(:Concept)`: Inheritance relationship
-- `(:Concept)-[:PART_OF]->(:Concept)`: Composition relationship
+- `(:Concept)-[:SUBTYPE_OF]->(:Concept)`: Inheritance/classification relationship (e.g., "REST API" subtype_of "API")
+- `(:Concept)-[:PART_OF]->(:Concept)`: Composition relationship (e.g., "엔진" part_of "자동차")
 - `(:Concept)-[:HAS_TAG]->(:Tag)`: Concept tagged with tag
 
 **Validation Rules**:
@@ -221,6 +221,57 @@ The system uses a dual-database architecture:
 **Constraints**:
 - No circular references (page cannot be ancestor of itself)
 - Maximum depth: 10 levels (to prevent deep recursion)
+
+### Concept Relationships
+
+#### SUBTYPE_OF Relationship
+
+**Pattern**: `(:Concept)-[:SUBTYPE_OF]->(:Concept)`
+
+**Usage**:
+- Represent classification/hierarchical relationships
+- Express "A is a kind of B" or "A is a subtype of B"
+- Build taxonomy (classification hierarchy)
+
+**Examples**:
+- "REST API" subtype_of "API" (REST API is a kind of API)
+- "JWT" subtype_of "토큰" (JWT is a kind of token)
+- "SUV" subtype_of "자동차" (SUV is a kind of car)
+
+**Distinguishing Rule**: If A is removed, B still exists as a category. A is a member/type of category B.
+
+#### PART_OF Relationship
+
+**Pattern**: `(:Concept)-[:PART_OF]->(:Concept)`
+
+**Usage**:
+- Represent composition/meronymy relationships
+- Express "A is a part/component of B"
+- Build meronomy (part-whole hierarchy)
+
+**Examples**:
+- "엔진" part_of "자동차" (Engine is a part of car)
+- "Authorization Header" part_of "HTTP Request" (Header is a component of request)
+- "API 키" part_of "인증 설정" (API key is a component of authentication settings)
+
+**Distinguishing Rule**: If A is removed, B becomes incomplete. A is a physical or logical component of B.
+
+#### SYNONYM_OF Relationship
+
+**Pattern**: `(:Concept)-[:SYNONYM_OF]->(:Concept)`
+
+**Usage**:
+- Represent synonym relationships (same language)
+- Link alternative terms for the same concept
+- Typically one concept is canonical, others are synonyms
+
+**Examples**:
+- "액세스 토큰" synonym_of "access token" (if both exist in same language)
+- "API 키" synonym_of "API Key"
+
+**Constraints**:
+- Both concepts must be in the same language
+- Relationship should be bidirectional or one-way to canonical term
 
 ## Query Patterns
 
