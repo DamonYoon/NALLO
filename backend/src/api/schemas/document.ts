@@ -102,3 +102,16 @@ export const documentIdParamSchema = z.object({
   id: uuidSchema,
 });
 export type DocumentIdParam = z.infer<typeof documentIdParamSchema>;
+
+// Import Document Request Schema (for multipart/form-data)
+export const importDocumentSchema = z.object({
+  type: z.enum([DocumentType.API, DocumentType.GENERAL], {
+    errorMap: () => ({ message: 'Import type must be one of: api, general' }),
+  }),
+  version_id: uuidSchema.optional(),
+});
+export type ImportDocumentRequest = z.infer<typeof importDocumentSchema>;
+
+// Supported file extensions for import
+export const SUPPORTED_IMPORT_EXTENSIONS = ['.md', '.markdown', '.yaml', '.yml', '.json'] as const;
+export type SupportedImportExtension = (typeof SUPPORTED_IMPORT_EXTENSIONS)[number];

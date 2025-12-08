@@ -28,9 +28,12 @@ import {
   UpdateDocumentRequest,
   DocumentQuery,
   DocumentListResponse,
+  ImportDocumentRequest,
+  SUPPORTED_IMPORT_EXTENSIONS,
 } from '../api/schemas/document';
 import { AppError, ErrorCode } from '../utils/errors';
 import { logger } from '../utils/logger';
+import path from 'path';
 
 /**
  * Document response type for API
@@ -275,6 +278,109 @@ export class DocumentService {
       limit: query.limit,
       offset: query.offset,
     };
+  }
+
+  /**
+   * Import document from file (markdown or OAS)
+   * Parses file content and creates document with extracted metadata
+   */
+  async importDocument(
+    file: Express.Multer.File,
+    input: ImportDocumentRequest
+  ): Promise<DocumentResponseDTO> {
+    const ext = path.extname(file.originalname).toLowerCase();
+
+    // Validate file extension
+    if (
+      !SUPPORTED_IMPORT_EXTENSIONS.includes(ext as (typeof SUPPORTED_IMPORT_EXTENSIONS)[number])
+    ) {
+      throw new AppError(
+        ErrorCode.VALIDATION_ERROR,
+        `Unsupported file format: ${ext}. Supported formats: ${SUPPORTED_IMPORT_EXTENSIONS.join(', ')}`,
+        400
+      );
+    }
+
+    logger.info('Importing document from file', {
+      filename: file.originalname,
+      size: file.size,
+      type: input.type,
+    });
+
+    // Extract content from file
+    const content = file.buffer.toString('utf-8');
+
+    // Extract title from content
+    const title = this.extractTitleFromContent(content, ext, file.originalname);
+
+    // Detect language (default to 'en' if not detected)
+    const lang = this.detectLanguage(content);
+
+    // Create document using extracted data
+    return this.createDocument({
+      title,
+      type: input.type,
+      content,
+      lang,
+    });
+  }
+
+  /**
+   * Extract title from document content
+   */
+  private extractTitleFromContent(content: string, extension: string, filename: string): string {
+    // For markdown files, try to extract first heading
+    if (['.md', '.markdown'].includes(extension)) {
+      const headingMatch = content.match(/^#\s+(.+)$/m);
+      if (headingMatch) {
+        return headingMatch[1].trim();
+      }
+    }
+
+    // For YAML/JSON (OpenAPI), try to extract info.title
+    if (['.yaml', '.yml', '.json'].includes(extension)) {
+      // Simple regex for YAML title
+      const titleMatch = content.match(/title:\s*['"]?([^'"\n]+)['"]?/);
+      if (titleMatch) {
+        return titleMatch[1].trim();
+      }
+
+      // Simple regex for JSON title
+      const jsonTitleMatch = content.match(/"title"\s*:\s*"([^"]+)"/);
+      if (jsonTitleMatch) {
+        return jsonTitleMatch[1].trim();
+      }
+    }
+
+    // Fallback to filename without extension
+    return path.basename(filename, extension);
+  }
+
+  /**
+   * Simple language detection from content
+   * Returns ISO 639-1 code
+   */
+  private detectLanguage(content: string): string {
+    // Simple heuristic: check for Korean characters
+    const koreanRegex = /[\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F]/;
+    if (koreanRegex.test(content)) {
+      return 'ko';
+    }
+
+    // Check for Japanese characters
+    const japaneseRegex = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/;
+    if (japaneseRegex.test(content)) {
+      return 'ja';
+    }
+
+    // Check for Chinese characters (simplified)
+    const chineseRegex = /[\u4E00-\u9FFF]/;
+    if (chineseRegex.test(content) && !japaneseRegex.test(content)) {
+      return 'zh';
+    }
+
+    // Default to English
+    return 'en';
   }
 
   /**

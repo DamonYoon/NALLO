@@ -57,7 +57,7 @@
 
 ---
 
-## Phase 3: User Story 1 - Document Management API (Priority: P1) 🎯 MVP - IN PROGRESS
+## Phase 3: User Story 1 - Document Management API (Priority: P1) 🎯 MVP - ✅ COMPLETED
 
 **Goal**: Administrators can create, read, update, and manage documents through REST API endpoints. Documents can be created from scratch or imported from markdown/OAS files.
 
@@ -75,10 +75,10 @@
 
 - [x] T021 [P] [US1] Acceptance test for document CRUD in backend/tests/acceptance/documents.test.ts (verifies independent functionality)
 - [x] T022 [P] [US1] Unit tests for document service in backend/tests/unit/documentService.test.ts (minimum 80% coverage)
-- [ ] T023 [P] [US1] Contract test for POST /api/v1/documents in backend/tests/contract/documents.test.ts
-- [ ] T024 [P] [US1] Contract test for GET /api/v1/documents/{id} in backend/tests/contract/documents.test.ts
-- [ ] T025 [P] [US1] Contract test for PUT /api/v1/documents/{id} in backend/tests/contract/documents.test.ts
-- [ ] T026 [P] [US1] Contract test for POST /api/v1/documents/import in backend/tests/contract/documents.test.ts
+- [x] T023 [P] [US1] Contract test for POST /api/v1/documents in backend/tests/contract/documents.test.ts
+- [x] T024 [P] [US1] Contract test for GET /api/v1/documents/{id} in backend/tests/contract/documents.test.ts
+- [x] T025 [P] [US1] Contract test for PUT /api/v1/documents/{id} in backend/tests/contract/documents.test.ts
+- [x] T026 [P] [US1] Contract test for POST /api/v1/documents/import in backend/tests/contract/documents.test.ts
 - [x] T027 [P] [US1] Integration test for document creation workflow in backend/tests/integration/documents.test.ts
 
 ### Implementation for User Story 1
@@ -96,7 +96,7 @@
 - [x] T034 [US1] Implement POST /api/v1/documents route in backend/src/api/routes/documents.ts
 - [x] T035 [US1] Implement GET /api/v1/documents/{id} route in backend/src/api/routes/documents.ts
 - [x] T036 [US1] Implement PUT /api/v1/documents/{id} route in backend/src/api/routes/documents.ts
-- [ ] T037 [US1] Implement POST /api/v1/documents/import route in backend/src/api/routes/documents.ts
+- [x] T037 [US1] Implement POST /api/v1/documents/import route in backend/src/api/routes/documents.ts
 - [x] T038 [US1] Add validation and error handling (per Constitution Principle I: Code Quality)
 - [x] T039 [US1] Add logging for document operations
 - [x] T040 [US1] Add API documentation (TypeScript types and JSDoc comments per Constitution Principle I)
