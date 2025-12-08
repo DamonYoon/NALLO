@@ -43,18 +43,22 @@ function validate<T>(schema: { parse: (data: unknown) => T }, source: 'body' | '
  * POST /api/v1/documents
  * Create a new document
  */
-router.post('/', validate(createDocumentSchema, 'body'), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const input = createDocumentSchema.parse(req.body);
-    const document = await documentService.createDocument(input);
+router.post(
+  '/',
+  validate(createDocumentSchema, 'body'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const input = createDocumentSchema.parse(req.body);
+      const document = await documentService.createDocument(input);
 
-    logger.info('Document created via API', { documentId: document.id });
+      logger.info('Document created via API', { documentId: document.id });
 
-    res.status(201).json(document);
-  } catch (error) {
-    next(error);
+      res.status(201).json(document);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 /**
  * GET /api/v1/documents
@@ -79,20 +83,24 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
  * GET /api/v1/documents/:id
  * Get document by ID
  */
-router.get('/:id', validate(documentIdParamSchema, 'params'), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = documentIdParamSchema.parse(req.params);
-    const document = await documentService.getDocument(id);
+router.get(
+  '/:id',
+  validate(documentIdParamSchema, 'params'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = documentIdParamSchema.parse(req.params);
+      const document = await documentService.getDocument(id);
 
-    if (!document) {
-      throw new AppError(ErrorCode.NOT_FOUND, `Document not found: ${id}`, 404);
+      if (!document) {
+        throw new AppError(ErrorCode.NOT_FOUND, `Document not found: ${id}`, 404);
+      }
+
+      res.status(200).json(document);
+    } catch (error) {
+      next(error);
     }
-
-    res.status(200).json(document);
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 /**
  * PUT /api/v1/documents/:id
@@ -125,22 +133,25 @@ router.put(
  * DELETE /api/v1/documents/:id
  * Delete document by ID
  */
-router.delete('/:id', validate(documentIdParamSchema, 'params'), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = documentIdParamSchema.parse(req.params);
-    const deleted = await documentService.deleteDocument(id);
+router.delete(
+  '/:id',
+  validate(documentIdParamSchema, 'params'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = documentIdParamSchema.parse(req.params);
+      const deleted = await documentService.deleteDocument(id);
 
-    if (!deleted) {
-      throw new AppError(ErrorCode.NOT_FOUND, `Document not found: ${id}`, 404);
+      if (!deleted) {
+        throw new AppError(ErrorCode.NOT_FOUND, `Document not found: ${id}`, 404);
+      }
+
+      logger.info('Document deleted via API', { documentId: id });
+
+      res.status(204).send();
+    } catch (error) {
+      next(error);
     }
-
-    logger.info('Document deleted via API', { documentId: id });
-
-    res.status(204).send();
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 export default router;
-

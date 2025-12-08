@@ -19,7 +19,11 @@ export function getAttachmentType(mimeType: string): AttachmentType {
   if (mimeType.startsWith('image/')) {
     return AttachmentType.IMAGE;
   }
-  if (mimeType === 'application/json' || mimeType === 'application/x-yaml' || mimeType === 'text/yaml') {
+  if (
+    mimeType === 'application/json' ||
+    mimeType === 'application/x-yaml' ||
+    mimeType === 'text/yaml'
+  ) {
     return AttachmentType.OAS;
   }
   if (mimeType === 'text/markdown' || mimeType === 'text/x-markdown') {
@@ -117,10 +121,7 @@ export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 /**
  * Validate file for upload
  */
-export function validateFile(
-  mimeType: string,
-  size: number
-): { valid: boolean; error?: string } {
+export function validateFile(mimeType: string, size: number): { valid: boolean; error?: string } {
   if (!ALLOWED_MIME_TYPES.includes(mimeType as (typeof ALLOWED_MIME_TYPES)[number])) {
     return {
       valid: false,
@@ -137,4 +138,3 @@ export function validateFile(
 
   return { valid: true };
 }
-

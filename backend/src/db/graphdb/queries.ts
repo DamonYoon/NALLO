@@ -239,7 +239,7 @@ export async function listDocumentNodes(params: {
       lang: params.lang ?? null,
     });
 
-    const items: DocumentNode[] = listResult.records.map((record) => {
+    const items: DocumentNode[] = listResult.records.map(record => {
       const node = record.get('d').properties;
       return {
         id: String(node.id),
@@ -364,4 +364,3 @@ export const GET_NAVIGATION_TREE = `
   RETURN p, parent
   ORDER BY p.order, p.created_at DESC
 `;
-

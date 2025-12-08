@@ -47,9 +47,7 @@ export class ValidationError extends AppError {
 
 export class NotFoundError extends AppError {
   constructor(resource: string, id?: string) {
-    const message = id
-      ? `${resource} with ID ${id} not found`
-      : `${resource} not found`;
+    const message = id ? `${resource} with ID ${id} not found` : `${resource} not found`;
     super(ErrorCode.NOT_FOUND, message, 404);
   }
 }
@@ -121,4 +119,3 @@ export function toErrorResponse(error: unknown): ErrorResponse {
     },
   };
 }
-

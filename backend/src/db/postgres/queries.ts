@@ -44,10 +44,7 @@ export async function getDocumentContent(documentId: string): Promise<{
 /**
  * Update document content
  */
-export async function updateDocumentContent(
-  documentId: string,
-  content: string
-): Promise<void> {
+export async function updateDocumentContent(documentId: string, content: string): Promise<void> {
   const query = `
     UPDATE documents
     SET content = $1, updated_at = NOW()
@@ -88,7 +85,16 @@ export async function createAttachment(
     INSERT INTO attachments (id, document_id, filename, storage_path, mime_type, attachment_type, size_bytes, checksum)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
   `;
-  await dataSource.query(query, [id, documentId, filename, storagePath, mimeType, attachmentType, sizeBytes, checksum]);
+  await dataSource.query(query, [
+    id,
+    documentId,
+    filename,
+    storagePath,
+    mimeType,
+    attachmentType,
+    sizeBytes,
+    checksum,
+  ]);
 }
 
 /**
@@ -224,4 +230,3 @@ export async function deleteAttachmentsByDocumentId(documentId: string): Promise
   const result = await dataSource.query(query, [documentId]);
   return result.map((row: { storage_path: string }) => row.storage_path);
 }
-

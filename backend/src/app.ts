@@ -71,7 +71,9 @@ export async function initializeApp(): Promise<void> {
     try {
       await initializeStorage();
     } catch (storageError) {
-      logger.warn('MinIO storage not available - file uploads will be disabled', { error: storageError });
+      logger.warn('MinIO storage not available - file uploads will be disabled', {
+        error: storageError,
+      });
     }
 
     logger.info('Application initialized successfully');
@@ -127,9 +129,8 @@ if (require.main === module) {
         });
       });
     })
-    .catch((error) => {
+    .catch(error => {
       logger.error('Failed to start application', error);
       process.exit(1);
     });
 }
-

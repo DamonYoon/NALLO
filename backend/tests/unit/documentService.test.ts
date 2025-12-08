@@ -51,15 +51,17 @@ describe('DocumentService', () => {
     documentService = new DocumentService();
 
     // Setup default mock implementations
-    (graphdbQueries.createDocumentNode as jest.Mock).mockImplementation((params) =>
-      Promise.resolve(createMockDocumentNode({
-        id: params.id || '123e4567-e89b-12d3-a456-426614174000',
-        title: params.title,
-        type: params.type,
-        lang: params.lang,
-        status: params.status,
-        storage_key: params.storage_key,
-      }))
+    (graphdbQueries.createDocumentNode as jest.Mock).mockImplementation(params =>
+      Promise.resolve(
+        createMockDocumentNode({
+          id: params.id || '123e4567-e89b-12d3-a456-426614174000',
+          title: params.title,
+          type: params.type,
+          lang: params.lang,
+          status: params.status,
+          storage_key: params.storage_key,
+        })
+      )
     );
 
     (graphdbQueries.getDocumentNode as jest.Mock).mockResolvedValue(createMockDocumentNode());
@@ -248,7 +250,9 @@ describe('DocumentService', () => {
         status: DocumentStatus.PUBLISH,
       };
 
-      await expect(documentService.updateDocument(testDocumentId, updateRequest)).rejects.toThrow('Invalid status transition');
+      await expect(documentService.updateDocument(testDocumentId, updateRequest)).rejects.toThrow(
+        'Invalid status transition'
+      );
     });
 
     it('should return null when document not found', async () => {
@@ -302,7 +306,7 @@ describe('DocumentService', () => {
         offset: 0,
       });
 
-      expect(result.items.every((doc) => doc.status === DocumentStatus.DRAFT)).toBe(true);
+      expect(result.items.every(doc => doc.status === DocumentStatus.DRAFT)).toBe(true);
     });
 
     it('should filter by type', async () => {
@@ -317,7 +321,7 @@ describe('DocumentService', () => {
         offset: 0,
       });
 
-      expect(result.items.every((doc) => doc.type === DocumentType.API)).toBe(true);
+      expect(result.items.every(doc => doc.type === DocumentType.API)).toBe(true);
     });
 
     it('should filter by language', async () => {
@@ -332,7 +336,7 @@ describe('DocumentService', () => {
         offset: 0,
       });
 
-      expect(result.items.every((doc) => doc.lang === 'ko')).toBe(true);
+      expect(result.items.every(doc => doc.lang === 'ko')).toBe(true);
     });
 
     it('should respect pagination parameters', async () => {
@@ -367,10 +371,13 @@ describe('DocumentService', () => {
     });
 
     it('should throw on partial failure', async () => {
-      (postgresQueries.deleteDocumentContent as jest.Mock).mockRejectedValueOnce(new Error('PostgreSQL error'));
+      (postgresQueries.deleteDocumentContent as jest.Mock).mockRejectedValueOnce(
+        new Error('PostgreSQL error')
+      );
 
-      await expect(documentService.deleteDocument(testDocumentId)).rejects.toThrow('PostgreSQL error');
+      await expect(documentService.deleteDocument(testDocumentId)).rejects.toThrow(
+        'PostgreSQL error'
+      );
     });
   });
 });
-

@@ -17,4 +17,3 @@ export const createDocumentContent = jest.fn().mockResolvedValue(undefined);
 export const getDocumentContent = jest.fn().mockResolvedValue(mockContent);
 export const updateDocumentContent = jest.fn().mockResolvedValue(undefined);
 export const deleteDocumentContent = jest.fn().mockResolvedValue(undefined);
-

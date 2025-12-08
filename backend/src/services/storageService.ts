@@ -25,7 +25,11 @@ import {
   validateFile,
   AttachmentType,
 } from '../models/rdb/attachment';
-import { AttachmentResponse, AttachmentListResponse, AttachmentQuery } from '../api/schemas/attachment';
+import {
+  AttachmentResponse,
+  AttachmentListResponse,
+  AttachmentQuery,
+} from '../api/schemas/attachment';
 import { AppError, ErrorCode } from '../utils/errors';
 import { logger } from '../utils/logger';
 
@@ -126,7 +130,9 @@ export class StorageService {
   /**
    * Download file content
    */
-  async downloadFile(id: string): Promise<{ buffer: Buffer; attachment: AttachmentResponse } | null> {
+  async downloadFile(
+    id: string
+  ): Promise<{ buffer: Buffer; attachment: AttachmentResponse } | null> {
     const record = await getAttachmentRecord(id);
 
     if (!record) {
@@ -185,7 +191,7 @@ export class StorageService {
     });
 
     return {
-      items: items.map((record) => this.recordToResponseDTO(record)),
+      items: items.map(record => this.recordToResponseDTO(record)),
       total,
       limit: query.limit,
       offset: query.offset,
@@ -197,7 +203,7 @@ export class StorageService {
    */
   async getAttachmentsByDocument(documentId: string): Promise<AttachmentResponse[]> {
     const records = await getAttachmentsByDocumentId(documentId);
-    return records.map((record) => this.recordToResponseDTO(record));
+    return records.map(record => this.recordToResponseDTO(record));
   }
 
   /**
@@ -271,4 +277,3 @@ export class StorageService {
 
 // Export singleton instance
 export const storageService = new StorageService();
-

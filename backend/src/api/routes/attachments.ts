@@ -24,7 +24,11 @@ const upload = multer({
     fileSize: FILE_VALIDATION.maxFileSize,
   },
   fileFilter: (_req, file, cb) => {
-    if (FILE_VALIDATION.allowedMimeTypes.includes(file.mimetype as (typeof FILE_VALIDATION.allowedMimeTypes)[number])) {
+    if (
+      FILE_VALIDATION.allowedMimeTypes.includes(
+        file.mimetype as (typeof FILE_VALIDATION.allowedMimeTypes)[number]
+      )
+    ) {
       cb(null, true);
     } else {
       cb(new Error(`File type not allowed: ${file.mimetype}`));
@@ -36,45 +40,47 @@ const upload = multer({
  * POST /api/v1/attachments
  * Upload a new file
  */
-router.post(
-  '/',
-  upload.single('file'),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.file) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'No file provided', 400);
-      }
+router.post('/', upload.single('file'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.file) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'No file provided', 400);
+    }
 
-      // Parse optional metadata
-      const metadata = uploadAttachmentSchema.safeParse(req.body);
-      const documentId = metadata.success ? metadata.data.document_id : undefined;
+    // Parse optional metadata
+    const metadata = uploadAttachmentSchema.safeParse(req.body);
+    const documentId = metadata.success ? metadata.data.document_id : undefined;
 
-      const attachment = await storageService.uploadFile(
-        {
-          buffer: req.file.buffer,
-          originalname: req.file.originalname,
-          mimetype: req.file.mimetype,
-          size: req.file.size,
-        },
-        documentId
-      );
+    const attachment = await storageService.uploadFile(
+      {
+        buffer: req.file.buffer,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+      },
+      documentId
+    );
 
-      logger.info('File uploaded via API', { attachmentId: attachment.id });
+    logger.info('File uploaded via API', { attachmentId: attachment.id });
 
-      res.status(201).json(attachment);
-    } catch (error) {
-      if (error instanceof multer.MulterError) {
-        if (error.code === 'LIMIT_FILE_SIZE') {
-          next(new AppError(ErrorCode.VALIDATION_ERROR, `File too large. Maximum size: ${FILE_VALIDATION.maxFileSizeMB}MB`, 400));
-        } else {
-          next(new AppError(ErrorCode.VALIDATION_ERROR, error.message, 400));
-        }
+    res.status(201).json(attachment);
+  } catch (error) {
+    if (error instanceof multer.MulterError) {
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        next(
+          new AppError(
+            ErrorCode.VALIDATION_ERROR,
+            `File too large. Maximum size: ${FILE_VALIDATION.maxFileSizeMB}MB`,
+            400
+          )
+        );
       } else {
-        next(error);
+        next(new AppError(ErrorCode.VALIDATION_ERROR, error.message, 400));
       }
+    } else {
+      next(error);
     }
   }
-);
+});
 
 /**
  * GET /api/v1/attachments
@@ -176,4 +182,3 @@ router.get('/validation-rules', (_req: Request, res: Response) => {
 });
 
 export default router;
-

@@ -25,7 +25,12 @@ import {
   updateDocumentContent,
   deleteDocumentContent,
 } from '../db/postgres/queries';
-import { CreateDocumentRequest, UpdateDocumentRequest, DocumentQuery, DocumentListResponse } from '../api/schemas/document';
+import {
+  CreateDocumentRequest,
+  UpdateDocumentRequest,
+  DocumentQuery,
+  DocumentListResponse,
+} from '../api/schemas/document';
 import { AppError, ErrorCode } from '../utils/errors';
 import { logger } from '../utils/logger';
 
@@ -124,7 +129,10 @@ export class DocumentService {
    * Update document
    * Updates metadata in GraphDB and/or content in PostgreSQL
    */
-  async updateDocument(id: string, input: UpdateDocumentRequest): Promise<DocumentResponseDTO | null> {
+  async updateDocument(
+    id: string,
+    input: UpdateDocumentRequest
+  ): Promise<DocumentResponseDTO | null> {
     logger.info('Updating document', { id, fields: Object.keys(input) });
 
     // Get current document
@@ -218,7 +226,7 @@ export class DocumentService {
 
     // Get content for each document
     const documentsWithContent = await Promise.all(
-      items.map(async (node) => {
+      items.map(async node => {
         const content = await getDocumentContent(node.id);
         return this.toResponseDTO(node, content?.content ?? '');
       })
@@ -252,4 +260,3 @@ export class DocumentService {
 
 // Export singleton instance
 export const documentService = new DocumentService();
-

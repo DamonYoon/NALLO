@@ -82,4 +82,3 @@ export const FILE_VALIDATION = {
   maxFileSize: MAX_FILE_SIZE,
   maxFileSizeMB: MAX_FILE_SIZE / 1024 / 1024,
 } as const;
-

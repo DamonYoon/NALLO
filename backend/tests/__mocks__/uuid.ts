@@ -16,4 +16,3 @@ export function v4(): string {
 export function __resetCounter(): void {
   counter = 0;
 }
-

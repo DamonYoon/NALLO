@@ -25,4 +25,3 @@ export const listDocumentNodes = jest.fn().mockResolvedValue({
   items: [mockDocument],
   total: 1,
 });
-
