@@ -10,13 +10,37 @@ echo "🚀 Initializing databases..."
 # Colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+RED='\033[0;31m'
 NC='\033[0m' # No Color
+
+# Load environment variables from .env file
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="${SCRIPT_DIR}/../.env"
+
+if [ -f "$ENV_FILE" ]; then
+  echo -e "${BLUE}📁 Loading environment variables from .env${NC}"
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+  echo -e "${RED}❌ .env file not found at ${ENV_FILE}${NC}"
+  exit 1
+fi
+
+# Check if Docker containers are running
+if ! docker ps | grep -q nallo-postgres; then
+  echo -e "${RED}❌ PostgreSQL container is not running. Please run 'docker compose up -d' first.${NC}"
+  exit 1
+fi
+
+if ! docker ps | grep -q nallo-neo4j; then
+  echo -e "${RED}❌ Neo4j container is not running. Please run 'docker compose up -d' first.${NC}"
+  exit 1
+fi
 
 # PostgreSQL Setup
 echo -e "${BLUE}📊 Setting up PostgreSQL...${NC}"
 
-# Wait for PostgreSQL to be ready
-until PGPASSWORD=your_password psql -h localhost -U nallo_user -d postgres -c '\q' 2>/dev/null; do
+# Wait for PostgreSQL to be ready (using docker exec)
+until docker exec nallo-postgres pg_isready -U "${POSTGRES_USER}" -d postgres > /dev/null 2>&1; do
   echo "⏳ Waiting for PostgreSQL to be ready..."
   sleep 2
 done
@@ -24,10 +48,10 @@ done
 echo -e "${GREEN}✅ PostgreSQL is ready${NC}"
 
 # Create database if it doesn't exist
-PGPASSWORD=your_password psql -h localhost -U nallo_user -d postgres -c "CREATE DATABASE nallo;" 2>/dev/null || echo "Database 'nallo' already exists"
+docker exec nallo-postgres psql -U "${POSTGRES_USER}" -d postgres -c "CREATE DATABASE ${POSTGRES_DB};" 2>/dev/null || echo "Database '${POSTGRES_DB}' already exists"
 
 # Create tables
-PGPASSWORD=your_password psql -h localhost -U nallo_user -d nallo <<EOF
+docker exec -i nallo-postgres psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" <<EOF
 -- Create documents table
 CREATE TABLE IF NOT EXISTS documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -61,7 +85,7 @@ echo -e "${GREEN}✅ PostgreSQL schema initialized${NC}"
 echo -e "${BLUE}🕸️  Setting up Neo4j...${NC}"
 
 # Wait for Neo4j to be ready
-until docker exec nallo-neo4j cypher-shell -u neo4j -p your_password "RETURN 1" 2>/dev/null; do
+until docker exec nallo-neo4j cypher-shell -u "${NEO4J_USER}" -p "${NEO4J_PASSWORD}" "RETURN 1" > /dev/null 2>&1; do
   echo "⏳ Waiting for Neo4j to be ready..."
   sleep 2
 done
@@ -69,7 +93,7 @@ done
 echo -e "${GREEN}✅ Neo4j is ready${NC}"
 
 # Create indexes
-docker exec nallo-neo4j cypher-shell -u neo4j -p your_password <<EOF
+docker exec nallo-neo4j cypher-shell -u "${NEO4J_USER}" -p "${NEO4J_PASSWORD}" <<EOF
 // Create indexes for better query performance
 CREATE INDEX document_id_index IF NOT EXISTS FOR (d:Document) ON (d.id);
 CREATE INDEX concept_id_index IF NOT EXISTS FOR (c:Concept) ON (c.id);

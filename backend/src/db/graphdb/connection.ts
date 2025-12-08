@@ -16,8 +16,8 @@ export async function initializeGraphDB(): Promise<void> {
     }
 
     driver = neo4j.driver(
-      config.GRAPHDB_URI,
-      neo4j.auth.basic(config.GRAPHDB_USER, config.GRAPHDB_PASSWORD),
+      config.NEO4J_URI,
+      neo4j.auth.basic(config.NEO4J_USER, config.NEO4J_PASSWORD),
       {
         maxConnectionPoolSize: 50,
         connectionAcquisitionTimeout: 30000, // 30 seconds
@@ -33,8 +33,8 @@ export async function initializeGraphDB(): Promise<void> {
         try {
           await session.run('RETURN 1 as test');
           logger.info('GraphDB connection established', {
-            uri: config.GRAPHDB_URI,
-            user: config.GRAPHDB_USER,
+            uri: config.NEO4J_URI,
+            user: config.NEO4J_USER,
           });
         } finally {
           await session.close();
@@ -120,8 +120,8 @@ export async function executeRead<T>(
 ): Promise<T[]> {
   const session = getSession();
   try {
-    const result = await session.executeRead((tx) => tx.run(query, parameters));
-    return result.records.map((record) => record.toObject() as T);
+    const result = await session.executeRead(tx => tx.run(query, parameters));
+    return result.records.map(record => record.toObject() as T);
   } finally {
     await session.close();
   }
@@ -136,10 +136,9 @@ export async function executeWrite<T>(
 ): Promise<T[]> {
   const session = getSession();
   try {
-    const result = await session.executeWrite((tx) => tx.run(query, parameters));
-    return result.records.map((record) => record.toObject() as T);
+    const result = await session.executeWrite(tx => tx.run(query, parameters));
+    return result.records.map(record => record.toObject() as T);
   } finally {
     await session.close();
   }
 }
-

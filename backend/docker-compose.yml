@@ -5,15 +5,15 @@ services:
     image: postgres:14-alpine
     container_name: nallo-postgres
     environment:
-      POSTGRES_DB: nallo
-      POSTGRES_USER: nallo_user
-      POSTGRES_PASSWORD: your_password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nallo_user"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,16 +22,16 @@ services:
     image: neo4j:5.14
     container_name: nallo-neo4j
     environment:
-      NEO4J_AUTH: neo4j/your_password
+      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
       NEO4J_PLUGINS: '["apoc"]'
     ports:
-      - "7474:7474"  # HTTP
-      - "7687:7687"  # Bolt
+      - '7474:7474' # HTTP
+      - '7687:7687' # Bolt
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
     healthcheck:
-      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "your_password", "RETURN 1"]
+      test: ['CMD', 'cypher-shell', '-u', '${NEO4J_USER}', '-p', '${NEO4J_PASSWORD}', 'RETURN 1']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,4 +40,3 @@ volumes:
   postgres_data:
   neo4j_data:
   neo4j_logs:
-

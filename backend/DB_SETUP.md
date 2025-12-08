@@ -12,9 +12,9 @@
 
 ```bash
 # Database Configuration
-GRAPHDB_URI=bolt://localhost:7687
-GRAPHDB_USER=neo4j
-GRAPHDB_PASSWORD=your_password
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=your_password
 
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
@@ -44,10 +44,11 @@ TYPEORM_LOGGING=false
 
 ```bash
 cd backend
-docker-compose up -d
+docker compose up -d
 ```
 
 이 명령은 다음을 실행합니다:
+
 - PostgreSQL 14 컨테이너 시작 (포트 5432)
 - Neo4j 5.14 컨테이너 시작 (포트 7474, 7687)
 
@@ -60,6 +61,7 @@ docker-compose up -d
 또는 수동으로:
 
 **PostgreSQL:**
+
 ```bash
 # 데이터베이스 생성
 createdb -U nallo_user nallo
@@ -72,6 +74,7 @@ psql -U nallo_user -d nallo -f scripts/postgres-schema.sql
 ```
 
 **Neo4j:**
+
 ```bash
 # Neo4j Browser에서 실행 (http://localhost:7474)
 # 또는 cypher-shell 사용
@@ -94,6 +97,7 @@ curl http://localhost:3000/health
 ```
 
 또는 테스트 실행:
+
 ```bash
 npm test
 ```
@@ -103,6 +107,7 @@ npm test
 ### PostgreSQL 설치 및 설정
 
 **macOS (Homebrew):**
+
 ```bash
 brew install postgresql@14
 brew services start postgresql@14
@@ -114,6 +119,7 @@ psql -d nallo -c "GRANT ALL PRIVILEGES ON DATABASE nallo TO nallo_user;"
 ```
 
 **Linux (Ubuntu/Debian):**
+
 ```bash
 sudo apt-get update
 sudo apt-get install postgresql-14
@@ -127,12 +133,14 @@ sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE nallo TO nallo_user;"
 ### Neo4j 설치 및 설정
 
 **Neo4j Desktop 사용 (권장):**
+
 1. https://neo4j.com/download/ 에서 Neo4j Desktop 다운로드
 2. Neo4j Desktop에서 새 프로젝트 생성
 3. 데이터베이스 시작
 4. 연결 정보 확인 (기본: bolt://localhost:7687, 사용자: neo4j)
 
 **또는 Docker로만 Neo4j 실행:**
+
 ```bash
 docker run -d \
   --name neo4j \
@@ -146,16 +154,19 @@ docker run -d \
 ### 1. Health Check API
 
 서버를 시작한 후:
+
 ```bash
 npm run dev
 ```
 
 다른 터미널에서:
+
 ```bash
 curl http://localhost:3000/health
 ```
 
 예상 응답:
+
 ```json
 {
   "status": "healthy",
@@ -171,6 +182,7 @@ curl http://localhost:3000/health
 ### 2. 직접 데이터베이스 연결 테스트
 
 **PostgreSQL:**
+
 ```bash
 psql -h localhost -U nallo_user -d nallo
 # 비밀번호 입력 후
@@ -178,6 +190,7 @@ SELECT 1;
 ```
 
 **Neo4j:**
+
 ```bash
 # Neo4j Browser에서 (http://localhost:7474)
 RETURN 1;
@@ -192,10 +205,11 @@ RETURN 1;
 ### PostgreSQL 연결 실패
 
 1. PostgreSQL이 실행 중인지 확인:
+
    ```bash
    # Docker 사용 시
    docker ps | grep postgres
-   
+
    # 로컬 설치 시
    brew services list | grep postgresql
    # 또는
@@ -203,6 +217,7 @@ RETURN 1;
    ```
 
 2. 포트가 사용 중인지 확인:
+
    ```bash
    lsof -i :5432
    ```
@@ -217,6 +232,7 @@ RETURN 1;
 ### Neo4j 연결 실패
 
 1. Neo4j가 실행 중인지 확인:
+
    ```bash
    docker ps | grep neo4j
    ```
@@ -225,13 +241,14 @@ RETURN 1;
    - http://localhost:7474 에 접속 가능한지 확인
 
 3. .env 파일의 연결 정보 확인:
-   - GRAPHDB_URI (기본: bolt://localhost:7687)
-   - GRAPHDB_USER (기본: neo4j)
-   - GRAPHDB_PASSWORD
+   - NEO4J_URI (기본: bolt://localhost:7687)
+   - NEO4J_USER (기본: neo4j)
+   - NEO4J_PASSWORD
 
 ### 환경 변수 오류
 
 `.env` 파일이 제대로 로드되지 않으면:
+
 1. `.env` 파일이 `backend/` 디렉토리에 있는지 확인
 2. 파일 이름이 정확히 `.env`인지 확인 (`.env.example` 아님)
 3. 환경 변수 값이 올바른지 확인 (특히 JWT_SECRET_KEY는 32자 이상)
@@ -239,6 +256,7 @@ RETURN 1;
 ## 다음 단계
 
 데이터베이스 연결이 완료되면:
+
 1. Phase 3 (Document Management API) 구현 시작
 2. API 엔드포인트 테스트
 3. 데이터베이스 마이그레이션 설정 (TypeORM)
@@ -259,4 +277,3 @@ docker exec -it nallo-neo4j cypher-shell -u neo4j -p your_password
 # 데이터베이스 초기화 스크립트 실행
 ./scripts/init-databases.sh
 ```
-

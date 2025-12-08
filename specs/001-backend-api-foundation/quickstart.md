@@ -30,6 +30,7 @@ pnpm install
 ```
 
 **Expected dependencies** (from research.md):
+
 - express>=4.18.0 or fastify>=4.24.0
 - typescript>=5.0.0
 - @types/node>=20.0.0
@@ -55,9 +56,9 @@ Create `.env` file in `backend/` directory:
 
 ```bash
 # Database Configuration
-GRAPHDB_URI=bolt://localhost:7687
-GRAPHDB_USER=neo4j
-GRAPHDB_PASSWORD=your_password
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=your_password
 
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
@@ -180,6 +181,7 @@ curl http://localhost:3000/api/v1/health
 ```
 
 Expected response:
+
 ```json
 {
   "status": "healthy",
@@ -274,14 +276,14 @@ git commit -m "feat: add your feature description"
 
 ```typescript
 // In TypeScript file or script
-import { AuthService } from './src/services/authService';
-import { getDb } from './src/db/postgres/connection';
+import { AuthService } from "./src/services/authService";
+import { getDb } from "./src/db/postgres/connection";
 
 const authService = new AuthService();
 const user = await authService.createUser({
-  email: 'admin@example.com',
-  password: 'secure_password',
-  role: 'administrator'
+  email: "admin@example.com",
+  password: "secure_password",
+  role: "administrator",
 });
 ```
 
@@ -320,11 +322,13 @@ curl -X POST http://localhost:3000/api/v1/concepts \
 **Problem**: Health check shows database as disconnected
 
 **Solutions**:
+
 1. Verify database is running:
+
    ```bash
    # PostgreSQL
    pg_isready -h localhost -p 5432
-   
+
    # Neo4j
    curl http://localhost:7474
    ```
@@ -338,6 +342,7 @@ curl -X POST http://localhost:3000/api/v1/concepts \
 **Problem**: TypeScript compilation fails
 
 **Solutions**:
+
 1. Check `tsconfig.json` configuration
 2. Ensure all dependencies are installed: `npm install`
 3. Verify Node.js version: `node --version` should show 18+
@@ -348,6 +353,7 @@ curl -X POST http://localhost:3000/api/v1/concepts \
 **Problem**: Tests fail with database connection errors
 
 **Solutions**:
+
 1. Ensure test databases are configured
 2. Check test environment variables
 3. Use test fixtures for database setup/teardown
@@ -358,6 +364,7 @@ curl -X POST http://localhost:3000/api/v1/concepts \
 **Problem**: `Cannot find module` errors
 
 **Solutions**:
+
 1. Check `tsconfig.json` paths configuration
 2. Verify `package.json` dependencies
 3. Run `npm install` to ensure all dependencies are installed

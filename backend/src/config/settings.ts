@@ -7,9 +7,9 @@ dotenv.config();
 // Environment schema validation
 const envSchema = z.object({
   // Database Configuration
-  GRAPHDB_URI: z.string().url().default('bolt://localhost:7687'),
-  GRAPHDB_USER: z.string().default('neo4j'),
-  GRAPHDB_PASSWORD: z.string().min(1),
+  NEO4J_URI: z.string().url().default('bolt://localhost:7687'),
+  NEO4J_USER: z.string().default('neo4j'),
+  NEO4J_PASSWORD: z.string().min(1),
 
   POSTGRES_HOST: z.string().default('localhost'),
   POSTGRES_PORT: z.coerce.number().default(5432),
@@ -47,7 +47,7 @@ const parseEnv = () => {
 
     // In test environment, provide defaults for missing required variables
     if (process.env.NODE_ENV === 'test') {
-      if (!env.GRAPHDB_PASSWORD) env.GRAPHDB_PASSWORD = 'test_password';
+      if (!env.NEO4J_PASSWORD) env.NEO4J_PASSWORD = 'test_password';
       if (!env.POSTGRES_DB) env.POSTGRES_DB = 'nallo_test';
       if (!env.POSTGRES_USER) env.POSTGRES_USER = 'test_user';
       if (!env.POSTGRES_PASSWORD) env.POSTGRES_PASSWORD = 'test_password';
@@ -66,9 +66,9 @@ const parseEnv = () => {
         );
         // Return with test defaults
         return envSchema.parse({
-          GRAPHDB_URI: 'bolt://localhost:7687',
-          GRAPHDB_USER: 'neo4j',
-          GRAPHDB_PASSWORD: 'test_password',
+          NEO4J_URI: 'bolt://localhost:7687',
+          NEO4J_USER: 'neo4j',
+          NEO4J_PASSWORD: 'test_password',
           POSTGRES_HOST: 'localhost',
           POSTGRES_PORT: 5432,
           POSTGRES_DB: 'nallo_test',
