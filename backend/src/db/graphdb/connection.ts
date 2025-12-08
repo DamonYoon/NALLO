@@ -83,6 +83,17 @@ export function getSession(): Session {
 }
 
 /**
+ * Get the Neo4j driver instance
+ * Throws error if driver is not initialized
+ */
+export function getGraphDBConnection(): Driver {
+  if (!driver) {
+    throw new Error('GraphDB driver not initialized. Call initializeGraphDB() first.');
+  }
+  return driver;
+}
+
+/**
  * Get GraphDB connection status
  */
 export async function getGraphDBStatus(): Promise<{ connected: boolean; error?: string }> {

@@ -8,6 +8,10 @@ const config: Config = {
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
+  // Transform ESM modules from node_modules
+  transformIgnorePatterns: [
+    'node_modules/(?!(uuid)/)',
+  ],
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',
@@ -33,6 +37,7 @@ const config: Config = {
     '^@/db/(.*)$': '<rootDir>/src/db/$1',
     '^@/utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@/config/(.*)$': '<rootDir>/src/config/$1',
+    '^uuid$': '<rootDir>/tests/__mocks__/uuid.ts',
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 10000,

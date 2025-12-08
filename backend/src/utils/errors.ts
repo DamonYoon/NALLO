@@ -2,14 +2,29 @@
  * Custom error classes and error handling utilities
  */
 
+/**
+ * Error codes enum for consistent error handling
+ */
+export const ErrorCode = {
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  NOT_FOUND: 'NOT_FOUND',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  CONFLICT: 'CONFLICT',
+  DATABASE_ERROR: 'DATABASE_ERROR',
+  INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
+  INVALID_STATUS_TRANSITION: 'INVALID_STATUS_TRANSITION',
+} as const;
+export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
+
 export class AppError extends Error {
   public readonly code: string;
   public readonly statusCode: number;
   public readonly details?: Record<string, unknown>;
 
   constructor(
-    message: string,
     code: string,
+    message: string,
     statusCode: number = 500,
     details?: Record<string, unknown>
   ) {
@@ -26,7 +41,7 @@ export class AppError extends Error {
 
 export class ValidationError extends AppError {
   constructor(message: string, details?: Record<string, unknown>) {
-    super(message, 'VALIDATION_ERROR', 400, details);
+    super(ErrorCode.VALIDATION_ERROR, message, 400, details);
   }
 }
 
@@ -35,31 +50,41 @@ export class NotFoundError extends AppError {
     const message = id
       ? `${resource} with ID ${id} not found`
       : `${resource} not found`;
-    super(message, `${resource.toUpperCase()}_NOT_FOUND`, 404);
+    super(ErrorCode.NOT_FOUND, message, 404);
   }
 }
 
 export class UnauthorizedError extends AppError {
   constructor(message: string = 'Unauthorized') {
-    super(message, 'UNAUTHORIZED', 401);
+    super(ErrorCode.UNAUTHORIZED, message, 401);
   }
 }
 
 export class ForbiddenError extends AppError {
   constructor(message: string = 'Forbidden') {
-    super(message, 'FORBIDDEN', 403);
+    super(ErrorCode.FORBIDDEN, message, 403);
   }
 }
 
 export class DatabaseError extends AppError {
   constructor(message: string, details?: Record<string, unknown>) {
-    super(message, 'DATABASE_ERROR', 500, details);
+    super(ErrorCode.DATABASE_ERROR, message, 500, details);
   }
 }
 
 export class ConflictError extends AppError {
   constructor(message: string, details?: Record<string, unknown>) {
-    super(message, 'CONFLICT', 409, details);
+    super(ErrorCode.CONFLICT, message, 409, details);
+  }
+}
+
+export class InvalidStatusTransitionError extends AppError {
+  constructor(currentStatus: string, newStatus: string) {
+    super(
+      ErrorCode.INVALID_STATUS_TRANSITION,
+      `Invalid status transition from ${currentStatus} to ${newStatus}`,
+      400
+    );
   }
 }
 

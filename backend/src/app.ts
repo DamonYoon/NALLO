@@ -8,6 +8,7 @@ import { errorHandler, notFoundHandler } from '@/api/middleware/errorHandler';
 import { initializePostgres, closePostgres } from '@/db/postgres/connection';
 import { initializeGraphDB, closeGraphDB } from '@/db/graphdb/connection';
 import healthRouter from '@/api/routes/health';
+import documentsRouter from '@/api/routes/documents';
 
 /**
  * Create and configure Express application
@@ -29,9 +30,19 @@ export function createApp(): Express {
   // Health check route (no authentication required)
   app.use('/health', healthRouter);
 
-  // API routes
-  app.use(config.API_V1_PREFIX, (_req, res) => {
-    res.json({ message: 'API v1 - Routes coming soon' });
+  // API v1 routes
+  app.use(`${config.API_V1_PREFIX}/documents`, documentsRouter);
+
+  // API root info
+  app.get(config.API_V1_PREFIX, (_req, res) => {
+    res.json({
+      name: 'NALLO API',
+      version: '1.0.0',
+      endpoints: {
+        documents: `${config.API_V1_PREFIX}/documents`,
+        health: '/health',
+      },
+    });
   });
 
   // 404 handler
