@@ -2420,3 +2420,210 @@ export async function getWorkingCopies(documentId: string): Promise<DocumentNode
     await session.close();
   }
 }
+
+// ============================================
+// SEARCH QUERIES
+// ============================================
+
+/**
+ * Search result item interface
+ */
+export interface SearchResultItem {
+  document_id: string;
+  page_id: string | null;
+  title: string;
+  summary: string | null;
+  relevance_score: number;
+  matched_fields: string[];
+  type: string;
+}
+
+/**
+ * Search result interface
+ */
+export interface SearchResult {
+  results: SearchResultItem[];
+  total: number;
+}
+
+/**
+ * Search parameters
+ */
+export interface SearchParams {
+  query: string;
+  versionId?: string;
+  tags?: string[];
+  limit: number;
+  offset: number;
+}
+
+/**
+ * Full-text search across documents
+ * Searches in title, summary, and related concept names
+ */
+export const SEARCH_DOCUMENTS = `
+  CALL {
+    // Search by title
+    MATCH (d:Document)
+    WHERE toLower(d.title) CONTAINS toLower($query)
+    RETURN d, 1.0 as relevance, ['title'] as matched_fields
+    
+    UNION
+    
+    // Search by summary
+    MATCH (d:Document)
+    WHERE d.summary IS NOT NULL AND toLower(d.summary) CONTAINS toLower($query)
+    RETURN d, 0.8 as relevance, ['summary'] as matched_fields
+    
+    UNION
+    
+    // Search by related concept names
+    MATCH (d:Document)-[:USES_CONCEPT]->(c:Concept)
+    WHERE toLower(c.name) CONTAINS toLower($query)
+    RETURN d, 0.6 as relevance, ['concept'] as matched_fields
+  }
+  WITH d, MAX(relevance) as max_relevance, COLLECT(DISTINCT matched_fields) as all_matched
+  WITH d, max_relevance, REDUCE(acc = [], fields IN all_matched | acc + fields) as matched_fields
+  RETURN DISTINCT d, max_relevance as relevance, matched_fields
+  ORDER BY relevance DESC, d.updated_at DESC
+`;
+
+/**
+ * Search documents with version filter
+ */
+export const SEARCH_DOCUMENTS_BY_VERSION = `
+  CALL {
+    MATCH (d:Document)
+    WHERE toLower(d.title) CONTAINS toLower($query)
+    RETURN d, 1.0 as relevance, ['title'] as matched_fields
+    
+    UNION
+    
+    MATCH (d:Document)
+    WHERE d.summary IS NOT NULL AND toLower(d.summary) CONTAINS toLower($query)
+    RETURN d, 0.8 as relevance, ['summary'] as matched_fields
+    
+    UNION
+    
+    MATCH (d:Document)-[:USES_CONCEPT]->(c:Concept)
+    WHERE toLower(c.name) CONTAINS toLower($query)
+    RETURN d, 0.6 as relevance, ['concept'] as matched_fields
+  }
+  WITH d, MAX(relevance) as max_relevance, COLLECT(DISTINCT matched_fields) as all_matched
+  WITH d, max_relevance, REDUCE(acc = [], fields IN all_matched | acc + fields) as matched_fields
+  // Filter by version through Page-[:IN_VERSION]->Version
+  MATCH (p:Page)-[:DISPLAYS]->(d)
+  MATCH (p)-[:IN_VERSION]->(v:Version {id: $versionId})
+  RETURN DISTINCT d, max_relevance as relevance, matched_fields, p.id as page_id
+  ORDER BY relevance DESC, d.updated_at DESC
+`;
+
+/**
+ * Search documents with tag filter
+ */
+export const SEARCH_DOCUMENTS_BY_TAG = `
+  CALL {
+    MATCH (d:Document)
+    WHERE toLower(d.title) CONTAINS toLower($query)
+    RETURN d, 1.0 as relevance, ['title'] as matched_fields
+    
+    UNION
+    
+    MATCH (d:Document)
+    WHERE d.summary IS NOT NULL AND toLower(d.summary) CONTAINS toLower($query)
+    RETURN d, 0.8 as relevance, ['summary'] as matched_fields
+    
+    UNION
+    
+    MATCH (d:Document)-[:USES_CONCEPT]->(c:Concept)
+    WHERE toLower(c.name) CONTAINS toLower($query)
+    RETURN d, 0.6 as relevance, ['concept'] as matched_fields
+  }
+  WITH d, MAX(relevance) as max_relevance, COLLECT(DISTINCT matched_fields) as all_matched
+  WITH d, max_relevance, REDUCE(acc = [], fields IN all_matched | acc + fields) as matched_fields
+  // Filter by tags
+  MATCH (d)-[:HAS_TAG]->(t:Tag)
+  WHERE t.name IN $tags
+  RETURN DISTINCT d, max_relevance as relevance, matched_fields
+  ORDER BY relevance DESC, d.updated_at DESC
+`;
+
+/**
+ * Count total search results
+ */
+export const COUNT_SEARCH_RESULTS = `
+  CALL {
+    MATCH (d:Document)
+    WHERE toLower(d.title) CONTAINS toLower($query)
+    RETURN d
+    
+    UNION
+    
+    MATCH (d:Document)
+    WHERE d.summary IS NOT NULL AND toLower(d.summary) CONTAINS toLower($query)
+    RETURN d
+    
+    UNION
+    
+    MATCH (d:Document)-[:USES_CONCEPT]->(c:Concept)
+    WHERE toLower(c.name) CONTAINS toLower($query)
+    RETURN d
+  }
+  RETURN COUNT(DISTINCT d) as total
+`;
+
+/**
+ * Search documents with optional filters
+ */
+export async function searchDocuments(params: SearchParams): Promise<SearchResult> {
+  const { query, versionId, tags, limit, offset } = params;
+  const session = getSession();
+
+  try {
+    // Build query based on filters
+    let searchQuery = SEARCH_DOCUMENTS;
+    const queryParams: Record<string, unknown> = { query };
+
+    if (versionId) {
+      searchQuery = SEARCH_DOCUMENTS_BY_VERSION;
+      queryParams.versionId = versionId;
+    } else if (tags && tags.length > 0) {
+      searchQuery = SEARCH_DOCUMENTS_BY_TAG;
+      queryParams.tags = tags;
+    }
+
+    // Add pagination
+    searchQuery += ` SKIP $offset LIMIT $limit`;
+    queryParams.offset = neo4j.int(offset);
+    queryParams.limit = neo4j.int(limit);
+
+    // Execute search
+    const result = await session.run(searchQuery, queryParams);
+
+    // Map results
+    const results: SearchResultItem[] = result.records.map(record => {
+      const doc = record.get('d').properties;
+      const relevance = record.get('relevance');
+      const matchedFields = record.get('matched_fields');
+      const pageId = record.has('page_id') ? record.get('page_id') : null;
+
+      return {
+        document_id: doc.id,
+        page_id: pageId,
+        title: doc.title,
+        summary: doc.summary || null,
+        relevance_score: typeof relevance === 'number' ? relevance : relevance.toNumber(),
+        matched_fields: matchedFields,
+        type: doc.type,
+      };
+    });
+
+    // Get total count
+    const countResult = await session.run(COUNT_SEARCH_RESULTS, { query });
+    const total = countResult.records[0].get('total').toNumber();
+
+    return { results, total };
+  } finally {
+    await session.close();
+  }
+}
