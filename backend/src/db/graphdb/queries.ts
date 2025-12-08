@@ -421,12 +421,14 @@ export const DELETE_ATTACHMENT = `
 
 /**
  * List Attachments with optional filters
+ * Note: When document_id is provided, only returns attachments linked to that document
  */
 export const LIST_ATTACHMENTS = `
   MATCH (a:Attachment)
+  WHERE ($file_type IS NULL OR a.file_type = $file_type)
   OPTIONAL MATCH (d:Document)-[r:HAS_ATTACHMENT]->(a)
-  WHERE ($document_id IS NULL OR d.id = $document_id)
-    AND ($file_type IS NULL OR a.file_type = $file_type)
+  WITH a, d, r
+  WHERE $document_id IS NULL OR d.id = $document_id
   RETURN a, d.id as document_id, r
   ORDER BY a.created_at DESC
   SKIP $offset
@@ -438,9 +440,10 @@ export const LIST_ATTACHMENTS = `
  */
 export const COUNT_ATTACHMENTS = `
   MATCH (a:Attachment)
+  WHERE ($file_type IS NULL OR a.file_type = $file_type)
   OPTIONAL MATCH (d:Document)-[:HAS_ATTACHMENT]->(a)
-  WHERE ($document_id IS NULL OR d.id = $document_id)
-    AND ($file_type IS NULL OR a.file_type = $file_type)
+  WITH a, d
+  WHERE $document_id IS NULL OR d.id = $document_id
   RETURN count(a) as total
 `;
 

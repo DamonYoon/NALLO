@@ -10,6 +10,7 @@ import {
   attachmentQuerySchema,
   attachmentIdParamSchema,
   uploadAttachmentSchema,
+  linkAttachmentSchema,
   FILE_VALIDATION,
 } from '../schemas/attachment';
 import { AppError, ErrorCode } from '../../utils/errors';
@@ -179,6 +180,71 @@ router.get('/validation-rules', (_req: Request, res: Response) => {
     max_file_size_bytes: FILE_VALIDATION.maxFileSize,
     max_file_size_mb: FILE_VALIDATION.maxFileSizeMB,
   });
+});
+
+/**
+ * POST /api/v1/attachments/:id/link
+ * Link attachment to a document
+ */
+router.post('/:id/link', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = attachmentIdParamSchema.parse(req.params);
+    const { document_id, order, caption } = linkAttachmentSchema.parse(req.body);
+
+    // Check if attachment exists
+    const attachment = await storageService.getAttachment(id);
+    if (!attachment) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Attachment not found: ${id}`, 404);
+    }
+
+    const linked = await storageService.linkToDocument(id, document_id, { order, caption });
+
+    if (!linked) {
+      throw new AppError(ErrorCode.INTERNAL_SERVER_ERROR, 'Failed to link attachment', 500);
+    }
+
+    logger.info('Attachment linked to document', { attachmentId: id, documentId: document_id });
+
+    res
+      .status(200)
+      .json({ message: 'Attachment linked successfully', attachment_id: id, document_id });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * DELETE /api/v1/attachments/:id/link/:documentId
+ * Unlink attachment from a document
+ */
+router.delete('/:id/link/:documentId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = attachmentIdParamSchema.parse(req.params);
+    const documentId = req.params.documentId;
+
+    // Validate document_id format
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(documentId)
+    ) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid document ID format', 400);
+    }
+
+    const unlinked = await storageService.unlinkFromDocument(id, documentId);
+
+    if (!unlinked) {
+      throw new AppError(ErrorCode.NOT_FOUND, 'Link not found', 404);
+    }
+
+    logger.info('Attachment unlinked from document', { attachmentId: id, documentId });
+
+    res.status(200).json({
+      message: 'Attachment unlinked successfully',
+      attachment_id: id,
+      document_id: documentId,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;
