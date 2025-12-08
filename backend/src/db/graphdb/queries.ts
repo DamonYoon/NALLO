@@ -3,13 +3,25 @@
  * This file contains reusable Cypher query templates and functions
  */
 
+import neo4j from 'neo4j-driver';
 import { getGraphDBConnection } from './connection';
-import { DocumentNode, DocumentStatus, DocumentType } from '../../models/graphdb/documentNode';
+import {
+  DocumentNode,
+  DocumentStatus,
+  DocumentType,
+  toDocumentNode,
+} from '../../models/graphdb/documentNode';
 import {
   AttachmentNode,
   AttachmentFileType,
   HasAttachmentRelationship,
 } from '../../models/graphdb/attachmentNode';
+import {
+  ConceptNode,
+  CreateConceptInput,
+  UpdateConceptInput,
+  toConceptNode,
+} from '../../models/graphdb/conceptNode';
 
 // ============================================
 // CYPHER QUERY TEMPLATES
@@ -728,6 +740,308 @@ export async function getDocumentAttachments(
         },
       };
     });
+  } finally {
+    await session.close();
+  }
+}
+
+// ============================================================================
+// Concept Node Operations
+// ============================================================================
+
+/**
+ * Cypher query to update a Concept
+ */
+const UPDATE_CONCEPT = `
+  MATCH (c:Concept {id: $id})
+  SET c += $updates, c.updated_at = datetime()
+  RETURN c
+`;
+
+/**
+ * Cypher query to delete a Concept
+ */
+const DELETE_CONCEPT = `
+  MATCH (c:Concept {id: $id})
+  DETACH DELETE c
+  RETURN count(c) as deleted
+`;
+
+/**
+ * Cypher query to list Concepts with filters
+ */
+const LIST_CONCEPTS = `
+  MATCH (c:Concept)
+  WHERE ($category IS NULL OR c.category = $category)
+    AND ($lang IS NULL OR c.lang = $lang)
+  RETURN c
+  ORDER BY c.term ASC
+  SKIP $offset
+  LIMIT $limit
+`;
+
+/**
+ * Cypher query to count Concepts
+ */
+const COUNT_CONCEPTS = `
+  MATCH (c:Concept)
+  WHERE ($category IS NULL OR c.category = $category)
+    AND ($lang IS NULL OR c.lang = $lang)
+  RETURN count(c) as total
+`;
+
+/**
+ * Cypher query to link Document to Concept
+ */
+const LINK_DOCUMENT_TO_CONCEPT = `
+  MATCH (d:Document {id: $document_id})
+  MATCH (c:Concept {id: $concept_id})
+  MERGE (d)-[r:USES_CONCEPT]->(c)
+  RETURN r
+`;
+
+/**
+ * Cypher query to unlink Document from Concept
+ */
+const UNLINK_DOCUMENT_FROM_CONCEPT = `
+  MATCH (d:Document {id: $document_id})-[r:USES_CONCEPT]->(c:Concept {id: $concept_id})
+  DELETE r
+  RETURN count(r) as deleted
+`;
+
+/**
+ * Create a new Concept node in GraphDB
+ */
+export async function createConceptNode(input: CreateConceptInput): Promise<ConceptNode> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const result = await session.run(CREATE_CONCEPT, {
+      id: input.id,
+      term: input.term,
+      category: input.category || null,
+      lang: input.lang,
+      description: input.description,
+    });
+
+    const record = result.records[0];
+    if (!record) {
+      throw new Error('Failed to create concept node');
+    }
+
+    const node = record.get('c').properties;
+    return toConceptNode({
+      ...node,
+      created_at: node.created_at.toString(),
+      updated_at: node.updated_at.toString(),
+    });
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Get a Concept node by ID
+ */
+export async function getConceptNode(id: string): Promise<ConceptNode | null> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const result = await session.run(GET_CONCEPT_BY_ID, { id });
+
+    if (result.records.length === 0) {
+      return null;
+    }
+
+    const node = result.records[0].get('c').properties;
+    return toConceptNode({
+      ...node,
+      created_at: node.created_at.toString(),
+      updated_at: node.updated_at.toString(),
+    });
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Update an existing Concept node
+ */
+export async function updateConceptNode(
+  id: string,
+  updates: UpdateConceptInput
+): Promise<ConceptNode | null> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    // Filter out undefined values
+    const cleanUpdates: Record<string, unknown> = {};
+    if (updates.term !== undefined) cleanUpdates.term = updates.term;
+    if (updates.category !== undefined) cleanUpdates.category = updates.category;
+    if (updates.description !== undefined) cleanUpdates.description = updates.description;
+
+    const result = await session.run(UPDATE_CONCEPT, {
+      id,
+      updates: cleanUpdates,
+    });
+
+    if (result.records.length === 0) {
+      return null;
+    }
+
+    const node = result.records[0].get('c').properties;
+    return toConceptNode({
+      ...node,
+      created_at: node.created_at.toString(),
+      updated_at: node.updated_at.toString(),
+    });
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Delete a Concept node
+ */
+export async function deleteConceptNode(id: string): Promise<boolean> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const result = await session.run(DELETE_CONCEPT, { id });
+    const deleted = result.records[0]?.get('deleted')?.toNumber?.() ?? 0;
+    return deleted > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Query parameters for listing Concepts
+ */
+export interface ListConceptsQuery {
+  category?: string;
+  lang?: string;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * List Concepts with filters and pagination
+ */
+export async function listConceptNodes(
+  query: ListConceptsQuery
+): Promise<{ items: ConceptNode[]; total: number }> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const params = {
+      category: query.category || null,
+      lang: query.lang || null,
+      limit: neo4j.int(query.limit),
+      offset: neo4j.int(query.offset),
+    };
+
+    // Get items
+    const itemsResult = await session.run(LIST_CONCEPTS, params);
+    const items = itemsResult.records.map(record => {
+      const node = record.get('c').properties;
+      return toConceptNode({
+        ...node,
+        created_at: node.created_at.toString(),
+        updated_at: node.updated_at.toString(),
+      });
+    });
+
+    // Get total count
+    const countResult = await session.run(COUNT_CONCEPTS, {
+      category: query.category || null,
+      lang: query.lang || null,
+    });
+    const total = countResult.records[0]?.get('total')?.toNumber?.() ?? 0;
+
+    return { items, total };
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Get documents using a concept (Impact Analysis)
+ */
+export async function getDocumentsUsingConcept(
+  conceptId: string
+): Promise<{ items: DocumentNode[]; total: number } | null> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    // First check if concept exists
+    const conceptResult = await session.run(GET_CONCEPT_BY_ID, { id: conceptId });
+    if (conceptResult.records.length === 0) {
+      return null;
+    }
+
+    // Get documents using this concept
+    const result = await session.run(GET_DOCUMENTS_USING_CONCEPT, { concept_id: conceptId });
+
+    const items = result.records.map(record => {
+      const node = record.get('d').properties;
+      return toDocumentNode({
+        ...node,
+        created_at: node.created_at.toString(),
+        updated_at: node.updated_at.toString(),
+      });
+    });
+
+    return { items, total: items.length };
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Link a document to a concept
+ */
+export async function linkDocumentToConcept(
+  documentId: string,
+  conceptId: string
+): Promise<boolean> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const result = await session.run(LINK_DOCUMENT_TO_CONCEPT, {
+      document_id: documentId,
+      concept_id: conceptId,
+    });
+    return result.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Unlink a document from a concept
+ */
+export async function unlinkDocumentFromConcept(
+  documentId: string,
+  conceptId: string
+): Promise<boolean> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const result = await session.run(UNLINK_DOCUMENT_FROM_CONCEPT, {
+      document_id: documentId,
+      concept_id: conceptId,
+    });
+    const deleted = result.records[0]?.get('deleted')?.toNumber?.() ?? 0;
+    return deleted > 0;
   } finally {
     await session.close();
   }

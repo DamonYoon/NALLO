@@ -11,6 +11,7 @@ import { initializeStorage, closeStorage } from '@/db/storage/connection';
 import healthRouter from '@/api/routes/health';
 import documentsRouter from '@/api/routes/documents';
 import attachmentsRouter from '@/api/routes/attachments';
+import conceptsRouter from '@/api/routes/concepts';
 
 /**
  * Create and configure Express application
@@ -35,6 +36,7 @@ export function createApp(): Express {
   // API v1 routes
   app.use(`${config.API_V1_PREFIX}/documents`, documentsRouter);
   app.use(`${config.API_V1_PREFIX}/attachments`, attachmentsRouter);
+  app.use(`${config.API_V1_PREFIX}/concepts`, conceptsRouter);
 
   // API root info
   app.get(config.API_V1_PREFIX, (_req, res) => {
@@ -44,6 +46,7 @@ export function createApp(): Express {
       endpoints: {
         documents: `${config.API_V1_PREFIX}/documents`,
         attachments: `${config.API_V1_PREFIX}/attachments`,
+        concepts: `${config.API_V1_PREFIX}/concepts`,
         health: '/health',
       },
     });

@@ -106,3 +106,22 @@ export function isValidStatusTransition(
 
   return validTransitions[currentStatus]?.includes(newStatus) ?? false;
 }
+
+/**
+ * Convert Neo4j record to DocumentNode
+ */
+export function toDocumentNode(record: Record<string, unknown>): DocumentNode {
+  return {
+    id: String(record.id),
+    type: String(record.type) as DocumentType,
+    status: String(record.status) as DocumentStatus,
+    title: String(record.title),
+    lang: String(record.lang),
+    storage_key: String(record.storage_key),
+    summary: record.summary ? String(record.summary) : null,
+    created_at:
+      record.created_at instanceof Date ? record.created_at : new Date(String(record.created_at)),
+    updated_at:
+      record.updated_at instanceof Date ? record.updated_at : new Date(String(record.updated_at)),
+  };
+}
