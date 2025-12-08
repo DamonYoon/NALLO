@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { AttachmentType, ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from '../../models/rdb/attachment';
+import {
+  AttachmentFileType,
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE,
+} from '../../models/graphdb/attachmentNode';
 
 // UUID validation
 const uuidSchema = z.string().uuid('Invalid UUID format');
@@ -14,11 +18,9 @@ export const attachmentResponseSchema = z.object({
   storage_path: z.string(),
   mime_type: z.string(),
   attachment_type: z.enum([
-    AttachmentType.IMAGE,
-    AttachmentType.DOCUMENT,
-    AttachmentType.OAS,
-    AttachmentType.MARKDOWN,
-    AttachmentType.OTHER,
+    AttachmentFileType.IMAGE,
+    AttachmentFileType.DOCUMENT,
+    AttachmentFileType.OTHER,
   ]),
   size_bytes: z.number().int().nonnegative(),
   checksum: z.string().nullable(),
@@ -53,13 +55,7 @@ export type AttachmentListResponse = z.infer<typeof attachmentListResponseSchema
 export const attachmentQuerySchema = z.object({
   document_id: uuidSchema.optional(),
   attachment_type: z
-    .enum([
-      AttachmentType.IMAGE,
-      AttachmentType.DOCUMENT,
-      AttachmentType.OAS,
-      AttachmentType.MARKDOWN,
-      AttachmentType.OTHER,
-    ])
+    .enum([AttachmentFileType.IMAGE, AttachmentFileType.DOCUMENT, AttachmentFileType.OTHER])
     .optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),
@@ -73,6 +69,16 @@ export const attachmentIdParamSchema = z.object({
   id: uuidSchema,
 });
 export type AttachmentIdParam = z.infer<typeof attachmentIdParamSchema>;
+
+/**
+ * Link Attachment to Document Request Schema
+ */
+export const linkAttachmentSchema = z.object({
+  document_id: uuidSchema,
+  order: z.number().int().nonnegative().optional(),
+  caption: z.string().max(500).optional(),
+});
+export type LinkAttachmentRequest = z.infer<typeof linkAttachmentSchema>;
 
 /**
  * File validation constants for client-side validation

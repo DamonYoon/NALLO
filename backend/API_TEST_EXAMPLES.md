@@ -194,7 +194,7 @@ curl -X POST http://localhost:3000/api/v1/attachments \
 
 # 문서에 연결된 파일 업로드
 curl -X POST http://localhost:3000/api/v1/attachments \
-  -F "file=@/path/to/file.pdf" \
+  -F "file=@/path/to/image.png" \
   -F "document_id={document_id}" | jq .
 
 # 마크다운 파일 업로드
@@ -206,10 +206,9 @@ curl -X POST http://localhost:3000/api/v1/attachments \
   -F "file=@/path/to/openapi.yaml" | jq .
 ```
 
-**지원 파일 형식:**
+**지원 파일 형식 (초기 버전):**
 
 - 이미지: `jpeg`, `png`, `gif`, `webp`, `svg`
-- 문서: `pdf`, `txt`
 - 마크다운: `md`
 - OAS/API: `json`, `yaml`
 
@@ -248,7 +247,7 @@ curl "http://localhost:3000/api/v1/attachments?attachment_type=image" | jq .
 curl "http://localhost:3000/api/v1/attachments?document_id={document_id}" | jq .
 ```
 
-**attachment_type 옵션:** `image`, `document`, `oas`, `markdown`, `other`
+**attachment_type 옵션:** `image`, `document`, `other`
 
 ### 5. 첨부파일 삭제 (DELETE)
 

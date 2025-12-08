@@ -1,7 +1,11 @@
 /**
  * Document Service
- * Handles document CRUD operations across GraphDB and PostgreSQL
+ * Handles document CRUD operations with GraphDB (metadata) and MinIO (content)
  * Per Constitution Principle I: Business logic separated from API routes and database access
+ *
+ * 저장 구조:
+ * - GraphDB: 메타데이터 + storage_key
+ * - MinIO: 실제 콘텐츠 파일 (md, yaml, json 등)
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +15,6 @@ import {
   DocumentStatus,
   isValidStatusTransition,
 } from '../models/graphdb/documentNode';
-import { generateStorageKey } from '../models/rdb/documentContent';
 import {
   createDocumentNode,
   getDocumentNode,
@@ -19,12 +22,7 @@ import {
   deleteDocumentNode,
   listDocumentNodes,
 } from '../db/graphdb/queries';
-import {
-  createDocumentContent,
-  getDocumentContent,
-  updateDocumentContent,
-  deleteDocumentContent,
-} from '../db/postgres/queries';
+import { uploadFile, downloadFile, deleteFile, fileExists } from '../db/storage/connection';
 import {
   CreateDocumentRequest,
   UpdateDocumentRequest,
@@ -50,23 +48,43 @@ export interface DocumentResponseDTO {
 }
 
 /**
+ * Generate storage key for document content in MinIO
+ */
+function generateStorageKey(documentId: string, type: DocumentType): string {
+  const extension = type === DocumentType.API ? 'yaml' : 'md';
+  return `documents/${documentId}/content.${extension}`;
+}
+
+/**
+ * Get MIME type for document type
+ */
+function getMimeType(type: DocumentType): string {
+  return type === DocumentType.API ? 'application/yaml' : 'text/markdown';
+}
+
+/**
  * Document Service class
- * Orchestrates operations between GraphDB (metadata) and PostgreSQL (content)
+ * Orchestrates operations between GraphDB (metadata) and MinIO (content)
  */
 export class DocumentService {
   /**
    * Create a new document
    * 1. Create metadata node in GraphDB
-   * 2. Store content in PostgreSQL
+   * 2. Store content in MinIO
    * 3. Return combined document
    */
   async createDocument(input: CreateDocumentRequest): Promise<DocumentResponseDTO> {
     const documentId = uuidv4();
-    const storageKey = generateStorageKey(documentId);
+    const storageKey = generateStorageKey(documentId, input.type as DocumentType);
+    const mimeType = getMimeType(input.type as DocumentType);
 
     logger.info('Creating document', { documentId, title: input.title, type: input.type });
 
     try {
+      // Store content in MinIO first
+      const contentBuffer = Buffer.from(input.content, 'utf-8');
+      await uploadFile(storageKey, contentBuffer, mimeType);
+
       // Create metadata in GraphDB
       const documentNode = await createDocumentNode({
         id: documentId,
@@ -78,17 +96,15 @@ export class DocumentService {
         summary: null,
       });
 
-      // Store content in PostgreSQL
-      await createDocumentContent(documentId, input.content, storageKey);
-
-      logger.info('Document created successfully', { documentId });
+      logger.info('Document created successfully', { documentId, storageKey });
 
       return this.toResponseDTO(documentNode, input.content);
     } catch (error) {
       logger.error('Failed to create document', { documentId, error });
 
-      // Attempt rollback: delete from GraphDB if PostgreSQL failed
+      // Attempt rollback: delete from MinIO and GraphDB
       try {
+        await deleteFile(storageKey);
         await deleteDocumentNode(documentId);
       } catch (rollbackError) {
         logger.error('Rollback failed', { documentId, rollbackError });
@@ -100,7 +116,7 @@ export class DocumentService {
 
   /**
    * Get document by ID
-   * Merges metadata from GraphDB with content from PostgreSQL
+   * Merges metadata from GraphDB with content from MinIO
    */
   async getDocument(id: string): Promise<DocumentResponseDTO | null> {
     logger.debug('Getting document', { id });
@@ -113,21 +129,30 @@ export class DocumentService {
       return null;
     }
 
-    // Get content from PostgreSQL
-    const content = await getDocumentContent(id);
-
-    if (!content) {
-      logger.warn('Document content not found in PostgreSQL (orphaned metadata)', { id });
+    // Get content from MinIO
+    let content = '';
+    try {
+      const exists = await fileExists(documentNode.storage_key);
+      if (exists) {
+        const contentBuffer = await downloadFile(documentNode.storage_key);
+        content = contentBuffer.toString('utf-8');
+      } else {
+        logger.warn('Document content not found in MinIO', {
+          id,
+          storageKey: documentNode.storage_key,
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to get document content from MinIO', { id, error });
       // Return metadata with empty content
-      return this.toResponseDTO(documentNode, '');
     }
 
-    return this.toResponseDTO(documentNode, content.content);
+    return this.toResponseDTO(documentNode, content);
   }
 
   /**
    * Update document
-   * Updates metadata in GraphDB and/or content in PostgreSQL
+   * Updates metadata in GraphDB and/or content in MinIO
    */
   async updateDocument(
     id: string,
@@ -167,22 +192,30 @@ export class DocumentService {
       }
     }
 
-    // Update content in PostgreSQL if content changed
+    // Update content in MinIO if content changed
     if (input.content) {
-      await updateDocumentContent(id, input.content);
+      const mimeType = getMimeType(currentNode.type);
+      const contentBuffer = Buffer.from(input.content, 'utf-8');
+      await uploadFile(currentNode.storage_key, contentBuffer, mimeType);
     }
 
-    // Get final content
-    const content = await getDocumentContent(id);
+    // Get final content from MinIO
+    let content = '';
+    try {
+      const contentBuffer = await downloadFile(updatedNode.storage_key);
+      content = contentBuffer.toString('utf-8');
+    } catch (error) {
+      logger.error('Failed to get updated content', { id, error });
+    }
 
     logger.info('Document updated successfully', { id });
 
-    return this.toResponseDTO(updatedNode, content?.content ?? '');
+    return this.toResponseDTO(updatedNode, content);
   }
 
   /**
    * Delete document
-   * Removes from both GraphDB and PostgreSQL
+   * Removes from both GraphDB and MinIO
    */
   async deleteDocument(id: string): Promise<boolean> {
     logger.info('Deleting document', { id });
@@ -196,8 +229,15 @@ export class DocumentService {
     }
 
     try {
-      // Delete from PostgreSQL first (content)
-      await deleteDocumentContent(id);
+      // Delete from MinIO first (content)
+      try {
+        await deleteFile(documentNode.storage_key);
+      } catch (minioError) {
+        logger.warn('Failed to delete content from MinIO (may not exist)', {
+          id,
+          error: minioError,
+        });
+      }
 
       // Delete from GraphDB (metadata)
       await deleteDocumentNode(id);
@@ -212,6 +252,7 @@ export class DocumentService {
 
   /**
    * List documents with optional filters and pagination
+   * Note: content is not included in list response for performance
    */
   async listDocuments(query: DocumentQuery): Promise<DocumentListResponse> {
     logger.debug('Listing documents', { query });
@@ -224,16 +265,12 @@ export class DocumentService {
       offset: query.offset,
     });
 
-    // Get content for each document
-    const documentsWithContent = await Promise.all(
-      items.map(async node => {
-        const content = await getDocumentContent(node.id);
-        return this.toResponseDTO(node, content?.content ?? '');
-      })
-    );
+    // For list, we don't fetch content from MinIO (performance optimization)
+    // Use empty string for content in list view
+    const documentsWithoutContent = items.map(node => this.toResponseDTO(node, ''));
 
     return {
-      items: documentsWithContent,
+      items: documentsWithoutContent,
       total,
       limit: query.limit,
       offset: query.offset,

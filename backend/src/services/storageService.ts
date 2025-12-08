@@ -1,6 +1,10 @@
 /**
  * Storage Service
- * Handles file upload/download operations with MinIO and PostgreSQL metadata
+ * Handles file upload/download operations with MinIO and GraphDB metadata
+ *
+ * Storage Architecture:
+ * - GraphDB: Attachment metadata + Document-Attachment relationships
+ * - MinIO: Actual file storage
  */
 
 import crypto from 'crypto';
@@ -12,19 +16,20 @@ import {
   fileExists,
 } from '../db/storage/connection';
 import {
-  createAttachment as createAttachmentRecord,
-  getAttachment as getAttachmentRecord,
-  listAttachments as listAttachmentsRecord,
-  deleteAttachment as deleteAttachmentRecord,
-  getAttachmentsByDocumentId,
-  deleteAttachmentsByDocumentId,
-} from '../db/postgres/queries';
+  createAttachmentNode,
+  getAttachmentNode,
+  deleteAttachmentNode,
+  listAttachmentNodes,
+  linkAttachmentToDocument,
+  unlinkAttachmentFromDocument,
+  getDocumentAttachments,
+} from '../db/graphdb/queries';
 import {
-  Attachment,
-  createAttachment,
+  AttachmentNode,
+  AttachmentFileType,
+  createAttachmentNode as createAttachmentModel,
   validateFile,
-  AttachmentType,
-} from '../models/rdb/attachment';
+} from '../models/graphdb/attachmentNode';
 import {
   AttachmentResponse,
   AttachmentListResponse,
@@ -35,7 +40,7 @@ import { logger } from '../utils/logger';
 
 /**
  * Storage Service class
- * Orchestrates file operations between MinIO (files) and PostgreSQL (metadata)
+ * Orchestrates file operations between MinIO (files) and GraphDB (metadata)
  */
 export class StorageService {
   /**
@@ -59,9 +64,8 @@ export class StorageService {
     // Calculate checksum
     const checksum = crypto.createHash('md5').update(file.buffer).digest('hex');
 
-    // Create attachment metadata
-    const attachment = createAttachment({
-      document_id: documentId ?? null,
+    // Create attachment model
+    const attachmentModel = createAttachmentModel({
       filename: file.originalname,
       mime_type: file.mimetype,
       size_bytes: file.size,
@@ -72,34 +76,42 @@ export class StorageService {
       filename: file.originalname,
       size: file.size,
       mimeType: file.mimetype,
-      storagePath: attachment.storage_path,
+      storageKey: attachmentModel.storage_key,
     });
 
     try {
-      // Upload to MinIO
-      await uploadFile(attachment.storage_path, file.buffer, file.mimetype);
+      // Upload to MinIO first
+      await uploadFile(attachmentModel.storage_key, file.buffer, file.mimetype);
 
-      // Save metadata to PostgreSQL
-      await createAttachmentRecord(
-        attachment.id,
-        attachment.document_id,
-        attachment.filename,
-        attachment.storage_path,
-        attachment.mime_type,
-        attachment.attachment_type,
-        attachment.size_bytes,
-        attachment.checksum
-      );
+      // Save metadata to GraphDB
+      const attachment = await createAttachmentNode({
+        id: attachmentModel.id,
+        filename: attachmentModel.filename,
+        storage_key: attachmentModel.storage_key,
+        mime_type: attachmentModel.mime_type,
+        file_type: attachmentModel.file_type,
+        size_bytes: attachmentModel.size_bytes,
+        checksum: attachmentModel.checksum,
+        alt_text: attachmentModel.alt_text,
+      });
 
-      logger.info('File uploaded successfully', { attachmentId: attachment.id });
+      // Link to document if provided
+      if (documentId) {
+        await linkAttachmentToDocument({
+          document_id: documentId,
+          attachment_id: attachment.id,
+        });
+      }
 
-      return this.toResponseDTO(attachment);
+      logger.info('File uploaded successfully', { attachmentId: attachment.id, documentId });
+
+      return this.toResponseDTO(attachment, documentId ?? null);
     } catch (error) {
       logger.error('Failed to upload file', { error });
 
-      // Attempt cleanup: delete from MinIO if PostgreSQL failed
+      // Attempt cleanup: delete from MinIO if GraphDB failed
       try {
-        await deleteFile(attachment.storage_path);
+        await deleteFile(attachmentModel.storage_key);
       } catch (cleanupError) {
         logger.error('Cleanup failed', { cleanupError });
       }
@@ -112,16 +124,16 @@ export class StorageService {
    * Get attachment metadata by ID
    */
   async getAttachment(id: string, includeDownloadUrl = false): Promise<AttachmentResponse | null> {
-    const record = await getAttachmentRecord(id);
+    const result = await getAttachmentNode(id);
 
-    if (!record) {
+    if (!result) {
       return null;
     }
 
-    const response = this.recordToResponseDTO(record);
+    const response = this.toResponseDTO(result.attachment, result.document_id);
 
     if (includeDownloadUrl) {
-      response.download_url = await getPresignedUrl(record.storage_path, 3600);
+      response.download_url = await getPresignedUrl(result.attachment.storage_key, 3600);
     }
 
     return response;
@@ -133,21 +145,24 @@ export class StorageService {
   async downloadFile(
     id: string
   ): Promise<{ buffer: Buffer; attachment: AttachmentResponse } | null> {
-    const record = await getAttachmentRecord(id);
+    const result = await getAttachmentNode(id);
 
-    if (!record) {
+    if (!result) {
       return null;
     }
 
     // Check if file exists in MinIO
-    const exists = await fileExists(record.storage_path);
+    const exists = await fileExists(result.attachment.storage_key);
     if (!exists) {
-      logger.warn('File not found in storage', { id, storagePath: record.storage_path });
+      logger.warn('File not found in storage', {
+        id,
+        storageKey: result.attachment.storage_key,
+      });
       throw new AppError(ErrorCode.NOT_FOUND, 'File not found in storage', 404);
     }
 
-    const buffer = await downloadFile(record.storage_path);
-    const attachment = this.recordToResponseDTO(record);
+    const buffer = await downloadFile(result.attachment.storage_key);
+    const attachment = this.toResponseDTO(result.attachment, result.document_id);
 
     return { buffer, attachment };
   }
@@ -156,20 +171,27 @@ export class StorageService {
    * Delete attachment
    */
   async deleteAttachment(id: string): Promise<boolean> {
-    const record = await getAttachmentRecord(id);
+    const result = await getAttachmentNode(id);
 
-    if (!record) {
+    if (!result) {
       return false;
     }
 
-    logger.info('Deleting attachment', { id, storagePath: record.storage_path });
+    logger.info('Deleting attachment', {
+      id,
+      storageKey: result.attachment.storage_key,
+    });
 
     try {
-      // Delete from MinIO
-      await deleteFile(record.storage_path);
+      // Delete from MinIO first
+      try {
+        await deleteFile(result.attachment.storage_key);
+      } catch (minioError) {
+        logger.warn('Failed to delete file from MinIO (may not exist)', { id, error: minioError });
+      }
 
-      // Delete metadata from PostgreSQL
-      await deleteAttachmentRecord(id);
+      // Delete metadata from GraphDB (also removes relationships)
+      await deleteAttachmentNode(id);
 
       logger.info('Attachment deleted successfully', { id });
       return true;
@@ -183,15 +205,15 @@ export class StorageService {
    * List attachments with optional filters
    */
   async listAttachments(query: AttachmentQuery): Promise<AttachmentListResponse> {
-    const { items, total } = await listAttachmentsRecord({
-      documentId: query.document_id,
-      attachmentType: query.attachment_type,
+    const { items, total } = await listAttachmentNodes({
+      document_id: query.document_id,
+      file_type: query.attachment_type as AttachmentFileType | undefined,
       limit: query.limit,
       offset: query.offset,
     });
 
     return {
-      items: items.map(record => this.recordToResponseDTO(record)),
+      items: items.map(item => this.toResponseDTO(item, item.document_id)),
       total,
       limit: query.limit,
       offset: query.offset,
@@ -202,75 +224,48 @@ export class StorageService {
    * Get attachments for a document
    */
   async getAttachmentsByDocument(documentId: string): Promise<AttachmentResponse[]> {
-    const records = await getAttachmentsByDocumentId(documentId);
-    return records.map(record => this.recordToResponseDTO(record));
+    const attachments = await getDocumentAttachments(documentId);
+    return attachments.map(att => this.toResponseDTO(att, documentId));
   }
 
   /**
-   * Delete all attachments for a document
+   * Link existing attachment to a document
    */
-  async deleteAttachmentsByDocument(documentId: string): Promise<number> {
-    const storagePaths = await deleteAttachmentsByDocumentId(documentId);
-
-    // Delete files from MinIO
-    let deletedCount = 0;
-    for (const storagePath of storagePaths) {
-      try {
-        await deleteFile(storagePath);
-        deletedCount++;
-      } catch (error) {
-        logger.error('Failed to delete file from storage', { storagePath, error });
-      }
-    }
-
-    logger.info('Deleted attachments for document', { documentId, count: deletedCount });
-    return deletedCount;
+  async linkToDocument(
+    attachmentId: string,
+    documentId: string,
+    options?: { order?: number; caption?: string }
+  ): Promise<boolean> {
+    return linkAttachmentToDocument({
+      attachment_id: attachmentId,
+      document_id: documentId,
+      order: options?.order,
+      caption: options?.caption,
+    });
   }
 
   /**
-   * Convert Attachment model to response DTO
+   * Unlink attachment from a document
    */
-  private toResponseDTO(attachment: Attachment): AttachmentResponse {
+  async unlinkFromDocument(attachmentId: string, documentId: string): Promise<boolean> {
+    return unlinkAttachmentFromDocument(documentId, attachmentId);
+  }
+
+  /**
+   * Convert AttachmentNode to response DTO
+   */
+  private toResponseDTO(attachment: AttachmentNode, documentId: string | null): AttachmentResponse {
     return {
       id: attachment.id,
-      document_id: attachment.document_id,
+      document_id: documentId,
       filename: attachment.filename,
-      storage_path: attachment.storage_path,
+      storage_path: attachment.storage_key,
       mime_type: attachment.mime_type,
-      attachment_type: attachment.attachment_type,
+      attachment_type: attachment.file_type,
       size_bytes: attachment.size_bytes,
       checksum: attachment.checksum,
       created_at: attachment.created_at.toISOString(),
       updated_at: attachment.updated_at.toISOString(),
-    };
-  }
-
-  /**
-   * Convert database record to response DTO
-   */
-  private recordToResponseDTO(record: {
-    id: string;
-    document_id: string | null;
-    filename: string;
-    storage_path: string;
-    mime_type: string;
-    attachment_type: string;
-    size_bytes: number;
-    checksum: string | null;
-    created_at: Date;
-    updated_at: Date;
-  }): AttachmentResponse {
-    return {
-      id: record.id,
-      document_id: record.document_id,
-      filename: record.filename,
-      storage_path: record.storage_path,
-      mime_type: record.mime_type,
-      attachment_type: record.attachment_type as AttachmentType,
-      size_bytes: record.size_bytes,
-      checksum: record.checksum,
-      created_at: record.created_at.toISOString(),
-      updated_at: record.updated_at.toISOString(),
     };
   }
 }

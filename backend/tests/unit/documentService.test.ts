@@ -2,12 +2,16 @@
  * Unit Tests for Document Service
  * TDD: These tests are written FIRST before implementation
  * Per Constitution Principle II: Minimum 80% code coverage for business logic
+ *
+ * Storage Architecture:
+ * - GraphDB: document metadata (id, title, status, lang, etc.)
+ * - MinIO: document content (md, yaml files)
  */
 import { DocumentService } from '../../src/services/documentService';
 import { DocumentType, DocumentStatus, DocumentNode } from '../../src/models/graphdb/documentNode';
 import { CreateDocumentRequest, UpdateDocumentRequest } from '../../src/api/schemas/document';
 
-// Mock the database modules
+// Mock the database and storage modules
 jest.mock('../../src/db/graphdb/queries', () => ({
   createDocumentNode: jest.fn(),
   getDocumentNode: jest.fn(),
@@ -16,16 +20,16 @@ jest.mock('../../src/db/graphdb/queries', () => ({
   listDocumentNodes: jest.fn(),
 }));
 
-jest.mock('../../src/db/postgres/queries', () => ({
-  createDocumentContent: jest.fn(),
-  getDocumentContent: jest.fn(),
-  updateDocumentContent: jest.fn(),
-  deleteDocumentContent: jest.fn(),
+jest.mock('../../src/db/storage/connection', () => ({
+  uploadFile: jest.fn(),
+  downloadFile: jest.fn(),
+  deleteFile: jest.fn(),
+  fileExists: jest.fn(),
 }));
 
 // Import mocked modules
 import * as graphdbQueries from '../../src/db/graphdb/queries';
-import * as postgresQueries from '../../src/db/postgres/queries';
+import * as storageConnection from '../../src/db/storage/connection';
 
 // Helper to create mock document node
 function createMockDocumentNode(overrides: Partial<DocumentNode> = {}): DocumentNode {
@@ -35,7 +39,7 @@ function createMockDocumentNode(overrides: Partial<DocumentNode> = {}): Document
     status: DocumentStatus.DRAFT,
     title: 'Test Document',
     lang: 'en',
-    storage_key: 'documents/123e4567-e89b-12d3-a456-426614174000',
+    storage_key: 'documents/123e4567-e89b-12d3-a456-426614174000/content.md',
     summary: null,
     created_at: new Date(),
     updated_at: new Date(),
@@ -45,12 +49,13 @@ function createMockDocumentNode(overrides: Partial<DocumentNode> = {}): Document
 
 describe('DocumentService', () => {
   let documentService: DocumentService;
+  const testContent = '# Test Content\n\nThis is test content.';
 
   beforeEach(() => {
     jest.clearAllMocks();
     documentService = new DocumentService();
 
-    // Setup default mock implementations
+    // Setup default mock implementations for GraphDB
     (graphdbQueries.createDocumentNode as jest.Mock).mockImplementation(params =>
       Promise.resolve(
         createMockDocumentNode({
@@ -77,20 +82,16 @@ describe('DocumentService', () => {
       total: 1,
     });
 
-    (postgresQueries.createDocumentContent as jest.Mock).mockResolvedValue(undefined);
+    // Setup default mock implementations for MinIO storage
+    (storageConnection.uploadFile as jest.Mock).mockResolvedValue('documents/test-id/content.md');
 
-    (postgresQueries.getDocumentContent as jest.Mock).mockResolvedValue({
-      id: 'content-123',
-      document_id: '123e4567-e89b-12d3-a456-426614174000',
-      content: '# Test Content\n\nThis is test content.',
-      storage_key: 'documents/123e4567-e89b-12d3-a456-426614174000',
-      created_at: new Date(),
-      updated_at: new Date(),
-    });
+    (storageConnection.downloadFile as jest.Mock).mockResolvedValue(
+      Buffer.from(testContent, 'utf-8')
+    );
 
-    (postgresQueries.updateDocumentContent as jest.Mock).mockResolvedValue(undefined);
+    (storageConnection.deleteFile as jest.Mock).mockResolvedValue(undefined);
 
-    (postgresQueries.deleteDocumentContent as jest.Mock).mockResolvedValue(undefined);
+    (storageConnection.fileExists as jest.Mock).mockResolvedValue(true);
   });
 
   describe('createDocument', () => {
@@ -130,13 +131,13 @@ describe('DocumentService', () => {
       expect(result.status).toBe(DocumentStatus.DRAFT);
     });
 
-    it('should store content in PostgreSQL', async () => {
+    it('should store content in MinIO', async () => {
       await documentService.createDocument(validCreateRequest);
 
-      expect(postgresQueries.createDocumentContent).toHaveBeenCalledWith(
-        expect.any(String), // documentId
-        validCreateRequest.content,
-        expect.any(String) // storageKey
+      expect(storageConnection.uploadFile).toHaveBeenCalledWith(
+        expect.stringContaining('documents/'), // storageKey
+        expect.any(Buffer), // content buffer
+        expect.any(String) // mime type
       );
     });
 
@@ -151,6 +152,22 @@ describe('DocumentService', () => {
         })
       );
     });
+
+    it('should use correct mime type based on document type', async () => {
+      // API document should use yaml
+      const apiRequest: CreateDocumentRequest = {
+        ...validCreateRequest,
+        type: DocumentType.API,
+      };
+
+      await documentService.createDocument(apiRequest);
+
+      expect(storageConnection.uploadFile).toHaveBeenCalledWith(
+        expect.stringContaining('.yaml'),
+        expect.any(Buffer),
+        'application/yaml'
+      );
+    });
   });
 
   describe('getDocument', () => {
@@ -161,7 +178,7 @@ describe('DocumentService', () => {
 
       expect(result).toBeDefined();
       expect(result?.id).toBe(testDocumentId);
-      expect(result?.content).toBeDefined();
+      expect(result?.content).toBe(testContent);
     });
 
     it('should return null when document not found', async () => {
@@ -172,7 +189,7 @@ describe('DocumentService', () => {
       expect(result).toBeNull();
     });
 
-    it('should merge GraphDB metadata with PostgreSQL content', async () => {
+    it('should merge GraphDB metadata with MinIO content', async () => {
       const result = await documentService.getDocument(testDocumentId);
 
       // Should have metadata from GraphDB
@@ -181,8 +198,17 @@ describe('DocumentService', () => {
       expect(result?.status).toBeDefined();
       expect(result?.lang).toBeDefined();
 
-      // Should have content from PostgreSQL
-      expect(result?.content).toBeDefined();
+      // Should have content from MinIO
+      expect(result?.content).toBe(testContent);
+    });
+
+    it('should return empty content when file not found in MinIO', async () => {
+      (storageConnection.fileExists as jest.Mock).mockResolvedValueOnce(false);
+
+      const result = await documentService.getDocument(testDocumentId);
+
+      expect(result).toBeDefined();
+      expect(result?.content).toBe('');
     });
   });
 
@@ -204,22 +230,19 @@ describe('DocumentService', () => {
       expect(result?.title).toBe(updateRequest.title);
     });
 
-    it('should update document content', async () => {
+    it('should update document content in MinIO', async () => {
       const updateRequest: UpdateDocumentRequest = {
         content: '# Updated Content\n\nThis is new content.',
       };
 
-      (postgresQueries.getDocumentContent as jest.Mock).mockResolvedValueOnce({
-        id: 'content-123',
-        document_id: testDocumentId,
-        content: updateRequest.content,
-        storage_key: `documents/${testDocumentId}`,
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
+      // Mock download to return updated content
+      (storageConnection.downloadFile as jest.Mock).mockResolvedValueOnce(
+        Buffer.from(updateRequest.content!, 'utf-8')
+      );
 
       const result = await documentService.updateDocument(testDocumentId, updateRequest);
 
+      expect(storageConnection.uploadFile).toHaveBeenCalled();
       expect(result).toBeDefined();
       expect(result?.content).toBe(updateRequest.content);
     });
@@ -281,7 +304,7 @@ describe('DocumentService', () => {
   });
 
   describe('listDocuments', () => {
-    it('should return paginated list of documents', async () => {
+    it('should return paginated list of documents without content', async () => {
       const result = await documentService.listDocuments({
         limit: 10,
         offset: 0,
@@ -292,6 +315,8 @@ describe('DocumentService', () => {
       expect(result.total).toBeDefined();
       expect(result.limit).toBe(10);
       expect(result.offset).toBe(0);
+      // List should not fetch content from MinIO for performance
+      expect(result.items[0].content).toBe('');
     });
 
     it('should filter by status', async () => {
@@ -354,12 +379,12 @@ describe('DocumentService', () => {
   describe('deleteDocument', () => {
     const testDocumentId = '123e4567-e89b-12d3-a456-426614174000';
 
-    it('should delete document from both databases', async () => {
+    it('should delete document from both GraphDB and MinIO', async () => {
       const result = await documentService.deleteDocument(testDocumentId);
 
       expect(result).toBe(true);
       expect(graphdbQueries.deleteDocumentNode).toHaveBeenCalledWith(testDocumentId);
-      expect(postgresQueries.deleteDocumentContent).toHaveBeenCalledWith(testDocumentId);
+      expect(storageConnection.deleteFile).toHaveBeenCalled();
     });
 
     it('should return false when document not found', async () => {
@@ -370,14 +395,14 @@ describe('DocumentService', () => {
       expect(result).toBe(false);
     });
 
-    it('should throw on partial failure', async () => {
-      (postgresQueries.deleteDocumentContent as jest.Mock).mockRejectedValueOnce(
-        new Error('PostgreSQL error')
-      );
+    it('should continue deletion even if MinIO delete fails', async () => {
+      (storageConnection.deleteFile as jest.Mock).mockRejectedValueOnce(new Error('MinIO error'));
 
-      await expect(documentService.deleteDocument(testDocumentId)).rejects.toThrow(
-        'PostgreSQL error'
-      );
+      const result = await documentService.deleteDocument(testDocumentId);
+
+      // Should still return true as GraphDB deletion succeeded
+      expect(result).toBe(true);
+      expect(graphdbQueries.deleteDocumentNode).toHaveBeenCalledWith(testDocumentId);
     });
   });
 });

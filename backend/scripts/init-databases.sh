@@ -51,21 +51,11 @@ echo -e "${GREEN}✅ PostgreSQL is ready${NC}"
 docker exec nallo-postgres psql -U "${POSTGRES_USER}" -d postgres -c "CREATE DATABASE ${POSTGRES_DB};" 2>/dev/null || echo "Database '${POSTGRES_DB}' already exists"
 
 # Create tables
+# Note: Document content is stored in MinIO
+# Note: Document/Attachment metadata is stored in GraphDB
+# PostgreSQL only stores: users (authentication)
 docker exec -i nallo-postgres psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" <<EOF
--- Create documents table
-CREATE TABLE IF NOT EXISTS documents (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    document_id UUID UNIQUE NOT NULL,
-    content TEXT NOT NULL,
-    storage_key VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_documents_document_id ON documents(document_id);
-CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
-
--- Create users table
+-- Create users table (for authentication)
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -78,23 +68,9 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 
--- Create attachments table
-CREATE TABLE IF NOT EXISTS attachments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    document_id UUID REFERENCES documents(document_id) ON DELETE SET NULL,
-    filename VARCHAR(255) NOT NULL,
-    storage_path VARCHAR(500) NOT NULL,
-    mime_type VARCHAR(100) NOT NULL,
-    attachment_type VARCHAR(50) NOT NULL,
-    size_bytes INTEGER NOT NULL,
-    checksum VARCHAR(64),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_attachments_document_id ON attachments(document_id);
-CREATE INDEX IF NOT EXISTS idx_attachments_type ON attachments(attachment_type);
-CREATE INDEX IF NOT EXISTS idx_attachments_created_at ON attachments(created_at);
+-- Drop legacy tables (data moved to GraphDB/MinIO)
+DROP TABLE IF EXISTS documents CASCADE;
+DROP TABLE IF EXISTS attachments CASCADE;
 EOF
 
 echo -e "${GREEN}✅ PostgreSQL schema initialized${NC}"
@@ -113,7 +89,16 @@ echo -e "${GREEN}✅ Neo4j is ready${NC}"
 # Create indexes
 docker exec nallo-neo4j cypher-shell -u "${NEO4J_USER}" -p "${NEO4J_PASSWORD}" <<EOF
 // Create indexes for better query performance
+// Document indexes
 CREATE INDEX document_id_index IF NOT EXISTS FOR (d:Document) ON (d.id);
+CREATE INDEX document_status_index IF NOT EXISTS FOR (d:Document) ON (d.status);
+CREATE INDEX document_type_index IF NOT EXISTS FOR (d:Document) ON (d.type);
+
+// Attachment indexes
+CREATE INDEX attachment_id_index IF NOT EXISTS FOR (a:Attachment) ON (a.id);
+CREATE INDEX attachment_file_type_index IF NOT EXISTS FOR (a:Attachment) ON (a.file_type);
+
+// Other node indexes
 CREATE INDEX concept_id_index IF NOT EXISTS FOR (c:Concept) ON (c.id);
 CREATE INDEX version_id_index IF NOT EXISTS FOR (v:Version) ON (v.id);
 CREATE INDEX page_id_index IF NOT EXISTS FOR (p:Page) ON (p.id);
@@ -142,3 +127,8 @@ else
 fi
 
 echo -e "${GREEN}🎉 Database initialization complete!${NC}"
+echo ""
+echo "Storage Architecture:"
+echo "  - GraphDB (Neo4j): Document & Attachment metadata, relationships"
+echo "  - MinIO: Document content files, Attachment files"
+echo "  - PostgreSQL: User authentication only"

@@ -1,120 +1,70 @@
 /**
  * PostgreSQL query utilities
- * This file contains reusable SQL query templates
+ * This file contains reusable SQL query templates for users
+ *
+ * Note: Document content is stored in MinIO (object storage)
+ * Note: Attachment metadata is stored in GraphDB
+ * GraphDB handles document metadata (id, title, status, etc.) and attachments
+ * PostgreSQL handles user authentication only
  */
 
 import { dataSource } from './connection';
 
+// ============================================
+// USER QUERIES (Future: Authentication)
+// ============================================
+
 /**
- * Create document content
+ * Create user
  */
-export async function createDocumentContent(
-  documentId: string,
-  content: string,
-  storageKey: string
-): Promise<void> {
+export async function createUser(
+  email: string,
+  passwordHash: string,
+  role: string = 'end_user'
+): Promise<{ id: string; email: string; role: string }> {
   const query = `
-    INSERT INTO documents (document_id, content, storage_key)
+    INSERT INTO users (email, password_hash, role)
     VALUES ($1, $2, $3)
+    RETURNING id, email, role
   `;
-  await dataSource.query(query, [documentId, content, storageKey]);
+  const result = await dataSource.query(query, [email, passwordHash, role]);
+  return result[0];
 }
 
 /**
- * Get document content by document_id
+ * Get user by email
  */
-export async function getDocumentContent(documentId: string): Promise<{
+export async function getUserByEmail(email: string): Promise<{
   id: string;
-  document_id: string;
-  content: string;
-  storage_key: string;
+  email: string;
+  password_hash: string;
+  role: string;
   created_at: Date;
   updated_at: Date;
 } | null> {
   const query = `
-    SELECT id, document_id, content, storage_key, created_at, updated_at
-    FROM documents
-    WHERE document_id = $1
+    SELECT id, email, password_hash, role, created_at, updated_at
+    FROM users
+    WHERE email = $1
     LIMIT 1
   `;
-  const result = await dataSource.query(query, [documentId]);
+  const result = await dataSource.query(query, [email]);
   return result[0] || null;
 }
 
 /**
- * Update document content
+ * Get user by ID
  */
-export async function updateDocumentContent(documentId: string, content: string): Promise<void> {
-  const query = `
-    UPDATE documents
-    SET content = $1, updated_at = NOW()
-    WHERE document_id = $2
-  `;
-  await dataSource.query(query, [content, documentId]);
-}
-
-/**
- * Delete document content
- */
-export async function deleteDocumentContent(documentId: string): Promise<void> {
-  const query = `
-    DELETE FROM documents
-    WHERE document_id = $1
-  `;
-  await dataSource.query(query, [documentId]);
-}
-
-// ============================================
-// ATTACHMENT QUERIES
-// ============================================
-
-/**
- * Create attachment record
- */
-export async function createAttachment(
-  id: string,
-  documentId: string | null,
-  filename: string,
-  storagePath: string,
-  mimeType: string,
-  attachmentType: string,
-  sizeBytes: number,
-  checksum: string | null
-): Promise<void> {
-  const query = `
-    INSERT INTO attachments (id, document_id, filename, storage_path, mime_type, attachment_type, size_bytes, checksum)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-  `;
-  await dataSource.query(query, [
-    id,
-    documentId,
-    filename,
-    storagePath,
-    mimeType,
-    attachmentType,
-    sizeBytes,
-    checksum,
-  ]);
-}
-
-/**
- * Get attachment by ID
- */
-export async function getAttachment(id: string): Promise<{
+export async function getUserById(id: string): Promise<{
   id: string;
-  document_id: string | null;
-  filename: string;
-  storage_path: string;
-  mime_type: string;
-  attachment_type: string;
-  size_bytes: number;
-  checksum: string | null;
+  email: string;
+  role: string;
   created_at: Date;
   updated_at: Date;
 } | null> {
   const query = `
-    SELECT id, document_id, filename, storage_path, mime_type, attachment_type, size_bytes, checksum, created_at, updated_at
-    FROM attachments
+    SELECT id, email, role, created_at, updated_at
+    FROM users
     WHERE id = $1
     LIMIT 1
   `;
@@ -123,110 +73,28 @@ export async function getAttachment(id: string): Promise<{
 }
 
 /**
- * Get attachments by document ID
+ * Update user role
  */
-export async function getAttachmentsByDocumentId(documentId: string): Promise<
-  Array<{
-    id: string;
-    document_id: string | null;
-    filename: string;
-    storage_path: string;
-    mime_type: string;
-    attachment_type: string;
-    size_bytes: number;
-    checksum: string | null;
-    created_at: Date;
-    updated_at: Date;
-  }>
-> {
+export async function updateUserRole(id: string, role: string): Promise<boolean> {
   const query = `
-    SELECT id, document_id, filename, storage_path, mime_type, attachment_type, size_bytes, checksum, created_at, updated_at
-    FROM attachments
-    WHERE document_id = $1
-    ORDER BY created_at DESC
+    UPDATE users
+    SET role = $1, updated_at = NOW()
+    WHERE id = $2
+    RETURNING id
   `;
-  return dataSource.query(query, [documentId]);
+  const result = await dataSource.query(query, [role, id]);
+  return result.length > 0;
 }
 
 /**
- * List attachments with optional filters
+ * Delete user
  */
-export async function listAttachments(params: {
-  documentId?: string | null;
-  attachmentType?: string | null;
-  limit: number;
-  offset: number;
-}): Promise<{
-  items: Array<{
-    id: string;
-    document_id: string | null;
-    filename: string;
-    storage_path: string;
-    mime_type: string;
-    attachment_type: string;
-    size_bytes: number;
-    checksum: string | null;
-    created_at: Date;
-    updated_at: Date;
-  }>;
-  total: number;
-}> {
-  const conditions: string[] = [];
-  const values: (string | number)[] = [];
-  let paramIndex = 1;
-
-  if (params.documentId) {
-    conditions.push(`document_id = $${paramIndex++}`);
-    values.push(params.documentId);
-  }
-
-  if (params.attachmentType) {
-    conditions.push(`attachment_type = $${paramIndex++}`);
-    values.push(params.attachmentType);
-  }
-
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-
-  const countQuery = `SELECT COUNT(*) as total FROM attachments ${whereClause}`;
-  const countResult = await dataSource.query(countQuery, values);
-  const total = parseInt(countResult[0]?.total || '0', 10);
-
-  const listQuery = `
-    SELECT id, document_id, filename, storage_path, mime_type, attachment_type, size_bytes, checksum, created_at, updated_at
-    FROM attachments
-    ${whereClause}
-    ORDER BY created_at DESC
-    LIMIT $${paramIndex++}
-    OFFSET $${paramIndex}
-  `;
-
-  const items = await dataSource.query(listQuery, [...values, params.limit, params.offset]);
-
-  return { items, total };
-}
-
-/**
- * Delete attachment
- */
-export async function deleteAttachment(id: string): Promise<boolean> {
+export async function deleteUser(id: string): Promise<boolean> {
   const query = `
-    DELETE FROM attachments
+    DELETE FROM users
     WHERE id = $1
     RETURNING id
   `;
   const result = await dataSource.query(query, [id]);
   return result.length > 0;
-}
-
-/**
- * Delete attachments by document ID
- */
-export async function deleteAttachmentsByDocumentId(documentId: string): Promise<string[]> {
-  const query = `
-    DELETE FROM attachments
-    WHERE document_id = $1
-    RETURNING storage_path
-  `;
-  const result = await dataSource.query(query, [documentId]);
-  return result.map((row: { storage_path: string }) => row.storage_path);
 }

@@ -5,6 +5,11 @@
 
 import { getGraphDBConnection } from './connection';
 import { DocumentNode, DocumentStatus, DocumentType } from '../../models/graphdb/documentNode';
+import {
+  AttachmentNode,
+  AttachmentFileType,
+  HasAttachmentRelationship,
+} from '../../models/graphdb/attachmentNode';
 
 // ============================================
 // CYPHER QUERY TEMPLATES
@@ -372,3 +377,355 @@ export const GET_NAVIGATION_TREE = `
   RETURN p, parent
   ORDER BY p.order, p.created_at DESC
 `;
+
+// ============================================
+// ATTACHMENT CYPHER QUERY TEMPLATES
+// ============================================
+
+/**
+ * Create an Attachment node
+ */
+export const CREATE_ATTACHMENT = `
+  CREATE (a:Attachment {
+    id: $id,
+    filename: $filename,
+    storage_key: $storage_key,
+    mime_type: $mime_type,
+    file_type: $file_type,
+    size_bytes: $size_bytes,
+    checksum: $checksum,
+    alt_text: $alt_text,
+    created_at: datetime(),
+    updated_at: datetime()
+  })
+  RETURN a
+`;
+
+/**
+ * Get Attachment by ID
+ */
+export const GET_ATTACHMENT_BY_ID = `
+  MATCH (a:Attachment {id: $id})
+  OPTIONAL MATCH (d:Document)-[r:HAS_ATTACHMENT]->(a)
+  RETURN a, d.id as document_id, r
+`;
+
+/**
+ * Delete Attachment node
+ */
+export const DELETE_ATTACHMENT = `
+  MATCH (a:Attachment {id: $id})
+  DETACH DELETE a
+  RETURN count(a) as deleted
+`;
+
+/**
+ * List Attachments with optional filters
+ */
+export const LIST_ATTACHMENTS = `
+  MATCH (a:Attachment)
+  OPTIONAL MATCH (d:Document)-[r:HAS_ATTACHMENT]->(a)
+  WHERE ($document_id IS NULL OR d.id = $document_id)
+    AND ($file_type IS NULL OR a.file_type = $file_type)
+  RETURN a, d.id as document_id, r
+  ORDER BY a.created_at DESC
+  SKIP $offset
+  LIMIT $limit
+`;
+
+/**
+ * Count Attachments with optional filters
+ */
+export const COUNT_ATTACHMENTS = `
+  MATCH (a:Attachment)
+  OPTIONAL MATCH (d:Document)-[:HAS_ATTACHMENT]->(a)
+  WHERE ($document_id IS NULL OR d.id = $document_id)
+    AND ($file_type IS NULL OR a.file_type = $file_type)
+  RETURN count(a) as total
+`;
+
+/**
+ * Create HAS_ATTACHMENT relationship
+ */
+export const CREATE_HAS_ATTACHMENT = `
+  MATCH (d:Document {id: $document_id}), (a:Attachment {id: $attachment_id})
+  CREATE (d)-[r:HAS_ATTACHMENT {order: $order, caption: $caption}]->(a)
+  RETURN d, a, r
+`;
+
+/**
+ * Get Attachments for a Document
+ */
+export const GET_DOCUMENT_ATTACHMENTS = `
+  MATCH (d:Document {id: $document_id})-[r:HAS_ATTACHMENT]->(a:Attachment)
+  RETURN a, r
+  ORDER BY r.order ASC, a.created_at DESC
+`;
+
+/**
+ * Remove HAS_ATTACHMENT relationship
+ */
+export const REMOVE_HAS_ATTACHMENT = `
+  MATCH (d:Document {id: $document_id})-[r:HAS_ATTACHMENT]->(a:Attachment {id: $attachment_id})
+  DELETE r
+  RETURN count(r) as deleted
+`;
+
+// ============================================
+// ATTACHMENT QUERY FUNCTIONS
+// ============================================
+
+/**
+ * Create an attachment node in GraphDB
+ */
+export async function createAttachmentNode(params: {
+  id: string;
+  filename: string;
+  storage_key: string;
+  mime_type: string;
+  file_type: AttachmentFileType;
+  size_bytes: number;
+  checksum: string | null;
+  alt_text: string | null;
+}): Promise<AttachmentNode> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const result = await session.run(CREATE_ATTACHMENT, params);
+    const record = result.records[0];
+    const node = record.get('a').properties;
+
+    return {
+      id: String(node.id),
+      filename: String(node.filename),
+      storage_key: String(node.storage_key),
+      mime_type: String(node.mime_type),
+      file_type: String(node.file_type) as AttachmentFileType,
+      size_bytes:
+        typeof node.size_bytes?.toNumber === 'function'
+          ? node.size_bytes.toNumber()
+          : Number(node.size_bytes),
+      checksum: node.checksum ? String(node.checksum) : null,
+      alt_text: node.alt_text ? String(node.alt_text) : null,
+      created_at: new Date(String(node.created_at)),
+      updated_at: new Date(String(node.updated_at)),
+    };
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Get an attachment node by ID from GraphDB
+ */
+export async function getAttachmentNode(
+  id: string
+): Promise<{ attachment: AttachmentNode; document_id: string | null } | null> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const result = await session.run(GET_ATTACHMENT_BY_ID, { id });
+
+    if (result.records.length === 0) {
+      return null;
+    }
+
+    const record = result.records[0];
+    const node = record.get('a').properties;
+    const documentId = record.get('document_id');
+
+    return {
+      attachment: {
+        id: String(node.id),
+        filename: String(node.filename),
+        storage_key: String(node.storage_key),
+        mime_type: String(node.mime_type),
+        file_type: String(node.file_type) as AttachmentFileType,
+        size_bytes:
+          typeof node.size_bytes?.toNumber === 'function'
+            ? node.size_bytes.toNumber()
+            : Number(node.size_bytes),
+        checksum: node.checksum ? String(node.checksum) : null,
+        alt_text: node.alt_text ? String(node.alt_text) : null,
+        created_at: new Date(String(node.created_at)),
+        updated_at: new Date(String(node.updated_at)),
+      },
+      document_id: documentId ? String(documentId) : null,
+    };
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Delete an attachment node from GraphDB
+ */
+export async function deleteAttachmentNode(id: string): Promise<boolean> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const result = await session.run(DELETE_ATTACHMENT, { id });
+    const deletedValue = result.records[0]?.get('deleted');
+    const deleted =
+      typeof deletedValue?.toNumber === 'function'
+        ? deletedValue.toNumber()
+        : Number(deletedValue ?? 0);
+    return deleted > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * List attachment nodes with optional filters
+ */
+export async function listAttachmentNodes(params: {
+  document_id?: string | null;
+  file_type?: AttachmentFileType | null;
+  limit: number;
+  offset: number;
+}): Promise<{ items: Array<AttachmentNode & { document_id: string | null }>; total: number }> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const neo4j = await import('neo4j-driver');
+    const listResult = await session.run(LIST_ATTACHMENTS, {
+      document_id: params.document_id ?? null,
+      file_type: params.file_type ?? null,
+      limit: neo4j.int(params.limit),
+      offset: neo4j.int(params.offset),
+    });
+
+    const countResult = await session.run(COUNT_ATTACHMENTS, {
+      document_id: params.document_id ?? null,
+      file_type: params.file_type ?? null,
+    });
+
+    const items = listResult.records.map(record => {
+      const node = record.get('a').properties;
+      const documentId = record.get('document_id');
+
+      return {
+        id: String(node.id),
+        filename: String(node.filename),
+        storage_key: String(node.storage_key),
+        mime_type: String(node.mime_type),
+        file_type: String(node.file_type) as AttachmentFileType,
+        size_bytes:
+          typeof node.size_bytes?.toNumber === 'function'
+            ? node.size_bytes.toNumber()
+            : Number(node.size_bytes),
+        checksum: node.checksum ? String(node.checksum) : null,
+        alt_text: node.alt_text ? String(node.alt_text) : null,
+        created_at: new Date(String(node.created_at)),
+        updated_at: new Date(String(node.updated_at)),
+        document_id: documentId ? String(documentId) : null,
+      };
+    });
+
+    const totalValue = countResult.records[0]?.get('total');
+    const total =
+      typeof totalValue?.toNumber === 'function' ? totalValue.toNumber() : Number(totalValue ?? 0);
+
+    return { items, total };
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Link attachment to document
+ */
+export async function linkAttachmentToDocument(params: {
+  document_id: string;
+  attachment_id: string;
+  order?: number;
+  caption?: string;
+}): Promise<boolean> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const result = await session.run(CREATE_HAS_ATTACHMENT, {
+      document_id: params.document_id,
+      attachment_id: params.attachment_id,
+      order: params.order ?? 0,
+      caption: params.caption ?? null,
+    });
+    return result.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Unlink attachment from document
+ */
+export async function unlinkAttachmentFromDocument(
+  documentId: string,
+  attachmentId: string
+): Promise<boolean> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const result = await session.run(REMOVE_HAS_ATTACHMENT, {
+      document_id: documentId,
+      attachment_id: attachmentId,
+    });
+    const deletedValue = result.records[0]?.get('deleted');
+    const deleted =
+      typeof deletedValue?.toNumber === 'function'
+        ? deletedValue.toNumber()
+        : Number(deletedValue ?? 0);
+    return deleted > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Get all attachments for a document
+ */
+export async function getDocumentAttachments(
+  documentId: string
+): Promise<Array<AttachmentNode & { relationship: HasAttachmentRelationship }>> {
+  const driver = getGraphDBConnection();
+  const session = driver.session();
+
+  try {
+    const result = await session.run(GET_DOCUMENT_ATTACHMENTS, { document_id: documentId });
+
+    return result.records.map(record => {
+      const node = record.get('a').properties;
+      const rel = record.get('r').properties;
+
+      return {
+        id: String(node.id),
+        filename: String(node.filename),
+        storage_key: String(node.storage_key),
+        mime_type: String(node.mime_type),
+        file_type: String(node.file_type) as AttachmentFileType,
+        size_bytes:
+          typeof node.size_bytes?.toNumber === 'function'
+            ? node.size_bytes.toNumber()
+            : Number(node.size_bytes),
+        checksum: node.checksum ? String(node.checksum) : null,
+        alt_text: node.alt_text ? String(node.alt_text) : null,
+        created_at: new Date(String(node.created_at)),
+        updated_at: new Date(String(node.updated_at)),
+        relationship: {
+          order:
+            typeof rel.order?.toNumber === 'function' ? rel.order.toNumber() : Number(rel.order),
+          caption: rel.caption ? String(rel.caption) : undefined,
+        },
+      };
+    });
+  } finally {
+    await session.close();
+  }
+}
