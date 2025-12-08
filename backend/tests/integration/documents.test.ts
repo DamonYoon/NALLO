@@ -8,6 +8,7 @@
 import { DocumentService } from '../../src/services/documentService';
 import { initializeGraphDB, closeGraphDB } from '../../src/db/graphdb/connection';
 import { initializePostgres, closePostgres } from '../../src/db/postgres/connection';
+import { initializeStorage, closeStorage } from '../../src/db/storage/connection';
 import { DocumentType, DocumentStatus } from '../../src/models/graphdb/documentNode';
 
 describe('Document Integration Tests', () => {
@@ -17,11 +18,13 @@ describe('Document Integration Tests', () => {
     // Initialize database connections for integration tests
     await initializeGraphDB();
     await initializePostgres();
+    await initializeStorage();
     documentService = new DocumentService();
   });
 
   afterAll(async () => {
     // Clean up connections
+    await closeStorage();
     await closeGraphDB();
     await closePostgres();
   });
@@ -33,8 +36,9 @@ describe('Document Integration Tests', () => {
 
   describe('Document Creation Workflow', () => {
     it('should create document in both GraphDB and PostgreSQL', async () => {
+      const uniqueTitle = `Integration Test Document ${Date.now()}`;
       const createRequest = {
-        title: 'Integration Test Document',
+        title: uniqueTitle,
         type: DocumentType.GENERAL,
         content: '# Integration Test\n\nThis document tests database integration.',
         lang: 'en',
@@ -48,7 +52,7 @@ describe('Document Integration Tests', () => {
       // Verify document can be retrieved (both databases working)
       const retrieved = await documentService.getDocument(result.id);
       expect(retrieved).toBeDefined();
-      expect(retrieved?.title).toBe(createRequest.title);
+      expect(retrieved?.title).toBe(uniqueTitle);
       expect(retrieved?.content).toBe(createRequest.content);
     });
 
@@ -122,8 +126,9 @@ describe('Document Integration Tests', () => {
 
   describe('Document Retrieval Workflow', () => {
     it('should merge GraphDB metadata with PostgreSQL content', async () => {
+      const uniqueTitle = `Merge Test Document ${Date.now()}`;
       const createRequest = {
-        title: 'Merge Test Document',
+        title: uniqueTitle,
         type: DocumentType.API,
         content: '# API Content\n\nThis tests metadata and content merge.',
         lang: 'en',
@@ -136,7 +141,7 @@ describe('Document Integration Tests', () => {
 
       // Metadata from GraphDB
       expect(retrieved?.id).toBe(created.id);
-      expect(retrieved?.title).toBe(createRequest.title);
+      expect(retrieved?.title).toBe(uniqueTitle);
       expect(retrieved?.type).toBe(createRequest.type);
       expect(retrieved?.status).toBe(DocumentStatus.DRAFT);
       expect(retrieved?.lang).toBe(createRequest.lang);

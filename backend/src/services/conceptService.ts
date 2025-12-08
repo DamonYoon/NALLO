@@ -13,7 +13,19 @@ import {
   deleteConceptNode,
   listConceptNodes,
   getDocumentsUsingConcept,
+  linkConceptSubtypeOf,
+  unlinkConceptSubtypeOf,
+  getConceptSupertypes,
+  getConceptSubtypes,
+  linkConceptPartOf,
+  unlinkConceptPartOf,
+  getConceptWholeOf,
+  getConceptParts,
+  linkConceptSynonymOf,
+  unlinkConceptSynonymOf,
+  getConceptSynonyms,
 } from '../db/graphdb/queries';
+import { AppError, ErrorCode } from '../utils/errors';
 import {
   CreateConceptRequest,
   UpdateConceptRequest,
@@ -209,6 +221,226 @@ export class ConceptService {
       created_at: node.created_at.toISOString(),
       updated_at: node.updated_at.toISOString(),
     };
+  }
+
+  // ============================================================================
+  // CONCEPT RELATIONSHIP METHODS
+  // ============================================================================
+
+  /**
+   * Link concept as subtype of another concept
+   * @param childId - The subtype concept ID
+   * @param parentId - The supertype concept ID
+   */
+  async linkSubtypeOf(childId: string, parentId: string): Promise<void> {
+    logger.info('Linking concept as subtype', { childId, parentId });
+
+    // Verify both concepts exist
+    const child = await getConceptNode(childId);
+    if (!child) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Concept with id '${childId}' not found`);
+    }
+
+    const parent = await getConceptNode(parentId);
+    if (!parent) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Concept with id '${parentId}' not found`);
+    }
+
+    // Prevent self-referencing
+    if (childId === parentId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Cannot link concept to itself');
+    }
+
+    await linkConceptSubtypeOf(childId, parentId);
+    logger.info('Concept linked as subtype', { childId, parentId });
+  }
+
+  /**
+   * Unlink concept subtype relationship
+   */
+  async unlinkSubtypeOf(childId: string, parentId: string): Promise<void> {
+    logger.info('Unlinking concept subtype', { childId, parentId });
+
+    const unlinked = await unlinkConceptSubtypeOf(childId, parentId);
+    if (!unlinked) {
+      throw new AppError(
+        ErrorCode.NOT_FOUND,
+        `Subtype relationship from '${childId}' to '${parentId}' not found`
+      );
+    }
+
+    logger.info('Concept subtype unlinked', { childId, parentId });
+  }
+
+  /**
+   * Get supertypes (parent concepts in SUBTYPE_OF hierarchy)
+   */
+  async getSupertypes(conceptId: string): Promise<ConceptResponseDTO[]> {
+    logger.debug('Getting supertypes', { conceptId });
+
+    const concept = await getConceptNode(conceptId);
+    if (!concept) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Concept with id '${conceptId}' not found`);
+    }
+
+    const supertypes = await getConceptSupertypes(conceptId);
+    return supertypes.map(node => this.toResponseDTO(node));
+  }
+
+  /**
+   * Get subtypes (child concepts in SUBTYPE_OF hierarchy)
+   */
+  async getSubtypes(conceptId: string): Promise<ConceptResponseDTO[]> {
+    logger.debug('Getting subtypes', { conceptId });
+
+    const concept = await getConceptNode(conceptId);
+    if (!concept) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Concept with id '${conceptId}' not found`);
+    }
+
+    const subtypes = await getConceptSubtypes(conceptId);
+    return subtypes.map(node => this.toResponseDTO(node));
+  }
+
+  /**
+   * Link concept as part of another concept
+   * @param partId - The part concept ID
+   * @param wholeId - The whole concept ID
+   */
+  async linkPartOf(partId: string, wholeId: string): Promise<void> {
+    logger.info('Linking concept as part', { partId, wholeId });
+
+    // Verify both concepts exist
+    const part = await getConceptNode(partId);
+    if (!part) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Concept with id '${partId}' not found`);
+    }
+
+    const whole = await getConceptNode(wholeId);
+    if (!whole) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Concept with id '${wholeId}' not found`);
+    }
+
+    // Prevent self-referencing
+    if (partId === wholeId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Cannot link concept to itself');
+    }
+
+    await linkConceptPartOf(partId, wholeId);
+    logger.info('Concept linked as part', { partId, wholeId });
+  }
+
+  /**
+   * Unlink concept part-of relationship
+   */
+  async unlinkPartOf(partId: string, wholeId: string): Promise<void> {
+    logger.info('Unlinking concept part-of', { partId, wholeId });
+
+    const unlinked = await unlinkConceptPartOf(partId, wholeId);
+    if (!unlinked) {
+      throw new AppError(
+        ErrorCode.NOT_FOUND,
+        `Part-of relationship from '${partId}' to '${wholeId}' not found`
+      );
+    }
+
+    logger.info('Concept part-of unlinked', { partId, wholeId });
+  }
+
+  /**
+   * Get what this concept is part of (whole concepts)
+   */
+  async getWholeOf(conceptId: string): Promise<ConceptResponseDTO[]> {
+    logger.debug('Getting whole-of', { conceptId });
+
+    const concept = await getConceptNode(conceptId);
+    if (!concept) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Concept with id '${conceptId}' not found`);
+    }
+
+    const wholes = await getConceptWholeOf(conceptId);
+    return wholes.map(node => this.toResponseDTO(node));
+  }
+
+  /**
+   * Get parts of this concept
+   */
+  async getParts(conceptId: string): Promise<ConceptResponseDTO[]> {
+    logger.debug('Getting parts', { conceptId });
+
+    const concept = await getConceptNode(conceptId);
+    if (!concept) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Concept with id '${conceptId}' not found`);
+    }
+
+    const parts = await getConceptParts(conceptId);
+    return parts.map(node => this.toResponseDTO(node));
+  }
+
+  /**
+   * Link two concepts as synonyms
+   */
+  async linkSynonymOf(conceptId1: string, conceptId2: string): Promise<void> {
+    logger.info('Linking concepts as synonyms', { conceptId1, conceptId2 });
+
+    // Verify both concepts exist
+    const concept1 = await getConceptNode(conceptId1);
+    if (!concept1) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Concept with id '${conceptId1}' not found`);
+    }
+
+    const concept2 = await getConceptNode(conceptId2);
+    if (!concept2) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Concept with id '${conceptId2}' not found`);
+    }
+
+    // Prevent self-referencing
+    if (conceptId1 === conceptId2) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Cannot link concept to itself');
+    }
+
+    // Validate same language constraint
+    if (concept1.lang !== concept2.lang) {
+      throw new AppError(
+        ErrorCode.VALIDATION_ERROR,
+        `Synonym concepts must be in the same language. Got '${concept1.lang}' and '${concept2.lang}'`
+      );
+    }
+
+    await linkConceptSynonymOf(conceptId1, conceptId2);
+    logger.info('Concepts linked as synonyms', { conceptId1, conceptId2 });
+  }
+
+  /**
+   * Unlink synonym relationship
+   */
+  async unlinkSynonymOf(conceptId1: string, conceptId2: string): Promise<void> {
+    logger.info('Unlinking concept synonyms', { conceptId1, conceptId2 });
+
+    const unlinked = await unlinkConceptSynonymOf(conceptId1, conceptId2);
+    if (!unlinked) {
+      throw new AppError(
+        ErrorCode.NOT_FOUND,
+        `Synonym relationship between '${conceptId1}' and '${conceptId2}' not found`
+      );
+    }
+
+    logger.info('Concept synonyms unlinked', { conceptId1, conceptId2 });
+  }
+
+  /**
+   * Get synonyms of a concept (bidirectional)
+   */
+  async getSynonyms(conceptId: string): Promise<ConceptResponseDTO[]> {
+    logger.debug('Getting synonyms', { conceptId });
+
+    const concept = await getConceptNode(conceptId);
+    if (!concept) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Concept with id '${conceptId}' not found`);
+    }
+
+    const synonyms = await getConceptSynonyms(conceptId);
+    return synonyms.map(node => this.toResponseDTO(node));
   }
 }
 

@@ -9,10 +9,27 @@
 import request from 'supertest';
 import { createApp } from '../../src/app';
 import { DocumentType, DocumentStatus } from '../../src/models/graphdb/documentNode';
+import { initializeGraphDB, closeGraphDB } from '../../src/db/graphdb/connection';
+import { initializePostgres, closePostgres } from '../../src/db/postgres/connection';
+import { initializeStorage, closeStorage } from '../../src/db/storage/connection';
 
 const app = createApp();
 
 describe('Document CRUD - Acceptance Tests', () => {
+  // Initialize all database connections before tests
+  beforeAll(async () => {
+    await initializeGraphDB();
+    await initializePostgres();
+    await initializeStorage();
+  });
+
+  // Clean up connections after tests
+  afterAll(async () => {
+    await closeStorage();
+    await closeGraphDB();
+    await closePostgres();
+  });
+
   // Test data
   const testDocument = {
     title: 'Getting Started Guide',
@@ -89,23 +106,30 @@ describe('Document CRUD - Acceptance Tests', () => {
   });
 
   describe('GET /api/v1/documents/{id} - Get Document', () => {
+    let getTestDocId: string;
+    const getTestDoc = {
+      ...testDocument,
+      title: `Get Test Document ${Date.now()}`,
+    };
+
     beforeAll(async () => {
-      // Create a document for testing if not exists
+      // Always create a fresh document for GET tests
+      const response = await request(app).post('/api/v1/documents').send(getTestDoc);
+      getTestDocId = response.body.id;
       if (!createdDocumentId) {
-        const response = await request(app).post('/api/v1/documents').send(testDocument);
-        createdDocumentId = response.body.id;
+        createdDocumentId = getTestDocId;
       }
     });
 
     it('should retrieve document by ID and return 200', async () => {
-      const response = await request(app).get(`/api/v1/documents/${createdDocumentId}`).expect(200);
+      const response = await request(app).get(`/api/v1/documents/${getTestDocId}`).expect(200);
 
       expect(response.body).toMatchObject({
-        id: createdDocumentId,
-        title: testDocument.title,
-        type: testDocument.type,
-        content: testDocument.content,
-        lang: testDocument.lang,
+        id: getTestDocId,
+        title: getTestDoc.title,
+        type: getTestDoc.type,
+        content: getTestDoc.content,
+        lang: getTestDoc.lang,
       });
     });
 
@@ -300,8 +324,9 @@ describe('Document CRUD - Acceptance Tests', () => {
 
   describe('Data Consistency - GraphDB and PostgreSQL', () => {
     it('should store metadata in GraphDB and content in PostgreSQL', async () => {
+      const uniqueTitle = `Consistency Test Document ${Date.now()}`;
       const doc = {
-        title: 'Consistency Test Document',
+        title: uniqueTitle,
         type: DocumentType.GENERAL,
         content: '# Test Content\n\nThis is a consistency test.',
         lang: 'en',
@@ -316,7 +341,7 @@ describe('Document CRUD - Acceptance Tests', () => {
 
       // Metadata (from GraphDB)
       expect(getResponse.body.id).toBe(docId);
-      expect(getResponse.body.title).toBe(doc.title);
+      expect(getResponse.body.title).toBe(uniqueTitle);
       expect(getResponse.body.type).toBe(doc.type);
       expect(getResponse.body.lang).toBe(doc.lang);
       expect(getResponse.body.status).toBe(DocumentStatus.DRAFT);

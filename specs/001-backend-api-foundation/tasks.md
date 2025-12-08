@@ -150,7 +150,7 @@
 
 ---
 
-## Phase 5: User Story 3 - Version and Page Management API (Priority: P1)
+## Phase 5: User Story 3 - Version and Page Management API (Priority: P1) ✅ COMPLETED
 
 **Goal**: Administrators can create versions, create pages, and link pages to documents through REST API endpoints. Pages are organized in a hierarchy and belong to a specific version.
 
@@ -163,31 +163,94 @@
 - [ ] T059 [P] [US3] Acceptance test for version and page management in backend/tests/acceptance/versions-pages.test.ts (verifies independent functionality)
 - [ ] T060 [P] [US3] Unit tests for version service in backend/tests/unit/versionService.test.ts (minimum 80% coverage)
 - [ ] T061 [P] [US3] Unit tests for page service in backend/tests/unit/pageService.test.ts (minimum 80% coverage)
-- [ ] T062 [P] [US3] Contract test for POST /api/v1/versions in backend/tests/contract/versions.test.ts
-- [ ] T063 [P] [US3] Contract test for POST /api/v1/pages in backend/tests/contract/pages.test.ts
-- [ ] T064 [P] [US3] Contract test for POST /api/v1/pages/{id}/documents in backend/tests/contract/pages.test.ts
-- [ ] T065 [P] [US3] Contract test for GET /api/v1/versions/{id}/navigation in backend/tests/contract/versions.test.ts
+- [x] T062 [P] [US3] Contract test for POST /api/v1/versions in backend/tests/contract/versions.test.ts
+- [x] T063 [P] [US3] Contract test for POST /api/v1/pages in backend/tests/contract/pages.test.ts
+- [x] T064 [P] [US3] Contract test for POST /api/v1/pages/{id}/documents in backend/tests/contract/pages.test.ts
+- [x] T065 [P] [US3] Contract test for GET /api/v1/versions/{id}/navigation in backend/tests/contract/versions.test.ts
 - [ ] T066 [P] [US3] Integration test for navigation tree in backend/tests/integration/versions-pages.test.ts
 
 ### Implementation for User Story 3
 
-- [ ] T067 [P] [US3] Create Version node model in backend/src/models/graphdb/versionNode.ts
-- [ ] T068 [P] [US3] Create Page node model in backend/src/models/graphdb/pageNode.ts
-- [ ] T069 [P] [US3] Create version schema in backend/src/api/schemas/version.ts (Zod/class-validator)
-- [ ] T070 [P] [US3] Create page schema in backend/src/api/schemas/page.ts (Zod/class-validator)
-- [ ] T071 [US3] Implement version service in backend/src/services/versionService.ts
-- [ ] T072 [US3] Implement page service in backend/src/services/pageService.ts
-- [ ] T073 [US3] Implement GraphDB queries for versions in backend/src/db/graphdb/queries.ts
-- [ ] T074 [US3] Implement GraphDB queries for pages in backend/src/db/graphdb/queries.ts
-- [ ] T075 [US3] Implement navigation tree query (hierarchical page structure) in backend/src/db/graphdb/queries.ts
-- [ ] T076 [US3] Implement POST /api/v1/versions route in backend/src/api/routes/versions.ts
-- [ ] T077 [US3] Implement POST /api/v1/pages route in backend/src/api/routes/pages.ts
-- [ ] T078 [US3] Implement POST /api/v1/pages/{id}/documents route in backend/src/api/routes/pages.ts
-- [ ] T079 [US3] Implement GET /api/v1/versions/{id}/navigation route in backend/src/api/routes/versions.ts
-- [ ] T080 [US3] Add validation and error handling (per Constitution Principle I: Code Quality)
-- [ ] T081 [US3] Add API documentation (TypeScript types and JSDoc comments per Constitution Principle I)
+- [x] T067 [P] [US3] Create Version node model in backend/src/models/graphdb/versionNode.ts
+- [x] T068 [P] [US3] Create Page node model in backend/src/models/graphdb/pageNode.ts
+- [x] T069 [P] [US3] Create version schema in backend/src/api/schemas/version.ts (Zod/class-validator)
+- [x] T070 [P] [US3] Create page schema in backend/src/api/schemas/page.ts (Zod/class-validator)
+- [x] T071 [US3] Implement version service in backend/src/services/versionService.ts
+- [x] T072 [US3] Implement page service in backend/src/services/pageService.ts
+- [x] T073 [US3] Implement GraphDB queries for versions in backend/src/db/graphdb/queries.ts
+- [x] T074 [US3] Implement GraphDB queries for pages in backend/src/db/graphdb/queries.ts
+- [x] T075 [US3] Implement navigation tree query (hierarchical page structure) in backend/src/db/graphdb/queries.ts
+- [x] T076 [US3] Implement POST /api/v1/versions route in backend/src/api/routes/versions.ts
+- [x] T077 [US3] Implement POST /api/v1/pages route in backend/src/api/routes/pages.ts
+- [x] T078 [US3] Implement POST /api/v1/pages/{id}/documents route in backend/src/api/routes/pages.ts
+- [x] T079 [US3] Implement GET /api/v1/versions/{id}/navigation route in backend/src/api/routes/versions.ts
+- [x] T080 [US3] Add validation and error handling (per Constitution Principle I: Code Quality)
+- [x] T081 [US3] Add API documentation (TypeScript types and JSDoc comments per Constitution Principle I)
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 should all work independently
+
+---
+
+## Phase 5.5: Graph Relationships & Tag Management ✅ COMPLETED
+
+**Goal**: Implement all GraphDB relationships (SUBTYPE_OF, PART_OF, SYNONYM_OF, LINKS_TO, WORKING_COPY_OF) and Tag management (HAS_TAG relationship for Document, Concept, Page).
+
+**Added**: 2025-12-08
+
+### Tag Management
+
+- [x] T118 [P] Create Tag node model in backend/src/models/graphdb/tagNode.ts
+- [x] T119 [P] Create Tag schema in backend/src/api/schemas/tag.ts
+- [x] T120 Implement Tag service in backend/src/services/tagService.ts
+- [x] T121 Implement Tag API routes in backend/src/api/routes/tags.ts
+- [x] T122 [P] Contract tests for Tag API in backend/tests/contract/tags.test.ts
+- [x] T123 [P] Unit tests for Tag service in backend/tests/unit/tagService.test.ts
+
+### Concept Relationships (SUBTYPE_OF, PART_OF, SYNONYM_OF)
+
+- [x] T124 Implement Concept relationship methods in backend/src/services/conceptService.ts
+- [x] T125 Implement Concept relationship routes in backend/src/api/routes/concepts.ts
+- [x] T126 Add GraphDB queries for Concept relationships in backend/src/db/graphdb/queries.ts
+- [x] T127 [P] Contract tests for Concept relationships in backend/tests/contract/concept-relations.test.ts
+- [x] T128 [P] Unit tests for Concept relationships in backend/tests/unit/conceptRelations.test.ts
+
+### Document Relationships (LINKS_TO, WORKING_COPY_OF)
+
+- [x] T129 Implement Document relationship methods in backend/src/services/documentService.ts
+- [x] T130 Implement Document relationship routes in backend/src/api/routes/documents.ts
+- [x] T131 Add GraphDB queries for Document relationships in backend/src/db/graphdb/queries.ts
+- [x] T132 [P] Contract tests for Document relationships in backend/tests/contract/document-relations.test.ts
+- [x] T133 [P] Unit tests for Document relationships in backend/tests/unit/documentRelations.test.ts
+
+### HAS_TAG Relationships
+
+- [x] T134 Implement HAS_TAG queries for Document/Concept/Page in backend/src/db/graphdb/queries.ts
+- [x] T135 Add HAS_TAG routes under /api/v1/{resource}/:id/tags
+- [x] T136 Register Tag routes in backend/src/app.ts
+
+**Checkpoint**: All GraphDB relationships from data-model.md are now implemented
+
+---
+
+## Test Infrastructure Improvements (Added 2025-12-08)
+
+**Purpose**: Critical test configuration fixes for reliable test execution
+
+### UUID Mock Improvement
+
+- [x] T137 Fix uuid mock in backend/tests/**mocks**/uuid.ts to generate unique IDs using timestamp + random value (prevents ID collisions across test runs)
+
+### Database Initialization for Integration/Acceptance Tests
+
+- [x] T138 Add MinIO initialization to backend/tests/integration/documents.test.ts
+- [x] T139 Add MinIO initialization to backend/tests/acceptance/documents.test.ts
+
+### Test Isolation
+
+- [x] T140 Use unique titles (with timestamp) in integration tests to prevent data collisions
+- [x] T141 Use unique titles (with timestamp) in acceptance tests to prevent data collisions
+
+**Result**: All 299 tests pass (120 Contract + 108 Unit + 71 Integration/Acceptance)
 
 ---
 

@@ -12,6 +12,138 @@ The system uses a triple-storage architecture:
 - **MinIO (Object Storage)**: Stores document content files and attachment files
 - **PostgreSQL**: Stores user authentication data only
 
+## Architecture Diagram
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────────────────┐
+│                               NALLO Storage Architecture                                      │
+├───────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                               │
+│   GraphDB (Neo4j) - Metadata & Relationships                                                  │
+│   ┌─────────────────────────────────────────────────────────────────────────────────────────┐ │
+│   │                                                                                         │ │
+│   │                                    ┌───────────────┐                                    │ │
+│   │                                    │     Tag       │                                    │ │
+│   │                                    │───────────────│                                    │ │
+│   │                                    │ id            │                                    │ │
+│   │              ┌─────────────────────│ name          │─────────────────────┐              │ │
+│   │              │        HAS_TAG      └───────────────┘      HAS_TAG        │              │ │
+│   │              │                            ▲                              │              │ │
+│   │              │                            │ HAS_TAG                      │              │ │
+│   │              │                            │                              │              │ │
+│   │              ▼                            │                              ▼              │ │
+│   │   ┌───────────────┐              ┌───────┴───────┐              ┌───────────────┐       │ │
+│   │   │     Page      │   DISPLAYS   │   Document    │ USES_CONCEPT │    Concept    │       │ │
+│   │   │───────────────│─────────────▶│───────────────│─────────────▶│───────────────│       │ │
+│   │   │ id            │              │ id            │              │ id            │       │ │
+│   │   │ slug          │              │ type          │              │ term          │       │ │
+│   │   │ title         │              │ status        │              │ category      │       │ │
+│   │   │ order         │              │ title         │              │ lang          │       │ │
+│   │   │ visible       │              │ lang          │              │ description   │       │ │
+│   │   └───────┬───────┘              │ storage_key   │              └───┬───┬───┬───┘       │ │
+│   │           │                      │ summary       │                  │   │   │           │ │
+│   │           │                      └──┬──┬──┬──┬───┘                  │   │   │           │ │
+│   │           │                         │  │  │  │                      │   │   │           │ │
+│   │   ┌───────┴───────┐                 │  │  │  │            ┌─────────┘   │   └─────────┐ │ │
+│   │   │               │                 │  │  │  │            │             │             │ │ │
+│   │   │  IN_VERSION   │  CHILD_OF       │  │  │  │            │ SYNONYM_OF  │ SUBTYPE_OF  │ │ │
+│   │   │               │  (self-ref)     │  │  │  │            │ (self-ref)  │ (self-ref)  │ │ │
+│   │   ▼               ▼                 │  │  │  │            ▼             ▼             ▼ │ │
+│   │ ┌───────────────┐ ┌──┐              │  │  │  │          ┌──┐         ┌──┐         ┌──┐ │ │
+│   │ │    Version    │ │  │              │  │  │  │          │  │         │  │         │  │ │ │
+│   │ │───────────────│ │  │              │  │  │  │          │  │         │  │         │  │ │ │
+│   │ │ id            │ │Page             │  │  │  │          │Concept    │Concept    │Concept │
+│   │ │ version       │ │  │              │  │  │  │          │  │         │  │         │  │ │ │
+│   │ │ name          │ │  │              │  │  │  │          │  │         │  │         │  │ │ │
+│   │ │ is_public     │ │  │              │  │  │  │          │  │         │  │         │  │ │ │
+│   │ │ is_main       │ │  │              │  │  │  │          │  │         │  │         │  │ │ │
+│   │ └───────────────┘ └──┘              │  │  │  │          └──┘         └──┘         └──┘ │ │
+│   │                                     │  │  │  │                   PART_OF              │ │
+│   │                   ┌─────────────────┘  │  │  │                   (self-ref)           │ │
+│   │                   │  ┌─────────────────┘  │  │                                        │ │
+│   │                   │  │  ┌────────────────┘  │                                         │ │
+│   │                   │  │  │  ┌────────────────┘                                         │ │
+│   │                   │  │  │  │                                                          │ │
+│   │                   │  │  │  │ HAS_ATTACHMENT                                           │ │
+│   │                   │  │  │  │                                                          │ │
+│   │                   │  │  │  │       ┌───────────────┐                                  │ │
+│   │                   │  │  │  │       │  Attachment   │                                  │ │
+│   │                   │  │  │  │       │───────────────│                                  │ │
+│   │                   │  │  │  └──────▶│ id            │                                  │ │
+│   │                   │  │  │          │ filename      │                                  │ │
+│   │                   │  │  │          │ storage_key   │                                  │ │
+│   │                   │  │  │          │ mime_type     │                                  │ │
+│   │                   │  │  │          │ file_type     │                                  │ │
+│   │                   │  │  │          │ size_bytes    │                                  │ │
+│   │                   │  │  │          │ checksum      │                                  │ │
+│   │                   │  │  │          │ alt_text      │                                  │ │
+│   │                   │  │  │          └───────┬───────┘                                  │ │
+│   │                   │  │  │                  │                                          │ │
+│   │                   │  │  │                  │ storage_key                              │ │
+│   │                   │  │  │                  │ (MinIO 경로)                             │ │
+│   │  LINKS_TO         │  │  │                  │                                          │ │
+│   │  ┌──────────────┐ │  │  │                  │                                          │ │
+│   │  ▼              │ │  │  │                  │                                          │ │
+│   │ ┌──┐ WORKING_   │ │  │  │                  │                                          │ │
+│   │ │  │ COPY_OF    │ │  │  │                  │                                          │ │
+│   │ │Doc├───────────┘ │  │  │                  │                                          │ │
+│   │ │  │              │  │  │                  │                                          │ │
+│   │ └──┘              │  │  │                  │                                          │ │
+│   │                   │  │  │                  │                                          │ │
+│   │       storage_key │  │  │                  │                                          │ │
+│   │       (MinIO 경로)│  │  │                  │                                          │ │
+│   │                   │  │  │                  │                                          │ │
+│   └───────────────────┼──┼──┼──────────────────┼──────────────────────────────────────────┘ │
+│                       │  │  │                  │                                            │
+│                       │  │  │                  │                                            │
+│   MinIO (Object Storage)                                                                    │
+│   ┌───────────────────┼──┼──┼──────────────────┼──────────────────────────────────────────┐ │
+│   │                   │  │  │                  │                                          │ │
+│   │                   ▼  │  │                  ▼                                          │ │
+│   │   ┌─────────────────────────┐    ┌─────────────────────────┐                          │ │
+│   │   │      documents/         │    │     attachments/        │                          │ │
+│   │   │─────────────────────────│    │─────────────────────────│                          │ │
+│   │   │ {document_id}/          │    │ {attachment_id}/        │                          │ │
+│   │   │   └── content.md        │    │   └── {filename}        │                          │ │
+│   │   │   └── content.yaml      │    │       (screenshot.png)  │                          │ │
+│   │   │       (API spec)        │    │       (api-spec.pdf)    │                          │ │
+│   │   └─────────────────────────┘    └─────────────────────────┘                          │ │
+│   │                                                                                       │ │
+│   └───────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                             │
+│   PostgreSQL (User Auth Only)                                                               │
+│   ┌─────────────────────────────────────────────────────────────────────────────────────┐   │
+│   │   users: id | email | password_hash | role ('administrator'|'end_user') | timestamps│   │
+│   └─────────────────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                             │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Relationships Reference
+
+| From Node | Relationship      | To Node    | Description        |
+| --------- | ----------------- | ---------- | ------------------ |
+| Page      | `IN_VERSION`      | Version    | 페이지 버전 소속   |
+| Page      | `DISPLAYS`        | Document   | 페이지가 문서 표시 |
+| Page      | `CHILD_OF`        | Page       | 페이지 계층구조    |
+| Page      | `HAS_TAG`         | Tag        | 페이지 태그        |
+| Document  | `USES_CONCEPT`    | Concept    | 문서가 용어 사용   |
+| Document  | `HAS_ATTACHMENT`  | Attachment | 문서에 첨부파일    |
+| Document  | `LINKS_TO`        | Document   | 문서 간 링크       |
+| Document  | `WORKING_COPY_OF` | Document   | 작업 복사본        |
+| Document  | `HAS_TAG`         | Tag        | 문서 태그          |
+| Concept   | `SYNONYM_OF`      | Concept    | 동의어 관계        |
+| Concept   | `SUBTYPE_OF`      | Concept    | 하위유형 관계      |
+| Concept   | `PART_OF`         | Concept    | 부분-전체 관계     |
+| Concept   | `HAS_TAG`         | Tag        | 용어 태그          |
+
+### Storage Key Mapping
+
+| Node       | storage_key → MinIO Path       |
+| ---------- | ------------------------------ |
+| Document   | `documents/{id}/content.{ext}` |
+| Attachment | `attachments/{id}/{filename}`  |
+
 ## GraphDB Schema
 
 ### Document Node

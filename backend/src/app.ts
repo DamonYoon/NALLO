@@ -12,6 +12,13 @@ import healthRouter from '@/api/routes/health';
 import documentsRouter from '@/api/routes/documents';
 import attachmentsRouter from '@/api/routes/attachments';
 import conceptsRouter from '@/api/routes/concepts';
+import versionsRouter from '@/api/routes/versions';
+import pagesRouter from '@/api/routes/pages';
+import tagsRouter, {
+  documentTagsRouter,
+  conceptTagsRouter,
+  pageTagsRouter,
+} from '@/api/routes/tags';
 
 /**
  * Create and configure Express application
@@ -37,6 +44,14 @@ export function createApp(): Express {
   app.use(`${config.API_V1_PREFIX}/documents`, documentsRouter);
   app.use(`${config.API_V1_PREFIX}/attachments`, attachmentsRouter);
   app.use(`${config.API_V1_PREFIX}/concepts`, conceptsRouter);
+  app.use(`${config.API_V1_PREFIX}/versions`, versionsRouter);
+  app.use(`${config.API_V1_PREFIX}/pages`, pagesRouter);
+  app.use(`${config.API_V1_PREFIX}/tags`, tagsRouter);
+
+  // HAS_TAG relationship routes (nested under resources)
+  app.use(`${config.API_V1_PREFIX}/documents/:documentId/tags`, documentTagsRouter);
+  app.use(`${config.API_V1_PREFIX}/concepts/:conceptId/tags`, conceptTagsRouter);
+  app.use(`${config.API_V1_PREFIX}/pages/:pageId/tags`, pageTagsRouter);
 
   // API root info
   app.get(config.API_V1_PREFIX, (_req, res) => {
@@ -47,6 +62,9 @@ export function createApp(): Express {
         documents: `${config.API_V1_PREFIX}/documents`,
         attachments: `${config.API_V1_PREFIX}/attachments`,
         concepts: `${config.API_V1_PREFIX}/concepts`,
+        versions: `${config.API_V1_PREFIX}/versions`,
+        pages: `${config.API_V1_PREFIX}/pages`,
+        tags: `${config.API_V1_PREFIX}/tags`,
         health: '/health',
       },
     });

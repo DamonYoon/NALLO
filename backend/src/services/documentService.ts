@@ -21,6 +21,14 @@ import {
   updateDocumentNode,
   deleteDocumentNode,
   listDocumentNodes,
+  linkDocumentToDocument,
+  unlinkDocumentFromDocument,
+  getLinkedDocuments,
+  getLinkingDocuments,
+  createWorkingCopy,
+  removeWorkingCopy,
+  getOriginalDocument,
+  getWorkingCopies,
 } from '../db/graphdb/queries';
 import { uploadFile, downloadFile, deleteFile, fileExists } from '../db/storage/connection';
 import {
@@ -398,6 +406,176 @@ export class DocumentService {
       created_at: node.created_at.toISOString(),
       updated_at: node.updated_at.toISOString(),
     };
+  }
+
+  // ============================================================================
+  // DOCUMENT RELATIONSHIP METHODS (LINKS_TO, WORKING_COPY_OF)
+  // ============================================================================
+
+  /**
+   * Link document to another document
+   * Creates LINKS_TO relationship
+   */
+  async linkToDocument(sourceId: string, targetId: string): Promise<void> {
+    logger.info('Linking document to document', { sourceId, targetId });
+
+    // Verify source document exists
+    const source = await getDocumentNode(sourceId);
+    if (!source) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Source document with id '${sourceId}' not found`);
+    }
+
+    // Verify target document exists
+    const target = await getDocumentNode(targetId);
+    if (!target) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Target document with id '${targetId}' not found`);
+    }
+
+    // Prevent self-referencing
+    if (sourceId === targetId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Cannot link document to itself');
+    }
+
+    await linkDocumentToDocument(sourceId, targetId);
+    logger.info('Document linked to document', { sourceId, targetId });
+  }
+
+  /**
+   * Unlink document from another document
+   * Removes LINKS_TO relationship
+   */
+  async unlinkFromDocument(sourceId: string, targetId: string): Promise<void> {
+    logger.info('Unlinking document from document', { sourceId, targetId });
+
+    const unlinked = await unlinkDocumentFromDocument(sourceId, targetId);
+    if (!unlinked) {
+      throw new AppError(
+        ErrorCode.NOT_FOUND,
+        `Link from document '${sourceId}' to '${targetId}' not found`
+      );
+    }
+
+    logger.info('Document unlinked from document', { sourceId, targetId });
+  }
+
+  /**
+   * Get documents that this document links to
+   */
+  async getLinkedDocuments(documentId: string): Promise<DocumentResponseDTO[]> {
+    logger.debug('Getting linked documents', { documentId });
+
+    // Verify document exists
+    const document = await getDocumentNode(documentId);
+    if (!document) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Document with id '${documentId}' not found`);
+    }
+
+    const linkedDocs = await getLinkedDocuments(documentId);
+    // Return documents without content for performance
+    return linkedDocs.map(node => this.toResponseDTO(node, ''));
+  }
+
+  /**
+   * Get documents that link to this document (backlinks)
+   */
+  async getLinkingDocuments(documentId: string): Promise<DocumentResponseDTO[]> {
+    logger.debug('Getting linking documents (backlinks)', { documentId });
+
+    // Verify document exists
+    const document = await getDocumentNode(documentId);
+    if (!document) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Document with id '${documentId}' not found`);
+    }
+
+    const linkingDocs = await getLinkingDocuments(documentId);
+    // Return documents without content for performance
+    return linkingDocs.map(node => this.toResponseDTO(node, ''));
+  }
+
+  /**
+   * Create working copy relationship
+   * Links a copy document to its original
+   */
+  async createWorkingCopy(copyId: string, originalId: string): Promise<void> {
+    logger.info('Creating working copy relationship', { copyId, originalId });
+
+    // Verify copy document exists
+    const copy = await getDocumentNode(copyId);
+    if (!copy) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Copy document with id '${copyId}' not found`);
+    }
+
+    // Verify original document exists
+    const original = await getDocumentNode(originalId);
+    if (!original) {
+      throw new AppError(
+        ErrorCode.NOT_FOUND,
+        `Original document with id '${originalId}' not found`
+      );
+    }
+
+    // Prevent self-referencing
+    if (copyId === originalId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Cannot create working copy of itself');
+    }
+
+    await createWorkingCopy(copyId, originalId);
+    logger.info('Working copy relationship created', { copyId, originalId });
+  }
+
+  /**
+   * Remove working copy relationship
+   */
+  async removeWorkingCopy(copyId: string, originalId: string): Promise<void> {
+    logger.info('Removing working copy relationship', { copyId, originalId });
+
+    const removed = await removeWorkingCopy(copyId, originalId);
+    if (!removed) {
+      throw new AppError(
+        ErrorCode.NOT_FOUND,
+        `Working copy relationship from '${copyId}' to '${originalId}' not found`
+      );
+    }
+
+    logger.info('Working copy relationship removed', { copyId, originalId });
+  }
+
+  /**
+   * Get original document of a working copy
+   */
+  async getOriginalDocument(documentId: string): Promise<DocumentResponseDTO | null> {
+    logger.debug('Getting original document', { documentId });
+
+    // Verify document exists
+    const document = await getDocumentNode(documentId);
+    if (!document) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Document with id '${documentId}' not found`);
+    }
+
+    const original = await getOriginalDocument(documentId);
+    if (!original) {
+      return null;
+    }
+
+    // Return document without content for performance
+    return this.toResponseDTO(original, '');
+  }
+
+  /**
+   * Get working copies of a document
+   */
+  async getWorkingCopies(documentId: string): Promise<DocumentResponseDTO[]> {
+    logger.debug('Getting working copies', { documentId });
+
+    // Verify document exists
+    const document = await getDocumentNode(documentId);
+    if (!document) {
+      throw new AppError(ErrorCode.NOT_FOUND, `Document with id '${documentId}' not found`);
+    }
+
+    const copies = await getWorkingCopies(documentId);
+    // Return documents without content for performance
+    return copies.map(node => this.toResponseDTO(node, ''));
   }
 }
 

@@ -243,4 +243,181 @@ router.post(
   }
 );
 
+// ============================================================================
+// DOCUMENT RELATIONSHIP ENDPOINTS (LINKS_TO, WORKING_COPY_OF)
+// ============================================================================
+
+/**
+ * POST /api/v1/documents/:id/links
+ * Link document to another document
+ */
+router.post(
+  '/:id/links',
+  validate(documentIdParamSchema, 'params'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = documentIdParamSchema.parse(req.params);
+      const { target_id } = req.body;
+
+      if (!target_id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'target_id is required', 400);
+      }
+
+      await documentService.linkToDocument(id, target_id);
+
+      res.status(201).json({ message: 'Document linked' });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /api/v1/documents/:id/links
+ * Get documents that this document links to
+ */
+router.get(
+  '/:id/links',
+  validate(documentIdParamSchema, 'params'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = documentIdParamSchema.parse(req.params);
+      const linkedDocs = await documentService.getLinkedDocuments(id);
+
+      res.status(200).json({
+        items: linkedDocs,
+        total: linkedDocs.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * DELETE /api/v1/documents/:id/links/:targetId
+ * Unlink document from another document
+ */
+router.delete('/:id/links/:targetId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id, targetId } = req.params;
+    await documentService.unlinkFromDocument(id, targetId);
+
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/v1/documents/:id/backlinks
+ * Get documents that link to this document
+ */
+router.get(
+  '/:id/backlinks',
+  validate(documentIdParamSchema, 'params'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = documentIdParamSchema.parse(req.params);
+      const linkingDocs = await documentService.getLinkingDocuments(id);
+
+      res.status(200).json({
+        items: linkingDocs,
+        total: linkingDocs.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/v1/documents/:id/working-copy
+ * Mark this document as a working copy of another document
+ */
+router.post(
+  '/:id/working-copy',
+  validate(documentIdParamSchema, 'params'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = documentIdParamSchema.parse(req.params);
+      const { original_id } = req.body;
+
+      if (!original_id) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'original_id is required', 400);
+      }
+
+      await documentService.createWorkingCopy(id, original_id);
+
+      res.status(201).json({ message: 'Working copy relationship created' });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /api/v1/documents/:id/original
+ * Get the original document of a working copy
+ */
+router.get(
+  '/:id/original',
+  validate(documentIdParamSchema, 'params'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = documentIdParamSchema.parse(req.params);
+      const original = await documentService.getOriginalDocument(id);
+
+      if (!original) {
+        res.status(200).json({ original: null });
+        return;
+      }
+
+      res.status(200).json({ original });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * DELETE /api/v1/documents/:id/working-copy/:originalId
+ * Remove working copy relationship
+ */
+router.delete(
+  '/:id/working-copy/:originalId',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id, originalId } = req.params;
+      await documentService.removeWorkingCopy(id, originalId);
+
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /api/v1/documents/:id/working-copies
+ * Get all working copies of this document
+ */
+router.get(
+  '/:id/working-copies',
+  validate(documentIdParamSchema, 'params'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = documentIdParamSchema.parse(req.params);
+      const copies = await documentService.getWorkingCopies(id);
+
+      res.status(200).json({
+        items: copies,
+        total: copies.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 export default router;
