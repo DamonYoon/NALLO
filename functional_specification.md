@@ -1381,7 +1381,7 @@ API 문서에서 직접 API를 호출해볼 수 있는 기능
 - WORKING_COPY_OF: Document → Document
 - TRANSLATION_OF: Document → Document (Phase 4)
 - SYNONYM_OF: Concept → Concept
-- IS_A: Concept → Concept
+- SUBTYPE_OF: Concept → Concept
 - PART_OF: Concept → Concept
 - HAS_SEO: Page → SEOProperties (Phase 4)
 - USED_IN: Block → Document (Phase 4)

@@ -160,7 +160,7 @@ WorkingDoc는 draft/in_review/done 상태에서만 사용. |
 | **HAS_TAG** | Concept | Tag | `(:Concept)-[:**HAS_TAG**]->(:Tag)` | 용어/개념에 태그를 추가. 
 Beginner 용어 세트, 캠페인 등으로 묶을 때 사용. |
 | **SYNONYM_OF** | Concept | Concept | `(:Concept)-[:**SYNONYM_OF**]->(:Concept)` | 같은 언어 내 동의어 관계. 보통 B를 canonical 개념으로 두고, A를 동의어로 연결 |
-| **IS_A** | Concept | Concept | `(:Concept)-[:**IS_A**]->(:Concept)` | 상속 관계(상↔하위) |
+| **SUBTYPE_OF** | Concept | Concept | `(:Concept)-[:**SUBTYPE_OF**]->(:Concept)` | 상속/분류 관계 (예: "REST API" subtype_of "API") |
 | **PART_OF** | Concept | Concept | `(:Concept)-[:**PART_OF**]->(:Concept)` | 구성 요소 관계
 
 예시:
