@@ -47,7 +47,10 @@ describe('Document CRUD - Acceptance Tests', () => {
         type: 'invalid_type',
       };
 
-      const response = await request(app).post('/api/v1/documents').send(invalidDocument).expect(400);
+      const response = await request(app)
+        .post('/api/v1/documents')
+        .send(invalidDocument)
+        .expect(400);
 
       expect(response.body.error).toBeDefined();
       expect(response.body.error.code).toBe('VALIDATION_ERROR');
@@ -59,7 +62,10 @@ describe('Document CRUD - Acceptance Tests', () => {
         // Missing: type, content, lang
       };
 
-      const response = await request(app).post('/api/v1/documents').send(incompleteDocument).expect(400);
+      const response = await request(app)
+        .post('/api/v1/documents')
+        .send(incompleteDocument)
+        .expect(400);
 
       expect(response.body.error).toBeDefined();
       expect(response.body.error.code).toBe('VALIDATION_ERROR');
@@ -71,7 +77,10 @@ describe('Document CRUD - Acceptance Tests', () => {
         lang: 'invalid',
       };
 
-      const response = await request(app).post('/api/v1/documents').send(invalidLangDocument).expect(400);
+      const response = await request(app)
+        .post('/api/v1/documents')
+        .send(invalidLangDocument)
+        .expect(400);
 
       expect(response.body.error).toBeDefined();
     });
@@ -129,7 +138,10 @@ describe('Document CRUD - Acceptance Tests', () => {
         title: 'Updated Getting Started Guide',
       };
 
-      const response = await request(app).put(`/api/v1/documents/${createdDocumentId}`).send(updateData).expect(200);
+      const response = await request(app)
+        .put(`/api/v1/documents/${createdDocumentId}`)
+        .send(updateData)
+        .expect(200);
 
       expect(response.body.title).toBe(updateData.title);
       expect(response.body.id).toBe(createdDocumentId);
@@ -140,7 +152,10 @@ describe('Document CRUD - Acceptance Tests', () => {
         content: '# Updated Getting Started\n\nThis content has been updated.',
       };
 
-      const response = await request(app).put(`/api/v1/documents/${createdDocumentId}`).send(updateData).expect(200);
+      const response = await request(app)
+        .put(`/api/v1/documents/${createdDocumentId}`)
+        .send(updateData)
+        .expect(200);
 
       expect(response.body.content).toBe(updateData.content);
     });
@@ -151,7 +166,10 @@ describe('Document CRUD - Acceptance Tests', () => {
         status: DocumentStatus.IN_REVIEW,
       };
 
-      const response = await request(app).put(`/api/v1/documents/${createdDocumentId}`).send(updateData).expect(200);
+      const response = await request(app)
+        .put(`/api/v1/documents/${createdDocumentId}`)
+        .send(updateData)
+        .expect(200);
 
       expect(response.body.status).toBe(DocumentStatus.IN_REVIEW);
     });
@@ -166,7 +184,10 @@ describe('Document CRUD - Acceptance Tests', () => {
         status: DocumentStatus.PUBLISH,
       };
 
-      const response = await request(app).put(`/api/v1/documents/${freshDocId}`).send(updateData).expect(400);
+      const response = await request(app)
+        .put(`/api/v1/documents/${freshDocId}`)
+        .send(updateData)
+        .expect(400);
 
       expect(response.body.error).toBeDefined();
       expect(response.body.error.code).toBe('INVALID_STATUS_TRANSITION');
@@ -176,7 +197,10 @@ describe('Document CRUD - Acceptance Tests', () => {
       const nonExistentId = '00000000-0000-4000-a000-000000000000';
       const updateData = { title: 'Updated Title' };
 
-      const response = await request(app).put(`/api/v1/documents/${nonExistentId}`).send(updateData).expect(404);
+      const response = await request(app)
+        .put(`/api/v1/documents/${nonExistentId}`)
+        .send(updateData)
+        .expect(404);
 
       expect(response.body.error).toBeDefined();
       expect(response.body.error.code).toBe('NOT_FOUND');
@@ -187,12 +211,17 @@ describe('Document CRUD - Acceptance Tests', () => {
       const beforeTimestamp = beforeUpdate.body.updated_at;
 
       // Wait a bit to ensure timestamp difference
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       const updateData = { title: 'Another Update' };
-      const response = await request(app).put(`/api/v1/documents/${createdDocumentId}`).send(updateData).expect(200);
+      const response = await request(app)
+        .put(`/api/v1/documents/${createdDocumentId}`)
+        .send(updateData)
+        .expect(200);
 
-      expect(new Date(response.body.updated_at).getTime()).toBeGreaterThan(new Date(beforeTimestamp).getTime());
+      expect(new Date(response.body.updated_at).getTime()).toBeGreaterThan(
+        new Date(beforeTimestamp).getTime()
+      );
     });
   });
 
@@ -211,7 +240,10 @@ describe('Document CRUD - Acceptance Tests', () => {
     });
 
     it('should return paginated list of documents', async () => {
-      const response = await request(app).get('/api/v1/documents').query({ limit: 10, offset: 0 }).expect(200);
+      const response = await request(app)
+        .get('/api/v1/documents')
+        .query({ limit: 10, offset: 0 })
+        .expect(200);
 
       expect(response.body).toMatchObject({
         items: expect.any(Array),
@@ -222,25 +254,41 @@ describe('Document CRUD - Acceptance Tests', () => {
     });
 
     it('should filter documents by status', async () => {
-      const response = await request(app).get('/api/v1/documents').query({ status: DocumentStatus.DRAFT }).expect(200);
+      const response = await request(app)
+        .get('/api/v1/documents')
+        .query({ status: DocumentStatus.DRAFT })
+        .expect(200);
 
-      expect(response.body.items.every((doc: { status: string }) => doc.status === DocumentStatus.DRAFT)).toBe(true);
+      expect(
+        response.body.items.every((doc: { status: string }) => doc.status === DocumentStatus.DRAFT)
+      ).toBe(true);
     });
 
     it('should filter documents by type', async () => {
-      const response = await request(app).get('/api/v1/documents').query({ type: DocumentType.API }).expect(200);
+      const response = await request(app)
+        .get('/api/v1/documents')
+        .query({ type: DocumentType.API })
+        .expect(200);
 
-      expect(response.body.items.every((doc: { type: string }) => doc.type === DocumentType.API)).toBe(true);
+      expect(
+        response.body.items.every((doc: { type: string }) => doc.type === DocumentType.API)
+      ).toBe(true);
     });
 
     it('should filter documents by language', async () => {
-      const response = await request(app).get('/api/v1/documents').query({ lang: 'ko' }).expect(200);
+      const response = await request(app)
+        .get('/api/v1/documents')
+        .query({ lang: 'ko' })
+        .expect(200);
 
       expect(response.body.items.every((doc: { lang: string }) => doc.lang === 'ko')).toBe(true);
     });
 
     it('should respect pagination parameters', async () => {
-      const response = await request(app).get('/api/v1/documents').query({ limit: 2, offset: 0 }).expect(200);
+      const response = await request(app)
+        .get('/api/v1/documents')
+        .query({ limit: 2, offset: 0 })
+        .expect(200);
 
       expect(response.body.items.length).toBeLessThanOrEqual(2);
       expect(response.body.limit).toBe(2);
@@ -293,7 +341,10 @@ describe('Document CRUD - Acceptance Tests', () => {
         content: '# Updated Content\n\nBoth title and content updated.',
       };
 
-      const updateResponse = await request(app).put(`/api/v1/documents/${docId}`).send(updateData).expect(200);
+      const updateResponse = await request(app)
+        .put(`/api/v1/documents/${docId}`)
+        .send(updateData)
+        .expect(200);
 
       expect(updateResponse.body.title).toBe(updateData.title);
       expect(updateResponse.body.content).toBe(updateData.content);
@@ -306,4 +357,3 @@ describe('Document CRUD - Acceptance Tests', () => {
     });
   });
 });
-

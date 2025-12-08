@@ -18,7 +18,9 @@ export const DocumentStatus = {
 export type DocumentStatus = (typeof DocumentStatus)[keyof typeof DocumentStatus];
 
 // ISO 639-1 language code pattern (2 lowercase letters)
-const langCodeSchema = z.string().regex(/^[a-z]{2}$/, 'Invalid language code. Must be ISO 639-1 format (e.g., "en", "ko")');
+const langCodeSchema = z
+  .string()
+  .regex(/^[a-z]{2}$/, 'Invalid language code. Must be ISO 639-1 format (e.g., "en", "ko")');
 
 // UUID validation
 const uuidSchema = z.string().uuid('Invalid UUID format');
@@ -40,9 +42,12 @@ export const updateDocumentSchema = z.object({
   title: z.string().min(1).max(255).optional(),
   content: z.string().min(1).optional(),
   status: z
-    .enum([DocumentStatus.DRAFT, DocumentStatus.IN_REVIEW, DocumentStatus.DONE, DocumentStatus.PUBLISH], {
-      errorMap: () => ({ message: 'Status must be one of: draft, in_review, done, publish' }),
-    })
+    .enum(
+      [DocumentStatus.DRAFT, DocumentStatus.IN_REVIEW, DocumentStatus.DONE, DocumentStatus.PUBLISH],
+      {
+        errorMap: () => ({ message: 'Status must be one of: draft, in_review, done, publish' }),
+      }
+    )
     .optional(),
 });
 export type UpdateDocumentRequest = z.infer<typeof updateDocumentSchema>;
@@ -51,7 +56,12 @@ export type UpdateDocumentRequest = z.infer<typeof updateDocumentSchema>;
 export const documentResponseSchema = z.object({
   id: uuidSchema,
   type: z.enum([DocumentType.API, DocumentType.GENERAL, DocumentType.TUTORIAL]),
-  status: z.enum([DocumentStatus.DRAFT, DocumentStatus.IN_REVIEW, DocumentStatus.DONE, DocumentStatus.PUBLISH]),
+  status: z.enum([
+    DocumentStatus.DRAFT,
+    DocumentStatus.IN_REVIEW,
+    DocumentStatus.DONE,
+    DocumentStatus.PUBLISH,
+  ]),
   title: z.string(),
   lang: z.string(),
   content: z.string(),
@@ -72,7 +82,14 @@ export type DocumentListResponse = z.infer<typeof documentListResponseSchema>;
 
 // Query Parameters Schema
 export const documentQuerySchema = z.object({
-  status: z.enum([DocumentStatus.DRAFT, DocumentStatus.IN_REVIEW, DocumentStatus.DONE, DocumentStatus.PUBLISH]).optional(),
+  status: z
+    .enum([
+      DocumentStatus.DRAFT,
+      DocumentStatus.IN_REVIEW,
+      DocumentStatus.DONE,
+      DocumentStatus.PUBLISH,
+    ])
+    .optional(),
   type: z.enum([DocumentType.API, DocumentType.GENERAL, DocumentType.TUTORIAL]).optional(),
   lang: langCodeSchema.optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -85,4 +102,3 @@ export const documentIdParamSchema = z.object({
   id: uuidSchema,
 });
 export type DocumentIdParam = z.infer<typeof documentIdParamSchema>;
-

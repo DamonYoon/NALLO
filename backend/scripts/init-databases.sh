@@ -77,6 +77,24 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+-- Create attachments table
+CREATE TABLE IF NOT EXISTS attachments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    document_id UUID REFERENCES documents(document_id) ON DELETE SET NULL,
+    filename VARCHAR(255) NOT NULL,
+    storage_path VARCHAR(500) NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    attachment_type VARCHAR(50) NOT NULL,
+    size_bytes INTEGER NOT NULL,
+    checksum VARCHAR(64),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_attachments_document_id ON attachments(document_id);
+CREATE INDEX IF NOT EXISTS idx_attachments_type ON attachments(attachment_type);
+CREATE INDEX IF NOT EXISTS idx_attachments_created_at ON attachments(created_at);
 EOF
 
 echo -e "${GREEN}✅ PostgreSQL schema initialized${NC}"
@@ -102,5 +120,25 @@ CREATE INDEX page_id_index IF NOT EXISTS FOR (p:Page) ON (p.id);
 EOF
 
 echo -e "${GREEN}✅ Neo4j indexes created${NC}"
+
+# MinIO Setup (if running)
+if docker ps | grep -q nallo-minio; then
+  echo -e "${BLUE}📦 Setting up MinIO...${NC}"
+  
+  # Wait for MinIO to be ready
+  until docker exec nallo-minio mc alias set local http://localhost:9000 "${MINIO_ROOT_USER:-minioadmin}" "${MINIO_ROOT_PASSWORD:-minioadmin}" > /dev/null 2>&1; do
+    echo "⏳ Waiting for MinIO to be ready..."
+    sleep 2
+  done
+  
+  echo -e "${GREEN}✅ MinIO is ready${NC}"
+  
+  # Create bucket if it doesn't exist
+  BUCKET_NAME="${MINIO_BUCKET_NAME:-nallo-files}"
+  docker exec nallo-minio mc mb --ignore-existing "local/${BUCKET_NAME}" > /dev/null 2>&1 || true
+  echo -e "${GREEN}✅ MinIO bucket '${BUCKET_NAME}' ready${NC}"
+else
+  echo -e "${BLUE}ℹ️  MinIO container not running - skipping MinIO setup${NC}"
+fi
 
 echo -e "${GREEN}🎉 Database initialization complete!${NC}"

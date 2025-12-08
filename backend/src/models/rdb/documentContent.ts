@@ -53,4 +53,3 @@ export function createDocumentContent(input: CreateDocumentContentInput): Docume
 export function generateStorageKey(documentId: string): string {
   return `documents/${documentId}`;
 }
-

@@ -17,6 +17,17 @@ const envSchema = z.object({
   POSTGRES_USER: z.string().min(1),
   POSTGRES_PASSWORD: z.string().min(1),
 
+  // MinIO Configuration
+  MINIO_ENDPOINT: z.string().default('localhost'),
+  MINIO_PORT: z.coerce.number().default(9000),
+  MINIO_USE_SSL: z
+    .string()
+    .transform(val => val === 'true')
+    .default('false'),
+  MINIO_ACCESS_KEY: z.string().default('minioadmin'),
+  MINIO_SECRET_KEY: z.string().default('minioadmin'),
+  MINIO_BUCKET_NAME: z.string().default('nallo-files'),
+
   // JWT Configuration
   JWT_SECRET_KEY: z.string().min(32),
   JWT_ALGORITHM: z.enum(['HS256', 'HS384', 'HS512']).default('HS256'),
@@ -74,6 +85,12 @@ const parseEnv = () => {
           POSTGRES_DB: 'nallo_test',
           POSTGRES_USER: 'test_user',
           POSTGRES_PASSWORD: 'test_password',
+          MINIO_ENDPOINT: 'localhost',
+          MINIO_PORT: 9000,
+          MINIO_USE_SSL: 'false',
+          MINIO_ACCESS_KEY: 'minioadmin',
+          MINIO_SECRET_KEY: 'minioadmin',
+          MINIO_BUCKET_NAME: 'nallo-files-test',
           JWT_SECRET_KEY: 'test-secret-key-minimum-32-characters-long-for-jwt-validation',
           JWT_ALGORITHM: 'HS256',
           JWT_EXPIRATION_HOURS: 24,

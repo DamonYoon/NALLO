@@ -72,7 +72,9 @@ export interface UpdateDocumentNodeInput {
 /**
  * Factory function to create a new DocumentNode
  */
-export function createDocumentNode(input: CreateDocumentNodeInput): Omit<DocumentNode, 'storage_key'> & { content: string } {
+export function createDocumentNode(
+  input: CreateDocumentNodeInput
+): Omit<DocumentNode, 'storage_key'> & { content: string } {
   const now = new Date();
   return {
     id: uuidv4(),
@@ -91,7 +93,10 @@ export function createDocumentNode(input: CreateDocumentNodeInput): Omit<Documen
  * Validate document status transition
  * @returns true if transition is valid, false otherwise
  */
-export function isValidStatusTransition(currentStatus: DocumentStatus, newStatus: DocumentStatus): boolean {
+export function isValidStatusTransition(
+  currentStatus: DocumentStatus,
+  newStatus: DocumentStatus
+): boolean {
   const validTransitions: Record<DocumentStatus, DocumentStatus[]> = {
     [DocumentStatus.DRAFT]: [DocumentStatus.IN_REVIEW],
     [DocumentStatus.IN_REVIEW]: [DocumentStatus.DONE, DocumentStatus.DRAFT],
@@ -101,4 +106,3 @@ export function isValidStatusTransition(currentStatus: DocumentStatus, newStatus
 
   return validTransitions[currentStatus]?.includes(newStatus) ?? false;
 }
-

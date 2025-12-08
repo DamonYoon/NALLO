@@ -7,8 +7,10 @@ import { requestLogger } from '@/api/middleware/logging';
 import { errorHandler, notFoundHandler } from '@/api/middleware/errorHandler';
 import { initializePostgres, closePostgres } from '@/db/postgres/connection';
 import { initializeGraphDB, closeGraphDB } from '@/db/graphdb/connection';
+import { initializeStorage, closeStorage } from '@/db/storage/connection';
 import healthRouter from '@/api/routes/health';
 import documentsRouter from '@/api/routes/documents';
+import attachmentsRouter from '@/api/routes/attachments';
 
 /**
  * Create and configure Express application
@@ -32,6 +34,7 @@ export function createApp(): Express {
 
   // API v1 routes
   app.use(`${config.API_V1_PREFIX}/documents`, documentsRouter);
+  app.use(`${config.API_V1_PREFIX}/attachments`, attachmentsRouter);
 
   // API root info
   app.get(config.API_V1_PREFIX, (_req, res) => {
@@ -40,6 +43,7 @@ export function createApp(): Express {
       version: '1.0.0',
       endpoints: {
         documents: `${config.API_V1_PREFIX}/documents`,
+        attachments: `${config.API_V1_PREFIX}/attachments`,
         health: '/health',
       },
     });
@@ -62,6 +66,14 @@ export async function initializeApp(): Promise<void> {
     // Initialize database connections
     await initializePostgres();
     await initializeGraphDB();
+
+    // Initialize storage (MinIO) - optional, may not be available in all environments
+    try {
+      await initializeStorage();
+    } catch (storageError) {
+      logger.warn('MinIO storage not available - file uploads will be disabled', { error: storageError });
+    }
+
     logger.info('Application initialized successfully');
   } catch (error) {
     logger.error('Failed to initialize application', error);
@@ -77,6 +89,7 @@ export async function shutdownApp(): Promise<void> {
   try {
     await closePostgres();
     await closeGraphDB();
+    await closeStorage();
     logger.info('Application shut down successfully');
   } catch (error) {
     logger.error('Error during application shutdown', error);
