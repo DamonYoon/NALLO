@@ -18,77 +18,97 @@
 - **Web app**: `backend/src/`, `backend/tests/`
 - Paths shown below follow plan.md structure
 
-## Phase 1: Setup (Shared Infrastructure)
+## Phase 1: Setup (Shared Infrastructure) ✅ COMPLETED
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create project structure per implementation plan in backend/
-- [ ] T002 Initialize TypeScript project with package.json, tsconfig.json
-- [ ] T003 [P] Configure ESLint and Prettier in backend/
-- [ ] T004 [P] Setup Jest or Vitest configuration in backend/jest.config.ts or backend/vitest.config.ts
-- [ ] T005 [P] Create .gitignore and .env.example in backend/
-- [ ] T006 [P] Setup TypeScript compilation configuration in backend/tsconfig.json
+- [x] T001 Create project structure per implementation plan in backend/
+- [x] T002 Initialize TypeScript project with package.json, tsconfig.json
+- [x] T003 [P] Configure ESLint and Prettier in backend/
+- [x] T004 [P] Setup Jest or Vitest configuration in backend/jest.config.ts or backend/vitest.config.ts
+- [x] T005 [P] Create .gitignore and .env.example in backend/
+- [x] T006 [P] Setup TypeScript compilation configuration in backend/tsconfig.json
 
 ---
 
-## Phase 2: Foundational (Blocking Prerequisites)
+## Phase 2: Foundational (Blocking Prerequisites) ✅ COMPLETED
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Setup PostgreSQL database connection in backend/src/db/postgres/connection.ts
-- [ ] T008 Setup GraphDB (Neo4j) connection in backend/src/db/graphdb/connection.ts
-- [ ] T009 [P] Implement connection pooling for PostgreSQL (TypeORM/Prisma configuration)
-- [ ] T010 [P] Implement connection pooling for GraphDB (neo4j-driver configuration)
-- [ ] T011 [P] Implement retry logic utility in backend/src/utils/retry.ts
-- [ ] T012 Create base error handling infrastructure in backend/src/utils/errors.ts
-- [ ] T013 Create logging infrastructure in backend/src/utils/logger.ts
-- [ ] T014 Setup environment configuration management in backend/src/config/settings.ts
-- [ ] T015 [P] Create Express/Fastify app structure in backend/src/app.ts
-- [ ] T016 [P] Implement health check endpoint in backend/src/api/routes/health.ts (US5)
-- [ ] T017 [US5] Create health check service in backend/src/services/healthService.ts
-- [ ] T018 [US5] Acceptance test for health check in backend/tests/acceptance/health.test.ts
-- [ ] T019 [US5] Unit tests for health service in backend/tests/unit/healthService.test.ts
-- [ ] T020 [US5] Integration test for database connections in backend/tests/integration/database.test.ts
+- [x] T007 Setup PostgreSQL database connection in backend/src/db/postgres/connection.ts
+- [x] T008 Setup GraphDB (Neo4j) connection in backend/src/db/graphdb/connection.ts
+- [x] T009 [P] Implement connection pooling for PostgreSQL (TypeORM/Prisma configuration)
+- [x] T010 [P] Implement connection pooling for GraphDB (neo4j-driver configuration)
+- [x] T011 [P] Implement retry logic utility in backend/src/utils/retry.ts
+- [x] T012 Create base error handling infrastructure in backend/src/utils/errors.ts
+- [x] T013 Create logging infrastructure in backend/src/utils/logger.ts
+- [x] T014 Setup environment configuration management in backend/src/config/settings.ts
+- [x] T015 [P] Create Express/Fastify app structure in backend/src/app.ts
+- [x] T016 [P] Implement health check endpoint in backend/src/api/routes/health.ts (US5)
+- [x] T017 [US5] Create health check service in backend/src/services/healthService.ts
+- [x] T018 [US5] Acceptance test for health check in backend/tests/acceptance/health.test.ts
+- [x] T019 [US5] Unit tests for health service in backend/tests/unit/healthService.test.ts
+- [x] T020 [US5] Integration test for database connections in backend/tests/integration/database.test.ts
+- [x] T020a [NEW] Setup MinIO connection in backend/src/db/storage/connection.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
 ---
 
-## Phase 3: User Story 1 - Document Management API (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Document Management API (Priority: P1) 🎯 MVP - IN PROGRESS
 
 **Goal**: Administrators can create, read, update, and manage documents through REST API endpoints. Documents can be created from scratch or imported from markdown/OAS files.
 
-**Independent Test**: Can be fully tested by creating a document via POST /api/v1/documents, retrieving it via GET /api/v1/documents/{id}, and updating it via PUT /api/v1/documents/{id}. The test verifies that document metadata is stored in GraphDB and content is stored in PostgreSQL, and both can be retrieved correctly.
+**Independent Test**: Can be fully tested by creating a document via POST /api/v1/documents, retrieving it via GET /api/v1/documents/{id}, and updating it via PUT /api/v1/documents/{id}. The test verifies that document metadata is stored in GraphDB and content is stored in MinIO, and both can be retrieved correctly.
+
+**Storage Architecture** (Updated 2025-12-08):
+
+- GraphDB: Document & Attachment metadata + relationships
+- MinIO: Document content files + Attachment files
+- PostgreSQL: User authentication only
 
 ### Tests for User Story 1 (MANDATORY per Constitution Principle II) ⚠️
 
 > **NOTE: Per Constitution, tests MUST be written FIRST using TDD approach. Write tests, ensure they FAIL, then implement. Tests MUST be independent, repeatable, and fast (< 1 second per test).**
 
-- [ ] T021 [P] [US1] Acceptance test for document CRUD in backend/tests/acceptance/documents.test.ts (verifies independent functionality)
-- [ ] T022 [P] [US1] Unit tests for document service in backend/tests/unit/documentService.test.ts (minimum 80% coverage)
+- [x] T021 [P] [US1] Acceptance test for document CRUD in backend/tests/acceptance/documents.test.ts (verifies independent functionality)
+- [x] T022 [P] [US1] Unit tests for document service in backend/tests/unit/documentService.test.ts (minimum 80% coverage)
 - [ ] T023 [P] [US1] Contract test for POST /api/v1/documents in backend/tests/contract/documents.test.ts
 - [ ] T024 [P] [US1] Contract test for GET /api/v1/documents/{id} in backend/tests/contract/documents.test.ts
 - [ ] T025 [P] [US1] Contract test for PUT /api/v1/documents/{id} in backend/tests/contract/documents.test.ts
 - [ ] T026 [P] [US1] Contract test for POST /api/v1/documents/import in backend/tests/contract/documents.test.ts
-- [ ] T027 [P] [US1] Integration test for document creation workflow in backend/tests/integration/documents.test.ts
+- [x] T027 [P] [US1] Integration test for document creation workflow in backend/tests/integration/documents.test.ts
 
 ### Implementation for User Story 1
 
-- [ ] T028 [P] [US1] Create Document node model in backend/src/models/graphdb/documentNode.ts
-- [ ] T029 [P] [US1] Create Document content model in backend/src/models/rdb/documentContent.ts
-- [ ] T030 [P] [US1] Create document schema in backend/src/api/schemas/document.ts (Zod/class-validator)
-- [ ] T031 [US1] Implement document service in backend/src/services/documentService.ts (depends on T028, T029)
-- [ ] T032 [US1] Implement GraphDB queries for documents in backend/src/db/graphdb/queries.ts
-- [ ] T033 [US1] Implement PostgreSQL queries for document content in backend/src/db/postgres/queries.ts
-- [ ] T034 [US1] Implement POST /api/v1/documents route in backend/src/api/routes/documents.ts
-- [ ] T035 [US1] Implement GET /api/v1/documents/{id} route in backend/src/api/routes/documents.ts
-- [ ] T036 [US1] Implement PUT /api/v1/documents/{id} route in backend/src/api/routes/documents.ts
+- [x] T028 [P] [US1] Create Document node model in backend/src/models/graphdb/documentNode.ts
+- [x] ~~T029~~ [REMOVED] Document content now stored in MinIO (see T028a)
+- [x] T028a [NEW] [US1] Create Attachment node model in backend/src/models/graphdb/attachmentNode.ts
+- [x] T030 [P] [US1] Create document schema in backend/src/api/schemas/document.ts (Zod/class-validator)
+- [x] T030a [NEW] [US1] Create attachment schema in backend/src/api/schemas/attachment.ts
+- [x] T031 [US1] Implement document service in backend/src/services/documentService.ts (uses GraphDB + MinIO)
+- [x] T031a [NEW] [US1] Implement storage service in backend/src/services/storageService.ts (Attachment CRUD)
+- [x] T032 [US1] Implement GraphDB queries for documents in backend/src/db/graphdb/queries.ts
+- [x] T032a [NEW] [US1] Implement GraphDB queries for attachments in backend/src/db/graphdb/queries.ts
+- [x] ~~T033~~ [MODIFIED] PostgreSQL now only handles users (see backend/src/db/postgres/queries.ts)
+- [x] T034 [US1] Implement POST /api/v1/documents route in backend/src/api/routes/documents.ts
+- [x] T035 [US1] Implement GET /api/v1/documents/{id} route in backend/src/api/routes/documents.ts
+- [x] T036 [US1] Implement PUT /api/v1/documents/{id} route in backend/src/api/routes/documents.ts
 - [ ] T037 [US1] Implement POST /api/v1/documents/import route in backend/src/api/routes/documents.ts
-- [ ] T038 [US1] Add validation and error handling (per Constitution Principle I: Code Quality)
-- [ ] T039 [US1] Add logging for document operations
-- [ ] T040 [US1] Add API documentation (TypeScript types and JSDoc comments per Constitution Principle I)
+- [x] T038 [US1] Add validation and error handling (per Constitution Principle I: Code Quality)
+- [x] T039 [US1] Add logging for document operations
+- [x] T040 [US1] Add API documentation (TypeScript types and JSDoc comments per Constitution Principle I)
+
+### Additional Attachment API (Added 2025-12-08)
+
+- [x] T040a [US1] Implement POST /api/v1/attachments route (upload)
+- [x] T040b [US1] Implement GET /api/v1/attachments/:id route
+- [x] T040c [US1] Implement GET /api/v1/attachments/:id/download route
+- [x] T040d [US1] Implement DELETE /api/v1/attachments/:id route
+- [x] T040e [US1] Implement POST /api/v1/attachments/:id/link route (link to document)
+- [x] T040f [US1] Implement DELETE /api/v1/attachments/:id/link/:documentId route (unlink)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -355,4 +375,3 @@ With multiple developers:
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
 - All file paths use TypeScript (.ts) extension
 - Database migrations should be created as needed (TypeORM migrations or Prisma migrations)
-
