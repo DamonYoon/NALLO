@@ -408,7 +408,7 @@ const storageKey = document.storage_key; // e.g., "documents/abc123/content.md"
 
 // Download content from MinIO
 const contentBuffer = await minioClient.getObject(bucketName, storageKey);
-const content = contentBuffer.toString('utf-8');
+const content = contentBuffer.toString("utf-8");
 ```
 
 ### Document with Attachments Retrieval

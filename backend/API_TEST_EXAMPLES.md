@@ -256,7 +256,36 @@ curl -X DELETE http://localhost:3000/api/v1/attachments/{attachment_id}
 # 성공 시 HTTP 204 (No Content)
 ```
 
-### 6. 파일 검증 규칙 조회 (GET)
+### 6. 첨부파일-문서 연결 (POST)
+
+```bash
+# 기존 첨부파일을 문서에 연결
+curl -X POST http://localhost:3000/api/v1/attachments/{attachment_id}/link \
+  -H "Content-Type: application/json" \
+  -d '{
+    "document_id": "{document_id}",
+    "order": 1,
+    "caption": "그림 1: 시스템 구성도"
+  }' | jq .
+```
+
+**요청 파라미터:**
+
+- `document_id` (required): 연결할 문서 UUID
+- `order` (optional): 표시 순서 (기본값: 0)
+- `caption` (optional): 첨부파일 캡션
+
+### 7. 첨부파일-문서 연결 해제 (DELETE)
+
+```bash
+# 문서에서 첨부파일 연결 해제 (첨부파일 자체는 유지)
+curl -X DELETE http://localhost:3000/api/v1/attachments/{attachment_id}/link/{document_id} | jq .
+
+# 연결 해제 후 확인 - document_id가 null이 됨
+curl http://localhost:3000/api/v1/attachments/{attachment_id} | jq '{id, filename, document_id}'
+```
+
+### 9. 파일 검증 규칙 조회 (GET)
 
 ```bash
 curl http://localhost:3000/api/v1/attachments/validation-rules | jq .
@@ -326,6 +355,49 @@ cat /tmp/downloaded.txt
 # 첨부파일 삭제
 echo "10. 첨부파일 삭제"
 curl -s -X DELETE http://localhost:3000/api/v1/attachments/$ATT_ID -w "Status: %{http_code}\n"
+
+echo ""
+echo "=== Document-Attachment Link 테스트 ==="
+
+# 문서 생성
+echo "11. 테스트 문서 생성"
+DOC_RESPONSE=$(curl -s -X POST http://localhost:3000/api/v1/documents \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Link Test Doc", "type": "general", "content": "# Link Test", "lang": "ko"}')
+DOC_ID=$(echo $DOC_RESPONSE | jq -r '.id')
+echo "문서 ID: $DOC_ID"
+
+# 이미지 파일 업로드 (문서에 연결)
+echo "12. 이미지 업로드 + 문서 연결"
+echo "PNG_IMAGE" > /tmp/test-image.png
+ATT_RESPONSE=$(curl -s -X POST http://localhost:3000/api/v1/attachments \
+  -F "file=@/tmp/test-image.png;type=image/png" \
+  -F "document_id=$DOC_ID")
+ATT_ID=$(echo $ATT_RESPONSE | jq -r '.id')
+echo "첨부파일 ID: $ATT_ID, 연결된 문서: $(echo $ATT_RESPONSE | jq -r '.document_id')"
+
+# 문서에 연결된 첨부파일 조회
+echo "13. 문서별 첨부파일 조회"
+curl -s "http://localhost:3000/api/v1/attachments?document_id=$DOC_ID" | jq '{total, items: [.items[] | {id, filename}]}'
+
+# 연결 해제
+echo "14. 첨부파일 연결 해제"
+curl -s -X DELETE "http://localhost:3000/api/v1/attachments/$ATT_ID/link/$DOC_ID" | jq .
+
+# 연결 해제 확인
+echo "15. 연결 해제 확인 (document_id: null)"
+curl -s "http://localhost:3000/api/v1/attachments/$ATT_ID" | jq '{id, document_id}'
+
+# 다시 연결
+echo "16. 다시 연결 (with caption)"
+curl -s -X POST "http://localhost:3000/api/v1/attachments/$ATT_ID/link" \
+  -H "Content-Type: application/json" \
+  -d "{\"document_id\": \"$DOC_ID\", \"order\": 1, \"caption\": \"Test Image\"}" | jq .
+
+# 정리
+echo "17. 테스트 데이터 정리"
+curl -s -X DELETE "http://localhost:3000/api/v1/attachments/$ATT_ID" -w "Attachment deleted: %{http_code}\n"
+curl -s -X DELETE "http://localhost:3000/api/v1/documents/$DOC_ID" -w "Document deleted: %{http_code}\n"
 
 echo ""
 echo "=== 테스트 완료 ==="
