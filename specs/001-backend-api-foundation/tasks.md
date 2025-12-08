@@ -124,13 +124,13 @@
 
 > **NOTE: Per Constitution, tests MUST be written FIRST using TDD approach. Tests MUST be independent, repeatable, and fast (< 1 second per test).**
 
-- [ ] T041 [P] [US2] Acceptance test for concept CRUD in backend/tests/acceptance/concepts.test.ts (verifies independent functionality)
-- [ ] T042 [P] [US2] Unit tests for concept service in backend/tests/unit/conceptService.test.ts (minimum 80% coverage)
+- [x] T041 [P] [US2] Acceptance test for concept CRUD in backend/tests/acceptance/concepts.test.ts (verifies independent functionality)
+- [x] T042 [P] [US2] Unit tests for concept service in backend/tests/unit/conceptService.test.ts (minimum 80% coverage)
 - [x] T043 [P] [US2] Contract test for POST /api/v1/concepts in backend/tests/contract/concepts.test.ts
 - [x] T044 [P] [US2] Contract test for GET /api/v1/concepts/{id} in backend/tests/contract/concepts.test.ts
 - [x] T045 [P] [US2] Contract test for PUT /api/v1/concepts/{id} in backend/tests/contract/concepts.test.ts
 - [x] T046 [P] [US2] Contract test for GET /api/v1/concepts/{id}/documents in backend/tests/contract/concepts.test.ts
-- [ ] T047 [P] [US2] Integration test for concept impact analysis in backend/tests/integration/concepts.test.ts
+- [x] T047 [P] [US2] Integration test for concept impact analysis in backend/tests/integration/concepts.test.ts
 
 ### Implementation for User Story 2
 
