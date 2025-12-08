@@ -202,7 +202,12 @@ export async function deleteDocumentNode(id: string): Promise<boolean> {
 
   try {
     const result = await session.run(DELETE_DOCUMENT, { id });
-    const deleted = result.records[0]?.get('deleted')?.toNumber() ?? 0;
+    const deletedValue = result.records[0]?.get('deleted');
+    // Handle both Neo4j Integer and regular number (depends on driver config)
+    const deleted =
+      typeof deletedValue?.toNumber === 'function'
+        ? deletedValue.toNumber()
+        : Number(deletedValue ?? 0);
     return deleted > 0;
   } finally {
     await session.close();
@@ -223,13 +228,14 @@ export async function listDocumentNodes(params: {
   const session = driver.session();
 
   try {
-    // Get documents
+    // Get documents - use neo4j.int() for integer parameters
+    const neo4j = await import('neo4j-driver');
     const listResult = await session.run(LIST_DOCUMENTS, {
       status: params.status ?? null,
       type: params.type ?? null,
       lang: params.lang ?? null,
-      limit: params.limit,
-      offset: params.offset,
+      limit: neo4j.int(params.limit),
+      offset: neo4j.int(params.offset),
     });
 
     // Get total count
@@ -254,7 +260,9 @@ export async function listDocumentNodes(params: {
       };
     });
 
-    const total = countResult.records[0]?.get('total')?.toNumber() ?? 0;
+    const totalValue = countResult.records[0]?.get('total');
+    const total =
+      typeof totalValue?.toNumber === 'function' ? totalValue.toNumber() : Number(totalValue ?? 0);
 
     return { items, total };
   } finally {
