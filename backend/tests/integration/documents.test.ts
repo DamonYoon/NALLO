@@ -6,8 +6,8 @@
  * These tests verify the integration between GraphDB and PostgreSQL for document operations.
  */
 import { DocumentService } from '../../src/services/documentService';
-import { getGraphDBConnection, closeGraphDBConnection } from '../../src/db/graphdb/connection';
-import { getPostgresConnection, closePostgresConnection } from '../../src/db/postgres/connection';
+import { initializeGraphDB, closeGraphDB } from '../../src/db/graphdb/connection';
+import { initializePostgres, closePostgres } from '../../src/db/postgres/connection';
 import { DocumentType, DocumentStatus } from '../../src/models/graphdb/documentNode';
 
 describe('Document Integration Tests', () => {
@@ -15,15 +15,15 @@ describe('Document Integration Tests', () => {
 
   beforeAll(async () => {
     // Initialize database connections for integration tests
-    await getGraphDBConnection();
-    await getPostgresConnection();
+    await initializeGraphDB();
+    await initializePostgres();
     documentService = new DocumentService();
   });
 
   afterAll(async () => {
     // Clean up connections
-    await closeGraphDBConnection();
-    await closePostgresConnection();
+    await closeGraphDB();
+    await closePostgres();
   });
 
   beforeEach(async () => {
@@ -35,7 +35,7 @@ describe('Document Integration Tests', () => {
     it('should create document in both GraphDB and PostgreSQL', async () => {
       const createRequest = {
         title: 'Integration Test Document',
-        type: DocumentType.GENERAL as const,
+        type: DocumentType.GENERAL,
         content: '# Integration Test\n\nThis document tests database integration.',
         lang: 'en',
       };
@@ -55,7 +55,7 @@ describe('Document Integration Tests', () => {
     it('should maintain data consistency between GraphDB and PostgreSQL', async () => {
       const createRequest = {
         title: 'Consistency Test Document',
-        type: DocumentType.API as const,
+        type: DocumentType.API,
         content: '# API Documentation\n\nThis is an API document.',
         lang: 'ko',
       };
@@ -83,7 +83,7 @@ describe('Document Integration Tests', () => {
     it('should handle document deletion from both databases', async () => {
       const createRequest = {
         title: 'To Be Deleted',
-        type: DocumentType.TUTORIAL as const,
+        type: DocumentType.TUTORIAL,
         content: '# Temporary Document\n\nThis will be deleted.',
         lang: 'en',
       };
@@ -106,7 +106,7 @@ describe('Document Integration Tests', () => {
 
       const createRequest = {
         title: 'Rollback Test Document',
-        type: DocumentType.GENERAL as const,
+        type: DocumentType.GENERAL,
         content: '# Rollback Test\n\nTesting transaction rollback.',
         lang: 'en',
       };
@@ -124,7 +124,7 @@ describe('Document Integration Tests', () => {
     it('should merge GraphDB metadata with PostgreSQL content', async () => {
       const createRequest = {
         title: 'Merge Test Document',
-        type: DocumentType.API as const,
+        type: DocumentType.API,
         content: '# API Content\n\nThis tests metadata and content merge.',
         lang: 'en',
       };
@@ -159,7 +159,7 @@ describe('Document Integration Tests', () => {
     it('should update metadata in GraphDB and content in PostgreSQL', async () => {
       const createRequest = {
         title: 'Update Workflow Test',
-        type: DocumentType.TUTORIAL as const,
+        type: DocumentType.TUTORIAL,
         content: '# Original Content\n\nOriginal tutorial content.',
         lang: 'ko',
       };
@@ -185,7 +185,7 @@ describe('Document Integration Tests', () => {
     it('should update status in GraphDB only', async () => {
       const createRequest = {
         title: 'Status Update Test',
-        type: DocumentType.GENERAL as const,
+        type: DocumentType.GENERAL,
         content: '# Status Test\n\nTesting status updates.',
         lang: 'en',
       };
@@ -194,7 +194,7 @@ describe('Document Integration Tests', () => {
 
       // Update status (GraphDB only)
       const updateRequest = {
-        status: DocumentStatus.IN_REVIEW as const,
+        status: DocumentStatus.IN_REVIEW,
       };
 
       const updated = await documentService.updateDocument(created.id, updateRequest);
@@ -208,9 +208,19 @@ describe('Document Integration Tests', () => {
     beforeAll(async () => {
       // Create test documents for listing
       const testDocs = [
-        { title: 'List Test 1', type: DocumentType.API as const, content: '# API 1', lang: 'en' },
-        { title: 'List Test 2', type: DocumentType.TUTORIAL as const, content: '# Tutorial 1', lang: 'en' },
-        { title: 'List Test 3', type: DocumentType.GENERAL as const, content: '# General 1', lang: 'ko' },
+        { title: 'List Test 1', type: DocumentType.API, content: '# API 1', lang: 'en' },
+        {
+          title: 'List Test 2',
+          type: DocumentType.TUTORIAL,
+          content: '# Tutorial 1',
+          lang: 'en',
+        },
+        {
+          title: 'List Test 3',
+          type: DocumentType.GENERAL,
+          content: '# General 1',
+          lang: 'ko',
+        },
       ];
 
       for (const doc of testDocs) {
@@ -238,7 +248,7 @@ describe('Document Integration Tests', () => {
         offset: 0,
       });
 
-      expect(result.items.every((doc) => doc.type === DocumentType.API)).toBe(true);
+      expect(result.items.every(doc => doc.type === DocumentType.API)).toBe(true);
     });
 
     it('should filter by language', async () => {
@@ -248,7 +258,7 @@ describe('Document Integration Tests', () => {
         offset: 0,
       });
 
-      expect(result.items.every((doc) => doc.lang === 'ko')).toBe(true);
+      expect(result.items.every(doc => doc.lang === 'ko')).toBe(true);
     });
   });
 
@@ -256,7 +266,7 @@ describe('Document Integration Tests', () => {
     it('should create document within 500ms (p95 target)', async () => {
       const createRequest = {
         title: 'Performance Test Document',
-        type: DocumentType.GENERAL as const,
+        type: DocumentType.GENERAL,
         content: '# Performance Test\n\n'.repeat(100), // ~2KB content
         lang: 'en',
       };
@@ -271,7 +281,7 @@ describe('Document Integration Tests', () => {
     it('should retrieve document within 200ms (p95 target)', async () => {
       const createRequest = {
         title: 'Retrieval Performance Test',
-        type: DocumentType.GENERAL as const,
+        type: DocumentType.GENERAL,
         content: '# Retrieval Test\n\nTesting retrieval performance.',
         lang: 'en',
       };
@@ -286,4 +296,3 @@ describe('Document Integration Tests', () => {
     });
   });
 });
-

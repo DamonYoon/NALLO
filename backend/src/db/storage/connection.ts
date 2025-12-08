@@ -128,7 +128,6 @@ export async function uploadFile(
  */
 export async function downloadFile(objectName: string): Promise<Buffer> {
   const client = getStorageClient();
-
   const dataStream = await client.getObject(config.MINIO_BUCKET_NAME, objectName);
 
   return new Promise((resolve, reject) => {

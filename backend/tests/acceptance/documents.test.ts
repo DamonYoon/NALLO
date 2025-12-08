@@ -7,8 +7,10 @@
  * retrieving it via GET /api/v1/documents/{id}, and updating it via PUT /api/v1/documents/{id}.
  */
 import request from 'supertest';
-import { app } from '../../src/app';
+import { createApp } from '../../src/app';
 import { DocumentType, DocumentStatus } from '../../src/models/graphdb/documentNode';
+
+const app = createApp();
 
 describe('Document CRUD - Acceptance Tests', () => {
   // Test data
