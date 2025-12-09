@@ -81,7 +81,11 @@ const metricColors = {
   error: '#EF4444',
 };
 
-export function Dashboard() {
+interface DashboardProps {
+  onViewDocuments?: () => void;
+}
+
+export function Dashboard({ onViewDocuments }: DashboardProps) {
   return (
     <div className="px-6 py-5">
       {/* Header */}
@@ -109,7 +113,10 @@ export function Dashboard() {
                 최근 수정되거나 생성된 문서
               </p>
             </div>
-            <button className="text-xs text-brand hover:underline">
+            <button 
+              onClick={onViewDocuments}
+              className="text-xs text-brand hover:underline"
+            >
               전체 보기
             </button>
           </CardHeader>

@@ -1,25 +1,33 @@
-'use client';
+"use client";
 
-import { useState, ReactNode } from 'react';
-import { GlobalHeader } from './global-header';
-import { FunctionHeader } from './function-header';
-import { Sidebar } from './sidebar';
-import { cn } from '@/lib/utils';
+import { useState, ReactNode } from "react";
+import { GlobalHeader } from "./global-header";
+import { FunctionHeader } from "./function-header";
+import { Sidebar } from "./sidebar";
+import { cn } from "@/lib/utils";
+
+type TabType = "문서" | "용어집" | "배포" | "그래프";
 
 interface AppLayoutProps {
-  children: ReactNode;
+  children?: ReactNode;
+  defaultTab?: TabType;
+  renderContent?: (activeTab: TabType) => ReactNode;
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+export function AppLayout({
+  children,
+  defaultTab = "문서",
+  renderContent,
+}: AppLayoutProps) {
   const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('문서');
+  const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
 
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
+    setActiveTab(tab as TabType);
   };
 
-  const showSidebar = activeTab === '문서';
-  const isDarkContent = activeTab === '그래프';
+  const showSidebar = activeTab === "문서";
+  const isDarkContent = activeTab === "그래프";
 
   return (
     <div className="size-full bg-global pt-0 px-5 pb-5 flex flex-col gap-[2px]">
@@ -33,8 +41,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* White Main Content Area */}
         <div
           className={cn(
-            'flex-1 rounded-lg overflow-hidden shadow-xl flex flex-col min-w-0 transition-all duration-300 ease-in-out',
-            isDarkContent ? 'bg-[#1e1e1e]' : 'bg-white'
+            "flex-1 rounded-lg overflow-hidden shadow-xl flex flex-col min-w-0 transition-all duration-300 ease-in-out",
+            isDarkContent ? "bg-[#1e1e1e]" : "bg-white"
           )}
         >
           {/* Function Header (Tabs) */}
@@ -48,11 +56,11 @@ export function AppLayout({ children }: AppLayoutProps) {
             {/* Main Content Area */}
             <main
               className={cn(
-                'flex-1 overflow-auto',
-                isDarkContent ? 'bg-[#1e1e1e]' : 'bg-muted'
+                "flex-1 overflow-auto",
+                isDarkContent ? "bg-[#1e1e1e]" : "bg-muted"
               )}
             >
-              {children}
+              {renderContent ? renderContent(activeTab) : children}
             </main>
           </div>
         </div>
@@ -81,3 +89,4 @@ export function AppLayout({ children }: AppLayoutProps) {
   );
 }
 
+export type { TabType };
