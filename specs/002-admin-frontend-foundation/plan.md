@@ -95,13 +95,22 @@ Admin Frontend 구현을 위한 단계별 계획입니다. **컴포넌트 주도
 
 ## Phase 3: Advanced Components (Week 3)
 
-### 3.1 Graph Visualization Components
+### 3.1 Graph Visualization Components (Neo4j NVL)
 
-- [ ] `GraphView` - 그래프 시각화 메인 컴포넌트
-  - 노드/엣지 렌더링
-  - 노드 타입별 스타일링
-  - 줌/팬 컨트롤
-- [ ] `GraphNodeDetail` - 노드 상세 정보 패널
+> **Tech**: `@neo4j-nvl/react` - Neo4j Network Visualization Library
+>
+> - [NVL Documentation](https://neo4j.com/docs/nvl/current/)
+> - [NVL API Reference](https://neo4j.com/docs/api/nvl/current/)
+> - [NVL React Examples](https://neo4j.com/docs/api/nvl/current/examples.html)
+
+- [ ] `GraphView` - NVL 기반 그래프 시각화 메인 컴포넌트
+  - InteractiveNvlWrapper 또는 BasicNvlWrapper 사용
+  - 노드/엣지 렌더링 (NVL Node, Relationship 타입)
+  - 노드 타입별 스타일링 (Document/Concept/Page/Tag)
+  - 줌/팬 컨트롤 (NVL 내장)
+  - Minimap 지원
+  - 레이아웃 알고리즘 (force-directed, hierarchical)
+- [ ] `GraphNodeDetail` - 노드 클릭 시 상세 정보 패널
 - [ ] `GraphFilter` - 노드 타입 필터
 
 ### 3.2 Search Components

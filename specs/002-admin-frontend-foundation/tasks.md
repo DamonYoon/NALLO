@@ -347,31 +347,32 @@ Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 
 ## Phase 3: Enhanced Features
 
-### TASK-013: 대시보드 페이지
+### TASK-013: 대시보드 페이지 ✅
 
 **Priority**: P2  
 **Estimate**: 4h  
 **Dependencies**: TASK-006
 
 **Description**:
-대시보드 페이지를 구현합니다.
+대시보드 위젯 컴포넌트들을 구현합니다.
 
 **Subtasks**:
 
-- [ ] `/dashboard` 페이지 생성
-- [ ] 통계 카드 컴포넌트 (문서 수, 버전 수, 용어 수)
-- [ ] 최근 문서 위젯
-- [ ] 빠른 액션 버튼 (새 문서, 새 버전 등)
-- [ ] 환영 메시지
+- [x] `StatCard` 컴포넌트 (통계 카드, 트렌드 표시)
+- [x] `StatCardGrid` 컴포넌트 (2/3/4 컬럼 그리드)
+- [x] `RecentDocuments` 위젯 (최근 문서 목록, 타입 뱃지)
+- [x] `QuickActions` 빠른 액션 버튼
+- [x] `QuickActionGrid` 카드형 액션 그리드
+- [x] `/playground/dashboard` 테스트 페이지
 
 **Acceptance Criteria**:
 
-- 대시보드에 통계와 최근 활동 표시
-- 빠른 액션으로 작업 시작 가능
+- ✅ 대시보드에 통계와 최근 활동 표시
+- ✅ 빠른 액션으로 작업 시작 가능
 
 ---
 
-### TASK-014: 통합 검색
+### TASK-014: 통합 검색 ✅
 
 **Priority**: P2  
 **Estimate**: 4h  
@@ -382,45 +383,68 @@ Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 
 **Subtasks**:
 
-- [ ] Header에 검색 입력 컴포넌트
-- [ ] 실시간 검색 제안 드롭다운 (debounce)
-- [ ] `/search` 검색 결과 페이지
-- [ ] 검색 결과 필터 (타입, 버전, 태그)
-- [ ] 검색 결과 하이라이팅
+- [x] `GlobalSearch` 컴포넌트 (Command Palette 스타일)
+- [x] ⌘K 단축키 지원
+- [x] 최근 검색어, 추천 검색어, 바로가기 링크
+- [x] `HeaderSearchBar` 헤더용 검색 바
+- [x] `SearchResults` 검색 결과 목록
+- [x] 타입별 필터 (document, concept, page, tag)
+- [x] 검색어 하이라이팅
+- [x] `/playground/search` 테스트 페이지
 
 **Acceptance Criteria**:
 
-- 키워드 입력 시 실시간 제안 표시
-- 검색 결과 페이지에서 필터 적용 가능
+- ✅ 키워드 입력 시 실시간 제안 표시
+- ✅ 검색 결과 페이지에서 필터 적용 가능
 
 ---
 
-### TASK-015: 그래프 시각화
+### TASK-015: 그래프 시각화 (Neo4j NVL)
 
 **Priority**: P2  
 **Estimate**: 6h  
 **Dependencies**: TASK-006
 
 **Description**:
-문서 관계 그래프 시각화를 구현합니다.
+Neo4j NVL(Network Visualization Library)을 사용하여 문서/용어 관계 그래프 시각화를 구현합니다.
+
+**Tech Stack**:
+- `@neo4j-nvl/react` - React wrapper for NVL
+- 참고 문서:
+  - [NVL Documentation](https://neo4j.com/docs/nvl/current/)
+  - [NVL API Reference](https://neo4j.com/docs/api/nvl/current/)
+  - [NVL React Examples](https://neo4j.com/docs/api/nvl/current/examples.html)
 
 **Subtasks**:
 
-- [ ] `/graph` 페이지 생성
-- [ ] Neo4j NVL 또는 Cytoscape.js 통합
-- [ ] 그래프 데이터 API 연동 (커스텀 엔드포인트 필요 시 백엔드 수정)
+- [ ] `@neo4j-nvl/react` 패키지 설치
+- [ ] `GraphView` 컴포넌트 생성 (`components/graph/graph-view.tsx`)
+  - NVL InteractiveNvlWrapper 사용
+  - 노드 데이터 변환 (Document, Concept, Page → NVL Node)
+  - 관계 데이터 변환 (USES_CONCEPT, LINKS_TO 등 → NVL Relationship)
 - [ ] 노드 스타일링 (타입별 색상/아이콘)
+  - Document: 파란색
+  - Concept: 보라색
+  - Page: 초록색
+  - Tag: 주황색
 - [ ] 엣지 스타일링 (관계 타입별)
-- [ ] 노드 클릭 → 상세 정보 패널
-- [ ] 노드 타입 필터
-- [ ] 줌/팬 컨트롤
-- [ ] 레이아웃 알고리즘 선택
+  - USES_CONCEPT: 점선
+  - LINKS_TO: 실선
+  - CHILD_OF: 화살표
+- [ ] `GraphNodeDetail` 컴포넌트 (노드 클릭 시 상세 정보 패널)
+- [ ] `GraphFilter` 컴포넌트 (노드 타입 필터)
+- [ ] NVL 내장 기능 활용:
+  - 줌/팬 컨트롤
+  - Minimap
+  - 레이아웃 알고리즘 (force-directed, hierarchical)
+- [ ] `/playground/graph-view` 테스트 페이지
 
 **Acceptance Criteria**:
 
-- 그래프가 렌더링됨
-- 노드 클릭 시 상세 정보 표시
-- 필터 적용 시 그래프 갱신
+- NVL로 그래프가 렌더링됨
+- 노드 클릭 시 상세 정보 패널 표시
+- 노드 타입 필터 적용 시 그래프 갱신
+- 줌/팬 컨트롤 동작
 
 ---
 

@@ -56,9 +56,21 @@ const components = [
     status: "ready",
   },
   {
+    name: "dashboard",
+    title: "Dashboard",
+    description: "대시보드 위젯 (StatCard, RecentDocuments, QuickActions)",
+    status: "ready",
+  },
+  {
+    name: "search",
+    title: "Search",
+    description: "통합 검색 (GlobalSearch, SearchResults)",
+    status: "ready",
+  },
+  {
     name: "graph-view",
     title: "Graph View",
-    description: "그래프 시각화",
+    description: "Neo4j NVL 그래프 시각화 (노드 필터, 상세 패널, Minimap)",
     status: "pending",
   },
 ];

@@ -30,7 +30,7 @@ JWT_EXPIRATION_HOURS=24
 # Application Configuration
 API_V1_PREFIX=/api/v1
 NODE_ENV=development
-PORT=3000
+PORT=8000
 LOG_LEVEL=info
 
 # TypeORM Configuration

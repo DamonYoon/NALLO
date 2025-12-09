@@ -248,7 +248,12 @@ Admin Frontend는 문서 작성자/배포자(Admin)를 위한 관리 인터페�
 
 ### Graph Visualization
 
-- **@neo4j-nvl/react** 또는 **Cytoscape.js** - 그래프 시각화
+- **@neo4j-nvl/react** - Neo4j Network Visualization Library (NVL)
+  - [NVL Documentation](https://neo4j.com/docs/nvl/current/)
+  - [NVL API Reference](https://neo4j.com/docs/api/nvl/current/)
+  - [NVL React Examples](https://neo4j.com/docs/api/nvl/current/examples.html)
+  - InteractiveNvlWrapper for React integration
+  - 내장 줌/팬, Minimap, 레이아웃 알고리즘 지원
 
 ### API Integration
 
