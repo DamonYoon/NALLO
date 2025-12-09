@@ -36,12 +36,12 @@ import { logger } from '../utils/logger';
 
 /**
  * Concept response type for API
+ * Note: category field removed - categorization via Concept relationships
  */
 export interface ConceptResponseDTO {
   id: string;
   term: string;
   description: string;
-  category: string | null;
   lang: string;
   created_at: string;
   updated_at: string;
@@ -83,7 +83,6 @@ export class ConceptService {
       const conceptNode = await createConceptNode({
         id: conceptId,
         term: input.term,
-        category: input.category || null,
         lang: input.lang,
         description: input.description,
       });
@@ -121,7 +120,6 @@ export class ConceptService {
 
     const updatedNode = await updateConceptNode(id, {
       term: input.term,
-      category: input.category,
       description: input.description,
     });
 
@@ -159,7 +157,6 @@ export class ConceptService {
     logger.debug('Listing concepts', { query });
 
     const { items, total } = await listConceptNodes({
-      category: query.category,
       lang: query.lang,
       limit: query.limit,
       offset: query.offset,
@@ -216,7 +213,6 @@ export class ConceptService {
       id: node.id,
       term: node.term,
       description: node.description,
-      category: node.category,
       lang: node.lang,
       created_at: node.created_at.toISOString(),
       updated_at: node.updated_at.toISOString(),

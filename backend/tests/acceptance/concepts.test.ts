@@ -63,7 +63,6 @@ jest.mock('../../src/db/graphdb/queries', () => {
     }),
     listConceptNodes: jest.fn().mockImplementation(async (query: Record<string, unknown>) => {
       let items = Array.from(mockConcepts.values());
-      if (query.category) items = items.filter(c => c.category === query.category);
       if (query.lang) items = items.filter(c => c.lang === query.lang);
       const offset = (query.offset as number) || 0;
       const limit = (query.limit as number) || 20;
@@ -108,10 +107,10 @@ const app = createApp();
 
 describe('Concept CRUD - Acceptance Tests', () => {
   // Test data matching User Story 2 requirements
+  // Note: category field removed - categorization via Concept relationships
   const testConcept = {
     term: 'Access Token',
     description: 'A credential used to access protected resources on behalf of a user.',
-    category: 'api',
     lang: 'en',
   };
 
@@ -128,7 +127,6 @@ describe('Concept CRUD - Acceptance Tests', () => {
         id: expect.any(String),
         term: testConcept.term,
         description: testConcept.description,
-        category: testConcept.category,
         lang: testConcept.lang,
         created_at: expect.any(String),
         updated_at: expect.any(String),
@@ -180,21 +178,8 @@ describe('Concept CRUD - Acceptance Tests', () => {
       expect(response.body.error).toBeDefined();
     });
 
-    it('should allow creating concept without optional category', async () => {
-      const conceptWithoutCategory = {
-        term: 'JWT',
-        description: 'JSON Web Token for authentication',
-        lang: 'en',
-      };
-
-      const response = await request(app)
-        .post('/api/v1/concepts')
-        .send(conceptWithoutCategory)
-        .expect(201);
-
-      expect([null, undefined]).toContain(response.body.category);
     });
-  });
+  // Note: category field has been removed - no category-related tests needed
 
   describe('GET /api/v1/concepts/{id} - Get Concept', () => {
     beforeAll(async () => {
@@ -273,19 +258,6 @@ describe('Concept CRUD - Acceptance Tests', () => {
       expect(response.body.term).toBe(updateData.term);
     });
 
-    it('should update concept category', async () => {
-      const updateData = {
-        category: 'authentication',
-      };
-
-      const response = await request(app)
-        .put(`/api/v1/concepts/${createdConceptId}`)
-        .send(updateData)
-        .expect(200);
-
-      expect(response.body.category).toBe(updateData.category);
-    });
-
     it('should return 404 for non-existent concept', async () => {
       const nonExistentId = '00000000-0000-4000-a000-000000000000';
 
@@ -351,10 +323,11 @@ describe('Concept CRUD - Acceptance Tests', () => {
   describe('GET /api/v1/concepts - List Concepts', () => {
     beforeAll(async () => {
       // Create multiple concepts for listing tests
+      // Note: category field removed - categorization via relationships
       const concepts = [
-        { term: 'API Key', description: 'A key for API access', category: 'api', lang: 'en' },
-        { term: 'Bearer Token', description: 'A bearer authentication token', category: 'api', lang: 'en' },
-        { term: '액세스 토큰', description: '보호된 리소스에 접근하기 위한 토큰', category: 'api', lang: 'ko' },
+        { term: 'API Key', description: 'A key for API access', lang: 'en' },
+        { term: 'Bearer Token', description: 'A bearer authentication token', lang: 'en' },
+        { term: '액세스 토큰', description: '보호된 리소스에 접근하기 위한 토큰', lang: 'ko' },
       ];
 
       for (const concept of concepts) {
@@ -374,18 +347,6 @@ describe('Concept CRUD - Acceptance Tests', () => {
         limit: 10,
         offset: 0,
       });
-    });
-
-    it('should filter concepts by category', async () => {
-      const response = await request(app)
-        .get('/api/v1/concepts')
-        .query({ category: 'api' })
-        .expect(200);
-
-      const allApiCategory = response.body.items.every(
-        (c: { category: string }) => c.category === 'api'
-      );
-      expect(allApiCategory).toBe(true);
     });
 
     it('should filter concepts by language', async () => {

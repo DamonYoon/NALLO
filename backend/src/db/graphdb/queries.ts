@@ -299,13 +299,13 @@ export async function listDocumentNodes(params: {
 
 /**
  * Create a Concept node
+ * Note: category field removed - categorization via Concept relationships
  */
 export const CREATE_CONCEPT = `
   CREATE (c:Concept {
     id: $id,
     term: $term,
     description: $description,
-    category: $category,
     lang: $lang,
     created_at: datetime(),
     updated_at: datetime()
@@ -779,11 +779,11 @@ const DELETE_CONCEPT = `
 
 /**
  * Cypher query to list Concepts with filters
+ * Note: category filter removed - categorization via Concept relationships
  */
 const LIST_CONCEPTS = `
   MATCH (c:Concept)
-  WHERE ($category IS NULL OR c.category = $category)
-    AND ($lang IS NULL OR c.lang = $lang)
+  WHERE ($lang IS NULL OR c.lang = $lang)
   RETURN c
   ORDER BY c.term ASC
   SKIP $offset
@@ -795,8 +795,7 @@ const LIST_CONCEPTS = `
  */
 const COUNT_CONCEPTS = `
   MATCH (c:Concept)
-  WHERE ($category IS NULL OR c.category = $category)
-    AND ($lang IS NULL OR c.lang = $lang)
+  WHERE ($lang IS NULL OR c.lang = $lang)
   RETURN count(c) as total
 `;
 
@@ -830,7 +829,6 @@ export async function createConceptNode(input: CreateConceptInput): Promise<Conc
     const result = await session.run(CREATE_CONCEPT, {
       id: input.id,
       term: input.term,
-      category: input.category || null,
       lang: input.lang,
       description: input.description,
     });
@@ -890,7 +888,6 @@ export async function updateConceptNode(
     // Filter out undefined values
     const cleanUpdates: Record<string, unknown> = {};
     if (updates.term !== undefined) cleanUpdates.term = updates.term;
-    if (updates.category !== undefined) cleanUpdates.category = updates.category;
     if (updates.description !== undefined) cleanUpdates.description = updates.description;
 
     const result = await session.run(UPDATE_CONCEPT, {
@@ -931,9 +928,9 @@ export async function deleteConceptNode(id: string): Promise<boolean> {
 
 /**
  * Query parameters for listing Concepts
+ * Note: category filter removed - categorization via Concept relationships
  */
 export interface ListConceptsQuery {
-  category?: string;
   lang?: string;
   limit: number;
   offset: number;
@@ -950,7 +947,6 @@ export async function listConceptNodes(
 
   try {
     const params = {
-      category: query.category || null,
       lang: query.lang || null,
       limit: neo4j.int(query.limit),
       offset: neo4j.int(query.offset),
@@ -969,7 +965,6 @@ export async function listConceptNodes(
 
     // Get total count
     const countResult = await session.run(COUNT_CONCEPTS, {
-      category: query.category || null,
       lang: query.lang || null,
     });
     const total = countResult.records[0]?.get('total')?.toNumber?.() ?? 0;

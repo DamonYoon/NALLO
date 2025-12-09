@@ -41,11 +41,11 @@ const mockedQueries = queries as jest.Mocked<typeof queries>;
 describe('Concept Relationships API Contract Tests', () => {
   let app: Express;
 
+  // Note: category field removed - categorization via relationships
   const testConcept1 = {
     id: '00000000-0000-4000-a000-000000000001',
     term: 'API',
     description: 'Application Programming Interface',
-    category: 'technology',
     lang: 'en',
     created_at: new Date('2025-12-08T10:00:00.000Z'),
     updated_at: new Date('2025-12-08T10:00:00.000Z'),
@@ -55,7 +55,6 @@ describe('Concept Relationships API Contract Tests', () => {
     id: '00000000-0000-4000-a000-000000000002',
     term: 'REST API',
     description: 'Representational State Transfer API',
-    category: 'technology',
     lang: 'en',
     created_at: new Date('2025-12-08T10:00:00.000Z'),
     updated_at: new Date('2025-12-08T10:00:00.000Z'),

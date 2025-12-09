@@ -2,19 +2,10 @@
  * Concept Node Model
  * Represents glossary terms stored in GraphDB
  * Per data-model.md specification
+ *
+ * Note: category field removed - categorization is done via
+ * Concept relationships (SUBTYPE_OF, PART_OF, SYNONYM_OF)
  */
-
-/**
- * Concept category type
- * Categorizes concepts by domain area
- */
-export const ConceptCategory = {
-  API: 'api',
-  DOMAIN: 'domain',
-  UI: 'ui',
-  GENERAL: 'general',
-} as const;
-export type ConceptCategory = (typeof ConceptCategory)[keyof typeof ConceptCategory];
 
 /**
  * Concept Node interface matching GraphDB schema
@@ -25,9 +16,6 @@ export interface ConceptNode {
 
   /** Term text (e.g., "access token", "액세스 토큰") */
   term: string;
-
-  /** Concept category (e.g., "api", "domain", "ui") */
-  category: string | null;
 
   /** Language code (ISO 639-1, e.g., "ko", "en") */
   lang: string;
@@ -48,7 +36,6 @@ export interface ConceptNode {
 export interface CreateConceptInput {
   id: string;
   term: string;
-  category?: string | null;
   lang: string;
   description: string;
 }
@@ -58,7 +45,6 @@ export interface CreateConceptInput {
  */
 export interface UpdateConceptInput {
   term?: string;
-  category?: string | null;
   description?: string;
 }
 
@@ -82,20 +68,12 @@ export type ConceptRelationship = (typeof ConceptRelationship)[keyof typeof Conc
 export const USES_CONCEPT = 'USES_CONCEPT';
 
 /**
- * Validate category value
- */
-export function isValidCategory(category: string): category is ConceptCategory {
-  return Object.values(ConceptCategory).includes(category as ConceptCategory);
-}
-
-/**
  * Convert Neo4j record to ConceptNode
  */
 export function toConceptNode(record: Record<string, unknown>): ConceptNode {
   return {
     id: record.id as string,
     term: record.term as string,
-    category: (record.category as string) || null,
     lang: record.lang as string,
     description: record.description as string,
     created_at:

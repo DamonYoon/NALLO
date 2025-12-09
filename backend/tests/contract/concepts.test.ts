@@ -69,7 +69,6 @@ jest.mock('../../src/db/graphdb/queries', () => {
     }),
     listConceptNodes: jest.fn().mockImplementation(async (query: Record<string, unknown>) => {
       let items = Array.from(mockConcepts.values());
-      if (query.category) items = items.filter(c => c.category === query.category);
       if (query.lang) items = items.filter(c => c.lang === query.lang);
       const offset = (query.offset as number) || 0;
       const limit = (query.limit as number) || 20;
@@ -132,10 +131,10 @@ const app = createApp();
 
 describe('Concept API - Contract Tests', () => {
   // Valid test concept matching OpenAPI CreateConceptRequest schema
+  // Note: category field removed - categorization via Concept relationships
   const validConcept = {
     term: 'Access Token',
     description: 'A token used to access protected resources on behalf of a user.',
-    category: 'api',
     lang: 'en',
   };
 
@@ -212,32 +211,19 @@ describe('Concept API - Contract Tests', () => {
       }
     });
 
-    it('should accept optional category field', async () => {
-      // Without category
-      const conceptWithoutCategory = {
-        term: 'No Category Term',
-        description: 'A term without category',
+    it('should create concept without category field', async () => {
+      // Category field has been removed - categorization via relationships
+      const concept = {
+        term: 'Concept Without Category',
+        description: 'Category is determined by relationships',
         lang: 'en',
       };
-      const response1 = await request(app)
+      const response = await request(app)
         .post('/api/v1/concepts')
-        .send(conceptWithoutCategory)
+        .send(concept)
         .expect(201);
-      // Category can be null or undefined when not provided
-      expect([null, undefined]).toContain(response1.body.category);
-
-      // With category
-      const conceptWithCategory = {
-        term: 'With Category Term',
-        description: 'A term with category',
-        category: 'domain',
-        lang: 'en',
-      };
-      const response2 = await request(app)
-        .post('/api/v1/concepts')
-        .send(conceptWithCategory)
-        .expect(201);
-      expect(response2.body.category).toBe('domain');
+      // Category field should not exist
+      expect(response.body.category).toBeUndefined();
     });
 
     it('should require term and description fields', async () => {
@@ -374,12 +360,6 @@ describe('Concept API - Contract Tests', () => {
         .put(`/api/v1/concepts/${updateTestConceptId}`)
         .send({ description: 'Only description update' })
         .expect(200);
-
-      // Only category
-      await request(app)
-        .put(`/api/v1/concepts/${updateTestConceptId}`)
-        .send({ category: 'ui' })
-        .expect(200);
     });
 
     it('should return 404 with ErrorResponse for non-existent concept', async () => {
@@ -487,7 +467,6 @@ describe('Concept API - Contract Tests', () => {
       const response = await request(app)
         .get('/api/v1/concepts')
         .query({
-          category: 'api',
           lang: 'en',
           limit: 20,
           offset: 0,

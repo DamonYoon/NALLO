@@ -151,7 +151,6 @@ describe('Concept Impact Analysis - Integration Tests', () => {
         .send({
           term: 'Authentication',
           description: 'The process of verifying user identity',
-          category: 'security',
           lang: 'en',
         });
       conceptId = conceptResponse.body.id;

@@ -2,17 +2,11 @@
  * Concept API Schemas
  * Zod schemas for concept request/response validation
  * Per OpenAPI specification in contracts/openapi.yaml
+ *
+ * Note: category field removed - categorization is done via
+ * Concept relationships (SUBTYPE_OF, PART_OF, SYNONYM_OF)
  */
 import { z } from 'zod';
-
-// Category enum - optional
-export const ConceptCategory = {
-  API: 'api',
-  DOMAIN: 'domain',
-  UI: 'ui',
-  GENERAL: 'general',
-} as const;
-export type ConceptCategory = (typeof ConceptCategory)[keyof typeof ConceptCategory];
 
 // ISO 639-1 language code pattern (2 lowercase letters)
 const langCodeSchema = z
@@ -32,7 +26,6 @@ export const createConceptSchema = z.object({
     .string()
     .min(1, 'Description is required')
     .max(5000, 'Description must be less than 5000 characters'),
-  category: z.string().max(50).optional(),
   lang: langCodeSchema,
 });
 export type CreateConceptRequest = z.infer<typeof createConceptSchema>;
@@ -44,7 +37,6 @@ export type CreateConceptRequest = z.infer<typeof createConceptSchema>;
 export const updateConceptSchema = z.object({
   term: z.string().min(1).max(255).optional(),
   description: z.string().min(1).max(5000).optional(),
-  category: z.string().max(50).optional(),
 });
 export type UpdateConceptRequest = z.infer<typeof updateConceptSchema>;
 
@@ -56,7 +48,6 @@ export const conceptResponseSchema = z.object({
   id: uuidSchema,
   term: z.string(),
   description: z.string(),
-  category: z.string().nullable().optional(),
   lang: z.string(),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime(),
@@ -78,7 +69,6 @@ export type ConceptListResponse = z.infer<typeof conceptListResponseSchema>;
  * Concept Query Parameters Schema
  */
 export const conceptQuerySchema = z.object({
-  category: z.string().optional(),
   lang: langCodeSchema.optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),

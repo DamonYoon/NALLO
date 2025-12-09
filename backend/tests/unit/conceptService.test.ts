@@ -39,7 +39,6 @@ describe('ConceptService', () => {
     id: 'test-uuid-1234-5678-9012',
     term: 'Access Token',
     description: 'A token used to access protected resources.',
-    category: 'api',
     lang: 'en',
     created_at: new Date('2025-01-01T00:00:00Z'),
     updated_at: new Date('2025-01-01T00:00:00Z'),
@@ -69,7 +68,6 @@ describe('ConceptService', () => {
       const input = {
         term: 'Access Token',
         description: 'A token used to access protected resources.',
-        category: 'api',
         lang: 'en',
       };
 
@@ -78,7 +76,6 @@ describe('ConceptService', () => {
       expect(createConceptNode).toHaveBeenCalledWith({
         id: 'test-uuid-1234-5678-9012',
         term: input.term,
-        category: input.category,
         lang: input.lang,
         description: input.description,
       });
@@ -87,34 +84,10 @@ describe('ConceptService', () => {
         id: mockConceptNode.id,
         term: mockConceptNode.term,
         description: mockConceptNode.description,
-        category: mockConceptNode.category,
         lang: mockConceptNode.lang,
         created_at: mockConceptNode.created_at.toISOString(),
         updated_at: mockConceptNode.updated_at.toISOString(),
       });
-    });
-
-    it('should create a concept without optional category', async () => {
-      const conceptWithoutCategory = { ...mockConceptNode, category: null };
-      (createConceptNode as jest.Mock).mockResolvedValue(conceptWithoutCategory);
-
-      const input = {
-        term: 'API',
-        description: 'Application Programming Interface',
-        lang: 'en',
-      };
-
-      const result = await service.createConcept(input);
-
-      expect(createConceptNode).toHaveBeenCalledWith({
-        id: 'test-uuid-1234-5678-9012',
-        term: input.term,
-        category: null,
-        lang: input.lang,
-        description: input.description,
-      });
-
-      expect(result.category).toBeNull();
     });
 
     it('should propagate errors from createConceptNode', async () => {
@@ -142,7 +115,6 @@ describe('ConceptService', () => {
         id: mockConceptNode.id,
         term: mockConceptNode.term,
         description: mockConceptNode.description,
-        category: mockConceptNode.category,
         lang: mockConceptNode.lang,
         created_at: mockConceptNode.created_at.toISOString(),
         updated_at: mockConceptNode.updated_at.toISOString(),
@@ -202,20 +174,6 @@ describe('ConceptService', () => {
 
       expect(result).toBeNull();
     });
-
-    it('should update category field', async () => {
-      const updatedConcept = { ...mockConceptNode, category: 'domain' };
-      (updateConceptNode as jest.Mock).mockResolvedValue(updatedConcept);
-
-      const result = await service.updateConcept('test-uuid-1234-5678-9012', {
-        category: 'domain',
-      });
-
-      expect(updateConceptNode).toHaveBeenCalledWith('test-uuid-1234-5678-9012', {
-        category: 'domain',
-      });
-      expect(result?.category).toBe('domain');
-    });
   });
 
   describe('deleteConcept', () => {
@@ -250,7 +208,6 @@ describe('ConceptService', () => {
       });
 
       expect(listConceptNodes).toHaveBeenCalledWith({
-        category: undefined,
         lang: undefined,
         limit: 20,
         offset: 0,
@@ -262,33 +219,12 @@ describe('ConceptService', () => {
             id: mockConceptNode.id,
             term: mockConceptNode.term,
             description: mockConceptNode.description,
-            category: mockConceptNode.category,
             lang: mockConceptNode.lang,
             created_at: mockConceptNode.created_at.toISOString(),
             updated_at: mockConceptNode.updated_at.toISOString(),
           },
         ],
         total: 1,
-        limit: 20,
-        offset: 0,
-      });
-    });
-
-    it('should filter by category', async () => {
-      (listConceptNodes as jest.Mock).mockResolvedValue({
-        items: [mockConceptNode],
-        total: 1,
-      });
-
-      await service.listConcepts({
-        category: 'api',
-        limit: 20,
-        offset: 0,
-      });
-
-      expect(listConceptNodes).toHaveBeenCalledWith({
-        category: 'api',
-        lang: undefined,
         limit: 20,
         offset: 0,
       });
@@ -307,7 +243,6 @@ describe('ConceptService', () => {
       });
 
       expect(listConceptNodes).toHaveBeenCalledWith({
-        category: undefined,
         lang: 'ko',
         limit: 20,
         offset: 0,
