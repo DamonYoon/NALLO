@@ -2,12 +2,24 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Lightbulb, RotateCcw } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Lightbulb,
+  RotateCcw,
+  Loader2,
+  Plus,
+  Database,
+  AlertCircle,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ConceptForm, ConceptFormValues } from "@/components/concepts/concept-form";
+import {
+  ConceptForm,
+  ConceptFormValues,
+} from "@/components/concepts/concept-form";
 import {
   ImpactAnalysisPanel,
   ImpactDocument,
@@ -18,6 +30,8 @@ import {
   ConceptSummary,
   RelationType,
 } from "@/components/concepts/concept-relations";
+import { conceptsApi } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api/client";
 
 // Mock data for impact analysis
 const generateMockImpactDocuments = (term: string): ImpactDocument[] => {
@@ -102,15 +116,57 @@ const mockInitialRelations: ConceptRelation[] = [
   },
 ];
 
+// Sample test data templates
+const sampleConcepts = [
+  {
+    term: "API 키",
+    description:
+      "API 키는 애플리케이션이 API에 접근할 수 있도록 인증하는 고유한 식별자입니다. 각 API 키는 특정 권한과 사용 제한이 있으며, 보안을 위해 주기적으로 재발급해야 합니다.",
+    lang: "ko",
+  },
+  {
+    term: "OAuth 2.0",
+    description:
+      "OAuth 2.0은 접근 위임을 위한 개방형 표준 프로토콜입니다. 사용자가 비밀번호를 공유하지 않고도 서드파티 애플리케이션에 리소스 접근 권한을 부여할 수 있습니다.",
+    lang: "ko",
+  },
+  {
+    term: "JWT",
+    description:
+      "JSON Web Token (JWT)은 당사자 간에 정보를 안전하게 전송하기 위한 컴팩트하고 URL-safe한 방법입니다. 토큰은 디지털 서명되어 있어 검증 가능합니다.",
+    lang: "ko",
+  },
+  {
+    term: "Rate Limiting",
+    description:
+      "Rate limiting is a strategy for limiting network traffic. It puts a cap on how often someone can repeat an action within a certain timeframe.",
+    lang: "en",
+  },
+  {
+    term: "Webhook",
+    description:
+      "A webhook is an HTTP-based callback function that allows lightweight, event-driven communication between 2 applications.",
+    lang: "en",
+  },
+];
+
 export default function ConceptFormPlayground() {
   const [isLoading, setIsLoading] = useState(false);
   const [isImpactLoading, setIsImpactLoading] = useState(false);
-  const [submittedData, setSubmittedData] = useState<ConceptFormValues | null>(null);
+  const [submittedData, setSubmittedData] = useState<ConceptFormValues | null>(
+    null
+  );
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [impactDocuments, setImpactDocuments] = useState<ImpactDocument[]>([]);
   const [currentTerm, setCurrentTerm] = useState("");
   const [currentLang, setCurrentLang] = useState("ko");
-  
+  const [apiResult, setApiResult] = useState<{
+    success: boolean;
+    message: string;
+    data?: unknown;
+  } | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
   // Relations state
   const [relations, setRelations] = useState<ConceptRelation[]>([]);
 
@@ -124,21 +180,39 @@ export default function ConceptFormPlayground() {
 
   const handleSubmit = async (values: ConceptFormValues) => {
     setIsLoading(true);
+    setApiResult(null);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // Create concept via API
+      const result = await conceptsApi.create({
+        term: values.term,
+        description: values.description,
+        lang: values.lang,
+      });
 
-    setSubmittedData(values);
-    setCurrentTerm(values.term);
-    setCurrentLang(values.lang);
-    setIsLoading(false);
+      setSubmittedData(values);
+      setCurrentTerm(values.term);
+      setCurrentLang(values.lang);
+      setApiResult({
+        success: true,
+        message: `용어가 성공적으로 생성되었습니다. (ID: ${result.id})`,
+        data: result,
+      });
 
-    // Log relations that would be saved
-    console.log("Submitted concept:", values);
-    console.log("Relations to save:", relations);
+      // Log relations that would be saved
+      console.log("Submitted concept:", values);
+      console.log("Relations to save:", relations);
 
-    // Load impact analysis
-    handleLoadImpact(values.term);
+      // Load impact analysis
+      handleLoadImpact(values.term);
+    } catch (error) {
+      setApiResult({
+        success: false,
+        message: getErrorMessage(error),
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLoadImpact = async (term: string) => {
@@ -153,10 +227,74 @@ export default function ConceptFormPlayground() {
     setImpactDocuments([]);
     setCurrentTerm("");
     setRelations([]);
+    setApiResult(null);
   };
 
   const handleDocumentClick = (doc: ImpactDocument) => {
     alert(`문서 클릭: ${doc.title} (ID: ${doc.id})`);
+  };
+
+  // Generate random test data
+  const handleGenerateTestData = async () => {
+    setIsGenerating(true);
+    setApiResult(null);
+
+    try {
+      const sample =
+        sampleConcepts[Math.floor(Math.random() * sampleConcepts.length)];
+      const randomSuffix = Math.random().toString(36).substring(2, 8);
+
+      const result = await conceptsApi.create({
+        term: `${sample.term} - ${randomSuffix}`,
+        description: sample.description,
+        lang: sample.lang,
+      });
+
+      setApiResult({
+        success: true,
+        message: `테스트 용어가 생성되었습니다. (ID: ${result.id})`,
+        data: result,
+      });
+    } catch (error) {
+      setApiResult({
+        success: false,
+        message: getErrorMessage(error),
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Generate multiple test concepts
+  const handleGenerateBulkTestData = async () => {
+    setIsGenerating(true);
+    setApiResult(null);
+
+    try {
+      const results = [];
+      for (const sample of sampleConcepts) {
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const result = await conceptsApi.create({
+          term: `${sample.term} - ${randomSuffix}`,
+          description: sample.description,
+          lang: sample.lang,
+        });
+        results.push(result);
+      }
+
+      setApiResult({
+        success: true,
+        message: `${results.length}개의 테스트 용어가 생성되었습니다.`,
+        data: results,
+      });
+    } catch (error) {
+      setApiResult({
+        success: false,
+        message: getErrorMessage(error),
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Relation handlers
@@ -181,7 +319,9 @@ export default function ConceptFormPlayground() {
   const handleRemoveRelation = useCallback((relationId: string) => {
     setRelations((prev) => {
       const removed = prev.find((r) => r.id === relationId);
-      console.log(`Removed relation: ${removed?.relationType} -> ${removed?.targetTerm}`);
+      console.log(
+        `Removed relation: ${removed?.relationType} -> ${removed?.targetTerm}`
+      );
       return prev.filter((r) => r.id !== relationId);
     });
   }, []);
@@ -200,7 +340,7 @@ export default function ConceptFormPlayground() {
           <div>
             <h1 className="text-2xl font-bold">ConceptForm & Relations</h1>
             <p className="text-muted-foreground">
-              용어 폼, 관계 설정, 영향도 분석 컴포넌트
+              용어 폼, 관계 설정, 영향도 분석 (실제 API 연동)
             </p>
           </div>
         </div>
@@ -246,6 +386,49 @@ export default function ConceptFormPlayground() {
             </CardContent>
           </Card>
 
+          {/* Test Data Generation */}
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Database className="h-4 w-4" />
+                테스트 데이터 생성
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-3">
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateTestData}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  랜덤 용어 1개 생성
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateBulkTestData}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  샘플 용어 5개 일괄 생성
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                클릭 시 실제 DB에 테스트 데이터가 생성됩니다.
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Form */}
           <Card>
             <CardHeader>
@@ -282,6 +465,40 @@ export default function ConceptFormPlayground() {
 
         {/* Right column - Results & Impact */}
         <div className="space-y-4">
+          {/* API Result */}
+          {apiResult && (
+            <Card
+              className={
+                apiResult.success
+                  ? "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30"
+                  : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30"
+              }
+            >
+              <CardHeader className="py-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  {apiResult.success ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                  )}
+                  API 응답
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="py-3">
+                <p
+                  className={`text-sm ${apiResult.success ? "text-green-700 dark:text-green-300" : "text-red-700 dark:text-red-300"}`}
+                >
+                  {apiResult.message}
+                </p>
+                {apiResult.data && (
+                  <pre className="mt-2 bg-muted p-3 rounded-md text-xs overflow-auto max-h-40">
+                    {JSON.stringify(apiResult.data, null, 2)}
+                  </pre>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Submitted data display */}
           <Card
             className={
@@ -351,8 +568,7 @@ export default function ConceptFormPlayground() {
                           >
                             {rel.relationType === "SUBTYPE_OF" && "↑"}
                             {rel.relationType === "SYNONYM_OF" && "≈"}
-                            {rel.relationType === "PART_OF" && "⊂"}
-                            {" "}{rel.targetTerm}
+                            {rel.relationType === "PART_OF" && "⊂"} {rel.targetTerm}
                           </Badge>
                         ))}
                       </div>
@@ -390,7 +606,7 @@ export default function ConceptFormPlayground() {
                     <li>• 설명 (필수, 최대 2000자)</li>
                     <li>• 언어 선택 (ko/en/ja)</li>
                     <li>• Zod 유효성 검사</li>
-                    <li>• 생성/편집 모드</li>
+                    <li>• 실제 DB에 저장</li>
                   </ul>
                 </div>
                 <div>

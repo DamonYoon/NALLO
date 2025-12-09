@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, FileText, RotateCcw } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  FileText,
+  RotateCcw,
+  Loader2,
+  Plus,
+  Database,
+  AlertCircle,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +20,33 @@ import {
   DocumentForm,
   DocumentFormValues,
 } from "@/components/documents/document-form";
+import { documentsApi } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api/client";
+
+// Sample test data templates
+const sampleDocuments = [
+  {
+    title: "시작하기 가이드",
+    type: "tutorial" as const,
+    lang: "ko",
+    content: "# 시작하기\n\n이 문서는 NALLO를 시작하는 방법을 설명합니다.\n\n## 설치\n\n```bash\nnpm install nallo\n```",
+    tags: ["시작하기", "설치", "튜토리얼"],
+  },
+  {
+    title: "API Reference",
+    type: "api" as const,
+    lang: "en",
+    content: "# API Reference\n\n## Authentication\n\nAll API requests require authentication.\n\n### Bearer Token\n\n```\nAuthorization: Bearer <token>\n```",
+    tags: ["api", "reference", "authentication"],
+  },
+  {
+    title: "인증 가이드",
+    type: "general" as const,
+    lang: "ko",
+    content: "# 인증 가이드\n\n## OAuth 2.0\n\nNALLO는 OAuth 2.0 인증을 지원합니다.\n\n### 토큰 발급\n\n1. 클라이언트 등록\n2. 인증 코드 발급\n3. 액세스 토큰 교환",
+    tags: ["인증", "OAuth", "보안"],
+  },
+];
 
 export default function DocumentFormPlayground() {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,6 +54,12 @@ export default function DocumentFormPlayground() {
     null
   );
   const [mode, setMode] = useState<"create" | "edit">("create");
+  const [apiResult, setApiResult] = useState<{
+    success: boolean;
+    message: string;
+    data?: unknown;
+  } | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Mock existing document for edit mode
   const existingDocument: Partial<DocumentFormValues> = {
@@ -30,16 +72,104 @@ export default function DocumentFormPlayground() {
 
   const handleSubmit = async (values: DocumentFormValues) => {
     setIsLoading(true);
+    setApiResult(null);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // Create document via API
+      const result = await documentsApi.create({
+        title: values.title,
+        type: values.type,
+        lang: values.lang,
+        content: values.summary || `# ${values.title}\n\n문서 내용을 작성하세요.`,
+        tags: values.tags,
+      });
 
-    setSubmittedData(values);
-    setIsLoading(false);
+      setSubmittedData(values);
+      setApiResult({
+        success: true,
+        message: `문서가 성공적으로 생성되었습니다. (ID: ${result.id})`,
+        data: result,
+      });
+    } catch (error) {
+      setApiResult({
+        success: false,
+        message: getErrorMessage(error),
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleReset = () => {
     setSubmittedData(null);
+    setApiResult(null);
+  };
+
+  // Generate random test data
+  const handleGenerateTestData = async () => {
+    setIsGenerating(true);
+    setApiResult(null);
+
+    try {
+      const sample =
+        sampleDocuments[Math.floor(Math.random() * sampleDocuments.length)];
+      const randomSuffix = Math.random().toString(36).substring(2, 8);
+
+      const result = await documentsApi.create({
+        title: `${sample.title} - ${randomSuffix}`,
+        type: sample.type,
+        lang: sample.lang,
+        content: sample.content,
+        tags: sample.tags,
+      });
+
+      setApiResult({
+        success: true,
+        message: `테스트 문서가 생성되었습니다. (ID: ${result.id})`,
+        data: result,
+      });
+    } catch (error) {
+      setApiResult({
+        success: false,
+        message: getErrorMessage(error),
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Generate multiple test documents
+  const handleGenerateBulkTestData = async () => {
+    setIsGenerating(true);
+    setApiResult(null);
+
+    try {
+      const results = [];
+      for (const sample of sampleDocuments) {
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const result = await documentsApi.create({
+          title: `${sample.title} - ${randomSuffix}`,
+          type: sample.type,
+          lang: sample.lang,
+          content: sample.content,
+          tags: sample.tags,
+        });
+        results.push(result);
+      }
+
+      setApiResult({
+        success: true,
+        message: `${results.length}개의 테스트 문서가 생성되었습니다.`,
+        data: results,
+      });
+    } catch (error) {
+      setApiResult({
+        success: false,
+        message: getErrorMessage(error),
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -56,7 +186,7 @@ export default function DocumentFormPlayground() {
           <div>
             <h1 className="text-2xl font-bold">DocumentForm</h1>
             <p className="text-muted-foreground">
-              문서 기본 정보 입력 폼 (제목, 타입, 언어, 태그)
+              문서 기본 정보 입력 폼 (실제 API 연동)
             </p>
           </div>
         </div>
@@ -78,6 +208,7 @@ export default function DocumentFormPlayground() {
                   onClick={() => {
                     setMode("create");
                     setSubmittedData(null);
+                    setApiResult(null);
                   }}
                 >
                   <FileText className="h-4 w-4 mr-2" />
@@ -89,12 +220,56 @@ export default function DocumentFormPlayground() {
                   onClick={() => {
                     setMode("edit");
                     setSubmittedData(null);
+                    setApiResult(null);
                   }}
                 >
                   <FileText className="h-4 w-4 mr-2" />
                   편집 모드
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Test Data Generation */}
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Database className="h-4 w-4" />
+                테스트 데이터 생성
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-3">
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateTestData}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  랜덤 문서 1개 생성
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateBulkTestData}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  샘플 문서 3개 일괄 생성
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                클릭 시 실제 DB에 테스트 데이터가 생성됩니다.
+              </p>
             </CardContent>
           </Card>
 
@@ -113,7 +288,10 @@ export default function DocumentFormPlayground() {
                 key={mode} // Reset form when mode changes
                 defaultValues={mode === "edit" ? existingDocument : undefined}
                 onSubmit={handleSubmit}
-                onCancel={() => setSubmittedData(null)}
+                onCancel={() => {
+                  setSubmittedData(null);
+                  setApiResult(null);
+                }}
                 isLoading={isLoading}
                 mode={mode}
               />
@@ -123,6 +301,40 @@ export default function DocumentFormPlayground() {
 
         {/* Result section */}
         <div className="space-y-4">
+          {/* API Result */}
+          {apiResult && (
+            <Card
+              className={
+                apiResult.success
+                  ? "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30"
+                  : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30"
+              }
+            >
+              <CardHeader className="py-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  {apiResult.success ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                  )}
+                  API 응답
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="py-3">
+                <p
+                  className={`text-sm ${apiResult.success ? "text-green-700 dark:text-green-300" : "text-red-700 dark:text-red-300"}`}
+                >
+                  {apiResult.message}
+                </p>
+                {apiResult.data && (
+                  <pre className="mt-2 bg-muted p-3 rounded-md text-xs overflow-auto max-h-40">
+                    {JSON.stringify(apiResult.data, null, 2)}
+                  </pre>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Submitted data display */}
           <Card
             className={
@@ -178,7 +390,11 @@ export default function DocumentFormPlayground() {
                       <div className="flex flex-wrap gap-1">
                         {submittedData.tags.length > 0 ? (
                           submittedData.tags.map((tag) => (
-                            <Badge key={tag} variant="secondary" className="text-xs">
+                            <Badge
+                              key={tag}
+                              variant="secondary"
+                              className="text-xs"
+                            >
                               {tag}
                             </Badge>
                           ))
@@ -235,11 +451,11 @@ export default function DocumentFormPlayground() {
                   </ul>
                 </div>
                 <div>
-                  <p className="font-medium mb-1">유효성 검사</p>
+                  <p className="font-medium mb-1">API 연동</p>
                   <ul className="text-muted-foreground text-xs space-y-0.5">
-                    <li>• Zod 스키마 기반 검증</li>
-                    <li>• 실시간 에러 메시지</li>
-                    <li>• 필수 필드 표시</li>
+                    <li>• 실제 DB에 문서 생성</li>
+                    <li>• 테스트 데이터 생성</li>
+                    <li>• 에러 핸들링</li>
                   </ul>
                 </div>
                 <div>
@@ -266,4 +482,3 @@ export default function DocumentFormPlayground() {
     </div>
   );
 }
-

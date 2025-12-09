@@ -42,6 +42,11 @@ export const documentsApi = {
     return data;
   },
 
+  // Delete document by ID
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`${BASE_PATH}/${id}`);
+  },
+
   // Import document from file
   import: async (
     file: File,

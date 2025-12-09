@@ -1,6 +1,7 @@
 import { apiClient } from "./client";
 import type {
   Concept,
+  ConceptListResponse,
   CreateConceptRequest,
   UpdateConceptRequest,
   DocumentListResponse,
@@ -10,6 +11,16 @@ import type {
 const BASE_PATH = "/concepts";
 
 export const conceptsApi = {
+  // List concepts with optional filters
+  list: async (
+    params?: PaginationParams & { lang?: string }
+  ): Promise<ConceptListResponse> => {
+    const { data } = await apiClient.get<ConceptListResponse>(BASE_PATH, {
+      params,
+    });
+    return data;
+  },
+
   // Get single concept by ID
   get: async (id: string): Promise<Concept> => {
     const { data } = await apiClient.get<Concept>(`${BASE_PATH}/${id}`);
@@ -32,6 +43,11 @@ export const conceptsApi = {
       request
     );
     return data;
+  },
+
+  // Delete concept by ID
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`${BASE_PATH}/${id}`);
   },
 
   // Get documents that use this concept (impact analysis)

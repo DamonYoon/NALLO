@@ -29,6 +29,9 @@ import {
   removeWorkingCopy,
   getOriginalDocument,
   getWorkingCopies,
+  getTagNodeByName,
+  createTagNode,
+  linkDocumentToTag,
 } from '../db/graphdb/queries';
 import { uploadFile, downloadFile, deleteFile, fileExists } from '../db/storage/connection';
 import {
@@ -82,14 +85,15 @@ export class DocumentService {
    * Create a new document
    * 1. Create metadata node in GraphDB
    * 2. Store content in MinIO
-   * 3. Return combined document
+   * 3. Create Tag nodes and link them (if tags provided)
+   * 4. Return combined document
    */
   async createDocument(input: CreateDocumentRequest): Promise<DocumentResponseDTO> {
     const documentId = uuidv4();
     const storageKey = generateStorageKey(documentId, input.type as DocumentType);
     const mimeType = getMimeType(input.type as DocumentType);
 
-    logger.info('Creating document', { documentId, title: input.title, type: input.type });
+    logger.info('Creating document', { documentId, title: input.title, type: input.type, tags: input.tags });
 
     try {
       // Store content in MinIO first
@@ -107,6 +111,11 @@ export class DocumentService {
         summary: null,
       });
 
+      // Process tags if provided
+      if (input.tags && input.tags.length > 0) {
+        await this.processDocumentTags(documentId, input.tags);
+      }
+
       logger.info('Document created successfully', { documentId, storageKey });
 
       return this.toResponseDTO(documentNode, input.content);
@@ -122,6 +131,37 @@ export class DocumentService {
       }
 
       throw error;
+    }
+  }
+
+  /**
+   * Process tags for a document
+   * Creates Tag nodes if they don't exist and links them to the document
+   */
+  private async processDocumentTags(documentId: string, tags: string[]): Promise<void> {
+    logger.info('Processing tags for document', { documentId, tags });
+
+    for (const tagName of tags) {
+      const trimmedTagName = tagName.trim();
+      if (!trimmedTagName) continue;
+
+      try {
+        // Check if tag already exists
+        let tagNode = await getTagNodeByName(trimmedTagName);
+
+        // Create tag if it doesn't exist
+        if (!tagNode) {
+          tagNode = await createTagNode({ name: trimmedTagName });
+          logger.info('Created new tag', { tagId: tagNode.id, name: trimmedTagName });
+        }
+
+        // Link document to tag
+        await linkDocumentToTag(documentId, tagNode.id);
+        logger.info('Linked document to tag', { documentId, tagId: tagNode.id, tagName: trimmedTagName });
+      } catch (error) {
+        logger.warn('Failed to process tag', { documentId, tagName: trimmedTagName, error });
+        // Continue processing other tags even if one fails
+      }
     }
   }
 

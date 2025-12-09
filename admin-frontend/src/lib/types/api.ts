@@ -63,6 +63,13 @@ export interface UpdateConceptRequest {
   category?: string;
 }
 
+export interface ConceptListResponse {
+  items: Concept[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 // Version
 export interface Version {
   id: string;
@@ -81,6 +88,20 @@ export interface CreateVersionRequest {
   description?: string;
   is_public: boolean;
   is_main: boolean;
+}
+
+export interface UpdateVersionRequest {
+  name?: string;
+  description?: string;
+  is_public?: boolean;
+  is_main?: boolean;
+}
+
+export interface VersionListResponse {
+  items: Version[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 // Page
