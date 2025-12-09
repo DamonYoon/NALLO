@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import {
   ArrowLeft,
   Hash,
@@ -12,6 +13,9 @@ import {
   Network,
   ExternalLink,
   Save,
+  Edit3,
+  Eye,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +30,12 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+
+// BlockNote 에디터는 클라이언트 전용이므로 동적 import
+const BlockNoteEditor = dynamic(
+  () => import("@/components/editor").then((mod) => mod.BlockNoteEditor),
+  { ssr: false }
+);
 
 interface DocumentEditorProps {
   documentId?: string;
@@ -55,25 +65,7 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
   );
   const [content, setContent] = useState(
     documentId
-      ? `BNB Chain의 온체인 데이터를 빠르게 조회할 수 있는 Web3 Data API의 기본 사용법을 안내합니다.
-
-## Introduction
-
-BNB Web3 Data API는 BNB Chain에서 발생하는 트랜잭션, 블록, 이벤트 로그 등 다양한 온체인 데이터를 실시간에 가깝게 조회할 수 있는 REST 기반 API입니다.
-
-## Requirements
-
-- BNB Chain 개발자 콘솔 접근 권한
-- API Key (모든 요청에 필요)
-- 기본적인 HTTP 요청 이해
-
-## Getting Your API Key
-
-1. 개발자 콘솔 로그인
-2. **API Keys** 메뉴 선택
-3. **Create New Key** 클릭
-4. Key 이름 및 권한 설정
-5. 발급된 키를 복사하여 안전하게 보관`
+      ? `BNB Chain의 온체인 데이터를 빠르게 조회할 수 있는 Web3 Data API의 기본 사용법을 안내합니다.`
       : ""
   );
 
@@ -92,6 +84,11 @@ BNB Web3 Data API는 BNB Chain에서 발생하는 트랜잭션, 블록, 이벤�
   const [showTermDropdown, setShowTermDropdown] = useState(false);
 
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleAddTag = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && tagInput.trim()) {
@@ -141,7 +138,7 @@ BNB Web3 Data API는 BNB Chain에서 발생하는 트랜잭션, 블록, 이벤�
         <ScrollArea className="flex-1">
           <div className="px-10 py-5 max-w-[900px] mx-auto">
             {/* Meta Bar */}
-            <div className="mb-8 flex items-start justify-between gap-4">
+            <div className="mb-6 flex items-start justify-between gap-4">
               {/* Left Side - Location, Type, Status */}
               <div className="flex-1 space-y-3">
                 {/* Back Button + Document Location */}
@@ -205,88 +202,82 @@ BNB Web3 Data API는 BNB Chain에서 발생하는 트랜잭션, 블록, 이벤�
                 <button
                   onClick={() => setViewMode("edit")}
                   className={cn(
-                    "px-3 py-1.5 rounded-md text-[13px] transition-colors",
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] transition-colors",
                     viewMode === "edit"
                       ? "bg-white text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
+                  <Edit3 size={14} />
                   Edit
                 </button>
                 <button
                   onClick={() => setViewMode("preview")}
                   className={cn(
-                    "px-3 py-1.5 rounded-md text-[13px] transition-colors",
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] transition-colors",
                     viewMode === "preview"
                       ? "bg-white text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
+                  <Eye size={14} />
                   Preview
                 </button>
               </div>
             </div>
 
-            {/* Title & Content Editor */}
-            <div className="mb-10">
+            {/* Editor Tips - Only show in edit mode */}
+            {viewMode === "edit" && (
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-medium text-emerald-900 mb-1">
+                      💡 에디터 사용법
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 text-emerald-700 text-xs">
+                      <div>
+                        <span className="font-medium">/</span> 슬래시 커맨드로
+                        블록 추가
+                      </div>
+                      <div>
+                        <span className="font-medium">@</span> 멘션으로 용어/문서
+                        연결
+                      </div>
+                      <div>
+                        <span className="font-medium">드래그</span>로 블록 순서
+                        변경
+                      </div>
+                      <div>
+                        <span className="font-medium">```ts</span> + Enter로
+                        코드 블록
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Title */}
+            <div className="mb-4">
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="문서 제목을 입력하세요"
-                className="w-full text-[32px] font-bold text-foreground placeholder:text-muted-foreground/50 focus:outline-none mb-6 pb-4 border-b border-border"
+                className="w-full text-[32px] font-bold text-foreground placeholder:text-muted-foreground/50 focus:outline-none pb-4 border-b border-border"
+                readOnly={viewMode === "preview"}
               />
+            </div>
 
-              {viewMode === "edit" ? (
-                <textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="문서 내용을 작성하거나, 우측 AI 패널을 열어 자동 생성을 시작하세요..."
-                  className="w-full min-h-[400px] text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none resize-none leading-relaxed"
+            {/* BlockNote Editor */}
+            <div className="min-h-[400px] mb-10">
+              {isMounted && (
+                <BlockNoteEditor
+                  editable={viewMode === "edit"}
+                  onChange={setContent}
+                  className="min-h-[400px]"
                 />
-              ) : (
-                <div className="prose prose-sm max-w-none">
-                  {content.split("\n").map((line, idx) => {
-                    if (line.startsWith("## ")) {
-                      return (
-                        <h2
-                          key={idx}
-                          className="text-xl font-semibold mt-6 mb-3"
-                        >
-                          {line.replace("## ", "")}
-                        </h2>
-                      );
-                    }
-                    if (line.startsWith("- ")) {
-                      return (
-                        <li key={idx} className="ml-4">
-                          {line.replace("- ", "")}
-                        </li>
-                      );
-                    }
-                    if (line.match(/^\d+\./)) {
-                      return (
-                        <li key={idx} className="ml-4">
-                          {line}
-                        </li>
-                      );
-                    }
-                    if (line.includes("**")) {
-                      return (
-                        <p
-                          key={idx}
-                          dangerouslySetInnerHTML={{
-                            __html: line.replace(
-                              /\*\*(.*?)\*\*/g,
-                              "<strong>$1</strong>"
-                            ),
-                          }}
-                        />
-                      );
-                    }
-                    return line ? <p key={idx}>{line}</p> : <br key={idx} />;
-                  })}
-                </div>
               )}
             </div>
 
@@ -303,7 +294,9 @@ BNB Web3 Data API는 BNB Chain에서 발생하는 트랜잭션, 블록, 이벤�
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  용어를 연결하면 문서 간 관계가 자동으로 구성됩니다
+                  용어를 연결하면 문서 간 관계가 자동으로 구성됩니다. 에디터에서{" "}
+                  <code className="bg-muted px-1 rounded">@</code>로 직접 연결할
+                  수도 있습니다.
                 </p>
               </div>
 
@@ -539,4 +532,3 @@ BNB Web3 Data API는 BNB Chain에서 발생하는 트랜잭션, 블록, 이벤�
     </div>
   );
 }
-

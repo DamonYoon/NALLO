@@ -1,0 +1,95 @@
+/* Custom Styles */
+
+/* Small Caps */
+.style-small-caps {
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+}
+
+/* Highlight Colors - Light Mode */
+.style-highlight[data-highlight-color="yellow"] {
+  background-color: #fef08a;
+}
+
+.style-highlight[data-highlight-color="green"] {
+  background-color: #bbf7d0;
+}
+
+.style-highlight[data-highlight-color="blue"] {
+  background-color: #bfdbfe;
+}
+
+.style-highlight[data-highlight-color="pink"] {
+  background-color: #fbcfe8;
+}
+
+.style-highlight[data-highlight-color="orange"] {
+  background-color: #fed7aa;
+}
+
+.style-highlight[data-highlight-color="purple"] {
+  background-color: #ddd6fe;
+}
+
+/* Highlight Colors - Dark Mode */
+[data-color-scheme="dark"] .style-highlight[data-highlight-color="yellow"] {
+  background-color: #854d0e;
+  color: #fef9c3;
+}
+
+[data-color-scheme="dark"] .style-highlight[data-highlight-color="green"] {
+  background-color: #166534;
+  color: #dcfce7;
+}
+
+[data-color-scheme="dark"] .style-highlight[data-highlight-color="blue"] {
+  background-color: #1e40af;
+  color: #dbeafe;
+}
+
+[data-color-scheme="dark"] .style-highlight[data-highlight-color="pink"] {
+  background-color: #9d174d;
+  color: #fce7f3;
+}
+
+[data-color-scheme="dark"] .style-highlight[data-highlight-color="orange"] {
+  background-color: #9a3412;
+  color: #ffedd5;
+}
+
+[data-color-scheme="dark"] .style-highlight[data-highlight-color="purple"] {
+  background-color: #5b21b6;
+  color: #ede9fe;
+}
+
+/* Underline Colors */
+.style-underline {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+.style-underline[data-underline-color="yellow"] {
+  text-decoration-color: #eab308;
+}
+
+.style-underline[data-underline-color="green"] {
+  text-decoration-color: #22c55e;
+}
+
+.style-underline[data-underline-color="blue"] {
+  text-decoration-color: #3b82f6;
+}
+
+.style-underline[data-underline-color="pink"] {
+  text-decoration-color: #ec4899;
+}
+
+.style-underline[data-underline-color="orange"] {
+  text-decoration-color: #f97316;
+}
+
+.style-underline[data-underline-color="purple"] {
+  text-decoration-color: #8b5cf6;
+}
+
