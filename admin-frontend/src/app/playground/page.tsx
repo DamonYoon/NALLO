@@ -22,20 +22,26 @@ const components = [
   {
     name: "document-form",
     title: "Document Form",
-    description: "문서 기본 정보 폼",
-    status: "pending",
+    description: "문서 기본 정보 폼 (제목, 타입, 언어, 태그)",
+    status: "ready",
   },
   {
     name: "data-table",
     title: "Data Table",
-    description: "범용 데이터 테이블",
-    status: "pending",
+    description: "범용 데이터 테이블 (정렬, 필터, 페이지네이션)",
+    status: "ready",
   },
   {
     name: "concept-form",
     title: "Concept Form",
-    description: "용어 폼",
-    status: "pending",
+    description: "용어 폼 및 영향도 분석 (ConceptForm + ImpactAnalysis)",
+    status: "ready",
+  },
+  {
+    name: "version-form",
+    title: "Version Form",
+    description: "버전 폼 및 버전 카드 (VersionForm + VersionCard)",
+    status: "ready",
   },
   {
     name: "page-tree",
