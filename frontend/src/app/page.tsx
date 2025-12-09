@@ -4,38 +4,18 @@ import { useState } from "react";
 import { AppLayout, TabType } from "@/components/layout";
 import { Dashboard } from "@/components/dashboard";
 import { DocumentList, DocumentEditor } from "@/components/documents";
+import { GlossaryList } from "@/components/glossary";
+import { GraphView } from "@/components/graph";
 
 type DocumentView = "dashboard" | "list" | "editor" | "new";
 
 // 임시 플레이스홀더 컴포넌트들
-function GlossaryPlaceholder() {
-  return (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-center">
-        <p className="text-2xl text-muted-foreground mb-2">📖</p>
-        <p className="text-muted-foreground">용어집 페이지 (구현 예정)</p>
-      </div>
-    </div>
-  );
-}
-
 function DeployPlaceholder() {
   return (
     <div className="flex items-center justify-center h-full">
       <div className="text-center">
         <p className="text-2xl text-muted-foreground mb-2">🚀</p>
         <p className="text-muted-foreground">배포 페이지 (구현 예정)</p>
-      </div>
-    </div>
-  );
-}
-
-function GraphPlaceholder() {
-  return (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-center">
-        <p className="text-2xl text-white/50 mb-2">📊</p>
-        <p className="text-white/50">그래프 뷰 (구현 예정)</p>
       </div>
     </div>
   );
@@ -98,11 +78,11 @@ export default function Home() {
             return <Dashboard onViewDocuments={() => setCurrentView("list")} />;
         }
       case "용어집":
-        return <GlossaryPlaceholder />;
+        return <GlossaryList />;
       case "배포":
         return <DeployPlaceholder />;
       case "그래프":
-        return <GraphPlaceholder />;
+        return <GraphView />;
       default:
         return <Dashboard />;
     }
