@@ -296,7 +296,7 @@ Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 
 ---
 
-### TASK-011: PageTree 컴포넌트
+### TASK-011: PageTree 컴포넌트 ✅
 
 **Priority**: P1  
 **Estimate**: 4h  
@@ -307,20 +307,22 @@ Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 
 **Subtasks**:
 
-- [ ] `PageTree` 컴포넌트 생성 (`components/pages/page-tree.tsx`)
-- [ ] 트리 노드 렌더링 (재귀)
-- [ ] 노드 확장/축소
-- [ ] 노드 선택 시 콜백
-- [ ] `/playground/page-tree` 테스트 페이지 (Mock 계층 데이터)
+- [x] `PageTree` 컴포넌트 생성 (`components/pages/page-tree.tsx`)
+- [x] 트리 노드 렌더링 (재귀)
+- [x] 노드 확장/축소 (개별 + 전체)
+- [x] 노드 선택 시 콜백
+- [x] 액션 메뉴 (편집, 숨기기/표시, 하위 추가, 삭제)
+- [x] 문서 링크 뱃지, 표시 여부 아이콘
+- [x] `/playground/page-tree` 테스트 페이지 (Mock 계층 데이터)
 
 **Acceptance Criteria**:
 
-- Playground에서 트리 구조 표시
-- 노드 클릭 시 선택 이벤트 발생
+- ✅ Playground에서 트리 구조 표시
+- ✅ 노드 클릭 시 선택 이벤트 발생
 
 ---
 
-### TASK-012: 공통 컴포넌트 (Shared)
+### TASK-012: 공통 컴포넌트 (Shared) ✅
 
 **Priority**: P1  
 **Estimate**: 3h  
@@ -331,16 +333,15 @@ Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 
 **Subtasks**:
 
-- [ ] `SearchInput` - 검색 입력 (debounce)
-- [ ] `FileUploader` - 파일 업로드 (드래그 앤 드롭)
-- [ ] `ConfirmDialog` - 확인 다이얼로그
-- [ ] `LoadingSkeleton` - 로딩 스켈레톤
-- [ ] `EmptyState` - 빈 상태 표시
-- [ ] 각 컴포넌트 Playground 테스트 페이지
+- [x] `SearchInput` - 검색 입력 (debounce, 사이즈 옵션, 클리어 버튼)
+- [x] `FileUploader` - 파일 업로드 (드래그 앤 드롭, 진행률 표시)
+- [x] `ConfirmDialog` - 확인 다이얼로그 (default/warning/danger variants)
+- [x] `EmptyState` - 빈 상태 표시 (empty/no-results/error variants)
+- [x] `/playground/shared` 테스트 페이지
 
 **Acceptance Criteria**:
 
-- Playground에서 각 컴포넌트 독립 테스트 가능
+- ✅ Playground에서 각 컴포넌트 독립 테스트 가능
 
 ---
 

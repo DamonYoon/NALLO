@@ -46,8 +46,14 @@ const components = [
   {
     name: "page-tree",
     title: "Page Tree",
-    description: "페이지 트리 구조",
-    status: "pending",
+    description: "페이지 트리 구조 (확장/축소, 선택, 액션 메뉴)",
+    status: "ready",
+  },
+  {
+    name: "shared",
+    title: "Shared Components",
+    description: "공통 컴포넌트 (SearchInput, ConfirmDialog, EmptyState, FileUploader)",
+    status: "ready",
   },
   {
     name: "graph-view",
