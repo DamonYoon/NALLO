@@ -3,12 +3,13 @@
 **Feature Branch**: `002-admin-frontend-foundation`  
 **Created**: 2025-12-08  
 **Status**: In Progress  
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **Last Updated**: 2025-12-09  
 **Depends On**: `001-backend-api-foundation`  
 **Input**: User description: "Admin frontend for document authors/publishers. Provides document management, glossary management, version/page management, and graph visualization. Uses Next.js 14+ with App Router, TypeScript, Tailwind CSS, and shadcn/ui components."
 
 **Changes**:
+- v1.1.1 (2025-12-09): ConceptForm에서 category 필드 제거 (관계형 카테고리화로 대체)
 - v1.1.0 (2025-12-09): BlockNote 에디터로 Tech Stack 변경, 멘션 기능 User Story 추가
 - v1.0.0 (2025-12-08): 최초 작성
 

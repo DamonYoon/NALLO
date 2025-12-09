@@ -115,7 +115,7 @@ Backend API 클라이언트와 컴포넌트 테스트용 Mock 데이터를 설�
 
 **Priority**: P0  
 **Estimate**: 6h  
-**Dependencies**: TASK-002, TASK-003  
+**Dependencies**: TASK-002, TASK-003
 **Status**: ✅ 완료
 
 **Description**:
@@ -150,7 +150,7 @@ Notion-style 블록 기반 WYSIWYG 에디터를 개발하고 Playground에서 �
 
 **Priority**: P0  
 **Estimate**: 2h  
-**Dependencies**: TASK-002, TASK-003  
+**Dependencies**: TASK-002, TASK-003
 **Status**: ✅ 완료
 
 **Description**:
@@ -176,82 +176,105 @@ Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 
 > **Note**: 이 단계에서는 컴포넌트만 개발합니다. 페이지 통합은 UI 확정 후 진행합니다.
 
-### TASK-007: DataTable 컴포넌트
+### TASK-007: DataTable 컴포넌트 ✅
 
 **Priority**: P1  
 **Estimate**: 4h  
 **Dependencies**: TASK-002
+**Status**: ✅ 완료
 
 **Description**:
 범용 데이터 테이블 컴포넌트를 개발합니다.
 
 **Subtasks**:
 
-- [ ] `DataTable` 컴포넌트 생성 (`components/shared/data-table.tsx`)
-- [ ] 컬럼 정의 인터페이스
-- [ ] 정렬 기능
-- [ ] 필터 기능
-- [ ] 페이지네이션
-- [ ] 로딩/빈 상태 처리
-- [ ] `/playground/data-table` 테스트 페이지 (Mock 데이터)
+- [x] `DataTable` 컴포넌트 생성 (`components/shared/data-table.tsx`)
+- [x] `DataTableColumnHeader` 헬퍼 컴포넌트 생성
+- [x] 컬럼 정의 인터페이스 (@tanstack/react-table)
+- [x] 정렬 기능 (컬럼 헤더 클릭, 오름차순/내림차순)
+- [x] 필터 기능 (검색 입력 필드)
+- [x] 페이지네이션 (페이지 크기 선택, 네비게이션)
+- [x] 행 선택 기능 (체크박스)
+- [x] 컬럼 표시/숨김 토글
+- [x] 로딩/빈 상태 처리 (Skeleton)
+- [x] `/playground/data-table` 테스트 페이지 (Mock 문서 데이터)
 
 **Acceptance Criteria**:
 
-- Playground에서 테이블 정렬, 필터, 페이지네이션 동작
-- 다양한 데이터 타입에 재사용 가능
+- [x] Playground에서 테이블 정렬, 필터, 페이지네이션 동작
+- [x] 다양한 데이터 타입에 재사용 가능
 
 ---
 
-### TASK-008: DocumentForm 컴포넌트
+### TASK-008: DocumentForm 컴포넌트 ✅
 
 **Priority**: P1  
 **Estimate**: 3h  
 **Dependencies**: TASK-002
+**Status**: ✅ 완료
 
 **Description**:
 문서 기본 정보 입력 폼 컴포넌트를 개발합니다.
 
 **Subtasks**:
 
-- [ ] `DocumentForm` 컴포넌트 생성 (`components/documents/document-form.tsx`)
-- [ ] react-hook-form + zod 유효성 검사
-- [ ] 제목 입력
-- [ ] 타입 선택 (api, general, tutorial)
-- [ ] 언어 선택
-- [ ] 태그 입력 (멀티 셀렉트)
-- [ ] `/playground/document-form` 테스트 페이지
+- [x] `DocumentForm` 컴포넌트 생성 (`components/documents/document-form.tsx`)
+- [x] react-hook-form + zod 유효성 검사
+- [x] 제목 입력 (필수, 최대 200자)
+- [x] 타입 선택 (api, general, tutorial)
+- [x] 언어 선택 (ko, en, ja)
+- [x] 요약 입력 (선택, 최대 500자)
+- [x] 태그 입력 (멀티 입력, Enter 키 추가, X 버튼 삭제)
+- [x] 생성/편집 모드 지원
+- [x] 로딩 상태 표시
+- [x] `/playground/document-form` 테스트 페이지
 
 **Acceptance Criteria**:
 
-- Playground에서 폼 입력 및 유효성 검사 동작
-- onSubmit으로 데이터 전달
+- [x] Playground에서 폼 입력 및 유효성 검사 동작
+- [x] onSubmit으로 데이터 전달
 
 ---
 
-### TASK-009: ConceptForm 및 ImpactAnalysis 컴포넌트
+### TASK-009: ConceptForm 및 ImpactAnalysis 컴포넌트 ✅
 
 **Priority**: P1  
 **Estimate**: 3h  
 **Dependencies**: TASK-002
+**Status**: ✅ 완료
 
 **Description**:
 용어 폼과 영향도 분석 컴포넌트를 개발합니다.
 
 **Subtasks**:
 
-- [ ] `ConceptForm` 컴포넌트 생성 (`components/concepts/concept-form.tsx`)
-- [ ] 용어, 설명, 카테고리, 언어 입력
-- [ ] `ImpactAnalysisPanel` 컴포넌트 (사용 문서 목록)
-- [ ] `/playground/concept-form` 테스트 페이지
+- [x] `ConceptForm` 컴포넌트 생성 (`components/concepts/concept-form.tsx`)
+- [x] 용어 입력 (필수, 최대 100자)
+- [x] 설명 입력 (필수, 최대 2000자)
+- [x] 언어 선택 (ko, en, ja)
+- [x] ~~카테고리 필드 제거~~ (Concept 노드 간 관계로 자동 카테고리화)
+- [x] react-hook-form + zod 유효성 검사
+- [x] 생성/편집 모드 지원
+- [x] `ImpactAnalysisPanel` 컴포넌트 (`components/concepts/impact-analysis.tsx`)
+- [x] 영향받는 문서 목록 표시
+- [x] `ConceptRelations` 컴포넌트 (`components/concepts/concept-relations.tsx`)
+  - [x] 상위 개념 (SUBTYPE_OF) 관계 추가/삭제
+  - [x] 동의어 (SYNONYM_OF) 관계 추가/삭제
+  - [x] 부분-전체 (PART_OF) 관계 추가/삭제
+  - [x] 검색 기반 용어 선택 UI (Combobox)
+- [x] 문서 타입/상태 뱃지
+- [x] 클릭 이벤트, 새로고침 버튼
+- [x] 로딩/빈 상태 처리
+- [x] `/playground/concept-form` 테스트 페이지
 
 **Acceptance Criteria**:
 
-- Playground에서 폼 동작 확인
-- 영향도 분석 패널에 Mock 문서 목록 표시
+- [x] Playground에서 폼 동작 확인
+- [x] 영향도 분석 패널에 Mock 문서 목록 표시
 
 ---
 
-### TASK-010: VersionForm 및 VersionCard 컴포넌트
+### TASK-010: VersionForm 및 VersionCard 컴포넌트 ✅
 
 **Priority**: P1  
 **Estimate**: 2h  
@@ -262,14 +285,14 @@ Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 
 **Subtasks**:
 
-- [ ] `VersionForm` 컴포넌트 (버전 식별자, 이름, 공개 여부, 메인 여부)
-- [ ] `VersionCard` 컴포넌트 (카드 형태로 버전 정보 표시)
-- [ ] `/playground/version-form` 테스트 페이지
+- [x] `VersionForm` 컴포넌트 (버전 식별자, 이름, 설명, 공개 여부, 메인 여부)
+- [x] `VersionCard` 컴포넌트 (카드 형태로 버전 정보 표시)
+- [x] `/playground/version-form` 테스트 페이지
 
 **Acceptance Criteria**:
 
-- Playground에서 버전 폼 동작 확인
-- 버전 카드에 상태 뱃지 표시
+- ✅ Playground에서 버전 폼 동작 확인
+- ✅ 버전 카드에 상태 뱃지 표시
 
 ---
 
@@ -537,10 +560,10 @@ Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 | TASK-004 | API 클라이언트 및 Mock 데이터  | P0       | 3h       | ✅     |
 | TASK-005 | BlockNote 블록 기반 에디터     | P0       | 6h       | ✅     |
 | TASK-006 | MarkdownViewer 컴포넌트        | P0       | 2h       | ✅     |
-| TASK-007 | DataTable 컴포넌트             | P1       | 4h       | ⬜     |
-| TASK-008 | DocumentForm 컴포넌트          | P1       | 3h       | ⬜     |
-| TASK-009 | ConceptForm 및 ImpactAnalysis  | P1       | 3h       | ⬜     |
-| TASK-010 | VersionForm 및 VersionCard     | P1       | 2h       | ⬜     |
+| TASK-007 | DataTable 컴포넌트             | P1       | 4h       | ✅     |
+| TASK-008 | DocumentForm 컴포넌트          | P1       | 3h       | ✅     |
+| TASK-009 | ConceptForm 및 ImpactAnalysis  | P1       | 3h       | ✅     |
+| TASK-010 | VersionForm 및 VersionCard     | P1       | 2h       | ✅     |
 | TASK-011 | PageTree 컴포넌트              | P1       | 4h       | ⬜     |
 | TASK-012 | 공통 컴포넌트 (Shared)         | P1       | 3h       | ⬜     |
 | TASK-013 | Dashboard 위젯 컴포넌트        | P2       | 4h       | ⬜     |

@@ -2,7 +2,11 @@
 
 **Feature**: Backend API Foundation  
 **Date**: 2025-12-07  
-**Updated**: 2025-12-08
+**Updated**: 2025-12-09
+
+**Changes**:
+- 2025-12-09: Concept Node에서 category 필드 제거 (categorization via relationships로 대체)
+- 2025-12-08: Storage 아키텍처 변경 (PostgreSQL → MinIO)
 
 ## Overview
 
@@ -37,9 +41,9 @@ The system uses a triple-storage architecture:
 │   │   │───────────────│─────────────▶│───────────────│─────────────▶│───────────────│       │ │
 │   │   │ id            │              │ id            │              │ id            │       │ │
 │   │   │ slug          │              │ type          │              │ term          │       │ │
-│   │   │ title         │              │ status        │              │ category      │       │ │
-│   │   │ order         │              │ title         │              │ lang          │       │ │
-│   │   │ visible       │              │ lang          │              │ description   │       │ │
+│   │   │ title         │              │ status        │              │ lang          │       │ │
+│   │   │ order         │              │ title         │              │ description   │       │ │
+│   │   │ visible       │              │ lang          │              │               │       │ │
 │   │   └───────┬───────┘              │ storage_key   │              └───┬───┬───┬───┘       │ │
 │   │           │                      │ summary       │                  │   │   │           │ │
 │   │           │                      └──┬──┬──┬──┬───┘                  │   │   │           │ │
@@ -194,7 +198,6 @@ The system uses a triple-storage architecture:
 
 - `id` (string, UUID, required): Concept unique identifier
 - `term` (string, required): Term text (e.g., "access token", "액세스 토큰")
-- `category` (string, optional): Concept category (e.g., "api", "domain", "ui")
 - `lang` (string, required): Language code (ISO 639-1)
 - `description` (string, required): Term definition/description
 - `created_at` (datetime, required): Creation timestamp
