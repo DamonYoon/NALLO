@@ -15,7 +15,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button, type ButtonProps } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import type { VariantProps } from "class-variance-authority";
+
+type ButtonVariant = VariantProps<typeof buttonVariants>["variant"];
 
 export type ConfirmVariant = "default" | "warning" | "danger";
 
@@ -51,7 +54,7 @@ const variantStyles: Record<
   {
     icon: React.ComponentType<{ className?: string }>;
     iconClass: string;
-    buttonVariant: ButtonProps["variant"];
+    buttonVariant: ButtonVariant;
   }
 > = {
   default: {

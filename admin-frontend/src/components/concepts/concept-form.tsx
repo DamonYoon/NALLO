@@ -43,7 +43,7 @@ const conceptFormSchema = z.object({
     .min(1, "설명을 입력해주세요")
     .max(2000, "설명은 2000자 이내로 입력해주세요"),
   lang: z.enum(["ko", "en", "ja"], {
-    required_error: "언어를 선택해주세요",
+    message: "언어를 선택해주세요",
   }),
 });
 

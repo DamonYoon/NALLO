@@ -327,6 +327,7 @@ Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 **Priority**: P1  
 **Estimate**: 3h  
 **Dependencies**: TASK-002
+**Status**: ✅ 완료
 
 **Description**:
 공통으로 사용되는 유틸리티 컴포넌트들을 개발합니다.
@@ -337,6 +338,13 @@ Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 - [x] `FileUploader` - 파일 업로드 (드래그 앤 드롭, 진행률 표시)
 - [x] `ConfirmDialog` - 확인 다이얼로그 (default/warning/danger variants)
 - [x] `EmptyState` - 빈 상태 표시 (empty/no-results/error variants)
+- [x] `StatusBadge` - 상태 배지 (draft/in-review/publish/done/error/warning)
+- [x] `PageHeader` - 페이지 헤더 (타이틀 + 설명 + 액션 버튼)
+- [x] `SectionHeader` - 섹션 헤더 (타이틀 + 설명 + 액션 링크)
+- [x] `CircularProgress` - 원형 진행률 차트 (점수 표시용)
+- [x] `MetricCard` - 지표 카드 (아이콘 + 레이블 + 숫자)
+- [x] `ActionListItem` - 액션 리스트 항목 (아이콘 + 제목 + 설명 + 버튼)
+- [x] `ProgressSteps` - 진행 단계 표시 (체크/로딩/대기 아이콘)
 - [x] `/playground/shared` 테스트 페이지
 
 **Acceptance Criteria**:
@@ -399,7 +407,7 @@ Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 
 ---
 
-### TASK-015: 그래프 시각화 (Neo4j NVL)
+### TASK-015: 그래프 시각화 (Neo4j NVL) ✅
 
 **Priority**: P2  
 **Estimate**: 6h  
@@ -417,34 +425,36 @@ Neo4j NVL(Network Visualization Library)을 사용하여 문서/용어 관계 �
 
 **Subtasks**:
 
-- [ ] `@neo4j-nvl/react` 패키지 설치
-- [ ] `GraphView` 컴포넌트 생성 (`components/graph/graph-view.tsx`)
+- [x] `@neo4j-nvl/react` 패키지 설치
+- [x] `GraphView` 컴포넌트 생성 (`components/graph/graph-view.tsx`)
   - NVL InteractiveNvlWrapper 사용
-  - 노드 데이터 변환 (Document, Concept, Page → NVL Node)
-  - 관계 데이터 변환 (USES_CONCEPT, LINKS_TO 등 → NVL Relationship)
-- [ ] 노드 스타일링 (타입별 색상/아이콘)
-  - Document: 파란색
-  - Concept: 보라색
-  - Page: 초록색
-  - Tag: 주황색
-- [ ] 엣지 스타일링 (관계 타입별)
-  - USES_CONCEPT: 점선
-  - LINKS_TO: 실선
-  - CHILD_OF: 화살표
-- [ ] `GraphNodeDetail` 컴포넌트 (노드 클릭 시 상세 정보 패널)
-- [ ] `GraphFilter` 컴포넌트 (노드 타입 필터)
-- [ ] NVL 내장 기능 활용:
-  - 줌/팬 컨트롤
-  - Minimap
-  - 레이아웃 알고리즘 (force-directed, hierarchical)
-- [ ] `/playground/graph-view` 테스트 페이지
+  - 노드 데이터 변환 (Document, Concept → NVL Node)
+  - 관계 데이터 변환 → NVL Relationship
+- [x] 노드 스타일링 (타입별 색상)
+  - Document: 파란색 (#3b82f6)
+  - Concept: 보라색 (#a855f7)
+  - Page: 초록색 (#22c55e)
+  - Tag: 주황색 (#f97316)
+- [x] `GraphNodeDetail` 컴포넌트 (노드 클릭 시 상세 정보 패널)
+  - 메타데이터 표시, 태그, 연결 정보 탭
+- [x] `GraphFilter` 컴포넌트 (노드 타입 필터)
+  - 노드 타입 필터 (문서/용어)
+  - 관계 타입 필터 (문서-문서/문서-용어/용어-용어)
+  - 태그 필터 & 색상 선택
+  - 그래프 스타일 (노드 크기, 엣지 굵기, 라벨 표시)
+- [x] NVL 내장 기능 활용:
+  - 줌/팬 컨트롤 (플로팅 툴바)
+  - Force-directed 레이아웃
+- [x] `/playground/graph-view` 테스트 페이지 (SSR 비활성화)
+- [x] 태그 노드 렌더링 및 문서-태그(doc-tag) 관계 표시, 태그 클릭 시 필터 토글
+- [x] 페이지 노드/필터 추가, doc-page 관계(Mock) 표시, 페이지 필터 기본 ON 및 카운트 표시
 
 **Acceptance Criteria**:
 
-- NVL로 그래프가 렌더링됨
-- 노드 클릭 시 상세 정보 패널 표시
-- 노드 타입 필터 적용 시 그래프 갱신
-- 줌/팬 컨트롤 동작
+- ✅ NVL로 그래프가 렌더링됨
+- ✅ 노드 클릭 시 상세 정보 패널 표시
+- ✅ 노드 타입 필터 적용 시 그래프 갱신
+- ✅ 줌/팬 컨트롤 동작
 
 ---
 
@@ -589,11 +599,11 @@ Neo4j NVL(Network Visualization Library)을 사용하여 문서/용어 관계 �
 | TASK-008 | DocumentForm 컴포넌트          | P1       | 3h       | ✅     |
 | TASK-009 | ConceptForm 및 ImpactAnalysis  | P1       | 3h       | ✅     |
 | TASK-010 | VersionForm 및 VersionCard     | P1       | 2h       | ✅     |
-| TASK-011 | PageTree 컴포넌트              | P1       | 4h       | ⬜     |
-| TASK-012 | 공통 컴포넌트 (Shared)         | P1       | 3h       | ⬜     |
-| TASK-013 | Dashboard 위젯 컴포넌트        | P2       | 4h       | ⬜     |
-| TASK-014 | Search 컴포넌트                | P2       | 4h       | ⬜     |
-| TASK-015 | GraphView 컴포넌트             | P2       | 6h       | ⬜     |
+| TASK-011 | PageTree 컴포넌트              | P1       | 4h       | ✅     |
+| TASK-012 | 공통 컴포넌트 (Shared)         | P1       | 3h       | ✅     |
+| TASK-013 | Dashboard 위젯 컴포넌트        | P2       | 4h       | ✅     |
+| TASK-014 | Search 컴포넌트                | P2       | 4h       | ✅     |
+| TASK-015 | GraphView 컴포넌트             | P2       | 6h       | ✅     |
 | TASK-016 | 에러 핸들링                    | P1       | 3h       | ⬜     |
 | TASK-017 | 로딩 상태                      | P1       | 2h       | ⬜     |
 | TASK-018 | 테스트 작성                    | P2       | 6h       | ⬜     |

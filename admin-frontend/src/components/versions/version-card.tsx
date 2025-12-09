@@ -18,17 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-interface Version {
-  id: string;
-  version: string;
-  name: string;
-  description?: string | null;
-  is_public: boolean;
-  is_main: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import type { Version } from "@/lib/types/api";
 
 interface VersionCardProps {
   version: Version;

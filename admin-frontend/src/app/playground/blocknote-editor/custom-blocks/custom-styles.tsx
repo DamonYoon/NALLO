@@ -12,9 +12,11 @@ export const createSmallCaps = createReactStyleSpec(
   },
   {
     render: (props) => (
-      <span className="style-small-caps" style={{ fontVariant: "small-caps" }}>
-        {props.children}
-      </span>
+      <span
+        className="style-small-caps"
+        style={{ fontVariant: "small-caps" }}
+        ref={props.contentRef}
+      />
     ),
   }
 );
@@ -39,9 +41,11 @@ export const createColorHighlight = createReactStyleSpec(
     render: (props) => {
       const colorValue = props.value || "yellow";
       return (
-        <span className="style-highlight" data-highlight-color={colorValue}>
-          {props.children}
-        </span>
+        <span
+          className="style-highlight"
+          data-highlight-color={colorValue}
+          ref={props.contentRef}
+        />
       );
     },
   }
@@ -57,9 +61,11 @@ export const createColorUnderline = createReactStyleSpec(
     render: (props) => {
       const colorValue = props.value || "blue";
       return (
-        <span className="style-underline" data-underline-color={colorValue}>
-          {props.children}
-        </span>
+        <span
+          className="style-underline"
+          data-underline-color={colorValue}
+          ref={props.contentRef}
+        />
       );
     },
   }
@@ -74,7 +80,7 @@ export const createFontSize = createReactStyleSpec(
   {
     render: (props) => {
       const size = props.value || "16px";
-      return <span style={{ fontSize: size }}>{props.children}</span>;
+      return <span style={{ fontSize: size }} ref={props.contentRef} />;
     },
   }
 );

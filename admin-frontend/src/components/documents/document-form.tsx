@@ -48,16 +48,16 @@ const documentFormSchema = z.object({
     .min(1, "제목을 입력해주세요")
     .max(200, "제목은 200자 이내로 입력해주세요"),
   type: z.enum(["api", "general", "tutorial"], {
-    required_error: "문서 타입을 선택해주세요",
+    message: "문서 타입을 선택해주세요",
   }),
   lang: z.enum(["ko", "en", "ja"], {
-    required_error: "언어를 선택해주세요",
+    message: "언어를 선택해주세요",
   }),
   summary: z
     .string()
     .max(500, "요약은 500자 이내로 입력해주세요")
     .optional(),
-  tags: z.array(z.string()).default([]),
+  tags: z.array(z.string()),
 });
 
 export type DocumentFormValues = z.infer<typeof documentFormSchema>;
@@ -85,8 +85,8 @@ export function DocumentForm({
     resolver: zodResolver(documentFormSchema),
     defaultValues: {
       title: "",
-      type: undefined,
-      lang: "ko",
+      type: "general" as const,
+      lang: "ko" as const,
       summary: "",
       tags: [],
       ...defaultValues,

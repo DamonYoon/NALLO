@@ -3,12 +3,19 @@
 **Feature Branch**: `002-admin-frontend-foundation`  
 **Created**: 2025-12-08  
 **Status**: In Progress  
-**Version**: 1.1.1  
+**Version**: 1.1.7  
 **Last Updated**: 2025-12-09  
 **Depends On**: `001-backend-api-foundation`  
 **Input**: User description: "Admin frontend for document authors/publishers. Provides document management, glossary management, version/page management, and graph visualization. Uses Next.js 14+ with App Router, TypeScript, Tailwind CSS, and shadcn/ui components."
 
 **Changes**:
+
+- v1.1.7 (2025-12-09): 페이지 노드/엣지 추가(Mock), 페이지 노드 필터 토글 추가, showPages 기본 ON
+- v1.1.6 (2025-12-09): 태그 선택 칩 폭을 전체로 사용하고 내부 정렬 개선, 긴 태그명은 말줄임 처리
+- v1.1.5 (2025-12-09): 태그 검색어 입력 시에만 목록 노출, 선택 시 랜덤 색상 자동 부여 및 색상 버튼으로 수정 가능
+- v1.1.4 (2025-12-09): 태그 필터 검색 결과에서 색상 선택 후 추가 가능하도록 UX 개선
+- v1.1.3 (2025-12-09): GraphView 태그 필터 검색/선택 UX 추가 (검색 후 추가, 선택된 태그만 필터 버튼 표시)
+- v1.1.2 (2025-12-09): GraphView에 태그 노드 및 doc-tag 관계 시각화 추가, 태그 클릭 시 필터 연동
 - v1.1.1 (2025-12-09): ConceptForm에서 category 필드 제거 (관계형 카테고리화로 대체)
 - v1.1.0 (2025-12-09): BlockNote 에디터로 Tech Stack 변경, 멘션 기능 User Story 추가
 - v1.0.0 (2025-12-08): 최초 작성

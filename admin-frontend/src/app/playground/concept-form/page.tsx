@@ -163,7 +163,8 @@ export default function ConceptFormPlayground() {
   const [apiResult, setApiResult] = useState<{
     success: boolean;
     message: string;
-    data?: unknown;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data?: any;
   } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 

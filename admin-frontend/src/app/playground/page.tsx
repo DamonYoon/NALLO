@@ -52,7 +52,7 @@ const components = [
   {
     name: "shared",
     title: "Shared Components",
-    description: "공통 컴포넌트 (SearchInput, ConfirmDialog, EmptyState, FileUploader)",
+    description: "공통 컴포넌트 (StatusBadge, Headers, Progress, Metrics, ActionList 등)",
     status: "ready",
   },
   {
@@ -71,7 +71,7 @@ const components = [
     name: "graph-view",
     title: "Graph View",
     description: "Neo4j NVL 그래프 시각화 (노드 필터, 상세 패널, Minimap)",
-    status: "pending",
+    status: "ready",
   },
 ];
 
