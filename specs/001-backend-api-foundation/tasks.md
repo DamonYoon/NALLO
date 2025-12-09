@@ -1,5 +1,9 @@
 # Tasks: Backend API Foundation
 
+**Feature Branch**: `001-backend-api-foundation`  
+**Last Updated**: 2025-12-09  
+**Status**: In Progress (Phase 6/8 완료)
+
 **Input**: Design documents from `/specs/001-backend-api-foundation/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
@@ -424,6 +428,24 @@ With multiple developers:
    - Developer A: User Story 4 (Search)
    - Developer B: User Story 6 (Authentication)
 4. Stories complete and integrate independently
+
+---
+
+## Task Summary
+
+| Phase | 내용 | Priority | Status |
+|-------|------|----------|--------|
+| Phase 1 | Setup (Shared Infrastructure) | P0 | ✅ 완료 |
+| Phase 2 | Foundational (Blocking Prerequisites) | P0 | ✅ 완료 |
+| Phase 3 | US1 - Document Management API | P1 | ✅ 완료 |
+| Phase 4 | US2 - Glossary Management API | P1 | ✅ 완료 |
+| Phase 5 | US3 - Version/Page Management API | P1 | ✅ 완료 |
+| Phase 5.5 | Graph Relationships & Tag Management | P1 | ✅ 완료 |
+| Phase 6 | US4 - Search API | P2 | ✅ 완료 |
+| Phase 7 | US6 - Authentication API | P2 | ⬜ 대기 |
+| Phase 8 | Polish & Cross-Cutting Concerns | P2 | ⬜ 대기 |
+
+**전체 진행률**: ~75% (Phase 6까지 완료)
 
 ---
 

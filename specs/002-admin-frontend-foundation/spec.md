@@ -2,9 +2,15 @@
 
 **Feature Branch**: `002-admin-frontend-foundation`  
 **Created**: 2025-12-08  
-**Status**: Draft  
+**Status**: In Progress  
+**Version**: 1.1.0  
+**Last Updated**: 2025-12-09  
 **Depends On**: `001-backend-api-foundation`  
 **Input**: User description: "Admin frontend for document authors/publishers. Provides document management, glossary management, version/page management, and graph visualization. Uses Next.js 14+ with App Router, TypeScript, Tailwind CSS, and shadcn/ui components."
+
+**Changes**:
+- v1.1.0 (2025-12-09): BlockNote 에디터로 Tech Stack 변경, 멘션 기능 User Story 추가
+- v1.0.0 (2025-12-08): 최초 작성
 
 ## Overview
 
@@ -27,7 +33,7 @@ Admin Frontend는 문서 작성자/배포자(Admin)를 위한 관리 인터페�
 
 ### User Story 1 - Document Management (Priority: P1)
 
-관리자가 문서를 생성, 조회, 편집할 수 있습니다. Markdown 에디터를 통해 문서를 작성하고, 실시간 미리보기를 제공합니다.
+관리자가 문서를 생성, 조회, 편집할 수 있습니다. BlockNote 블록 기반 에디터를 통해 문서를 작성하고, Edit/View 모드 전환을 제공합니다.
 
 **Why this priority**: 문서 관리는 시스템의 핵심 기능입니다. 다른 모든 기능이 문서 존재를 전제로 합니다.
 
@@ -36,10 +42,15 @@ Admin Frontend는 문서 작성자/배포자(Admin)를 위한 관리 인터페�
 **Acceptance Scenarios**:
 
 1. **Given** 관리자가 로그인한 상태, **When** 문서 목록 페이지에 접근, **Then** 시스템이 모든 문서 목록을 상태/타입별 필터와 함께 표시
-2. **Given** 문서 목록 페이지, **When** "새 문서" 버튼 클릭, **Then** 문서 에디터 페이지로 이동하고 빈 에디터가 표시됨
+2. **Given** 문서 목록 페이지, **When** "새 문서" 버튼 클릭, **Then** 문서 에디터 페이지로 이동하고 빈 BlockNote 에디터가 표시됨
 3. **Given** 문서 에디터, **When** 제목, 타입, 본문을 입력하고 저장, **Then** 문서가 생성되고 목록 페이지로 이동하며 새 문서가 "draft" 상태로 표시됨
 4. **Given** 문서 상세 페이지, **When** "편집" 버튼 클릭, **Then** 에디터가 기존 내용을 로드하고 수정 가능한 상태가 됨
-5. **Given** Markdown 에디터, **When** 본문 입력, **Then** 실시간으로 렌더링된 미리보기가 옆에 표시됨
+5. **Given** BlockNote 에디터, **When** `/` 입력, **Then** 슬래시 커맨드 메뉴가 표시되고 블록 타입 선택 가능
+6. **Given** BlockNote 에디터, **When** `@` 입력 후 검색어 입력, **Then** Concept/Document 멘션 목록이 표시됨
+7. **Given** 멘션 목록에서, **When** Concept 선택, **Then** 문서와 해당 Concept 간 USES_CONCEPT 관계가 생성됨
+8. **Given** 멘션 목록에서, **When** Document 선택, **Then** 문서 간 LINKS_TO 관계가 생성됨
+9. **Given** 멘션 검색 결과에 없는 항목, **When** "새 Concept/Document 생성" 선택, **Then** stub 노드가 생성되고 멘션이 삽입됨
+10. **Given** BlockNote 에디터, **When** Edit/View 토글 클릭, **Then** 편집 모드와 읽기 전용 모드가 전환됨
 
 ---
 
@@ -147,7 +158,10 @@ Admin Frontend는 문서 작성자/배포자(Admin)를 위한 관리 인터페�
 - **FR-001**: 시스템은 이메일/비밀번호 기반 로그인 기능을 제공해야 함
 - **FR-002**: 시스템은 JWT 토큰 기반 인증 상태를 유지해야 함
 - **FR-003**: 시스템은 문서 CRUD 인터페이스를 제공해야 함
-- **FR-004**: 시스템은 Markdown 에디터와 실시간 미리보기를 제공해야 함
+- **FR-004**: 시스템은 BlockNote 블록 기반 WYSIWYG 에디터를 제공해야 함
+- **FR-004a**: 에디터는 슬래시 커맨드(`/`)로 블록 생성을 지원해야 함
+- **FR-004b**: 에디터는 멘션(`@`)으로 Concept/Document 연결을 지원해야 함
+- **FR-004c**: 에디터는 Edit/View 모드 전환을 지원해야 함
 - **FR-005**: 시스템은 문서 Import(마크다운, OAS) 기능을 제공해야 함
 - **FR-006**: 시스템은 용어집 CRUD 인터페이스를 제공해야 함
 - **FR-007**: 시스템은 용어 수정 시 영향받는 문서 목록을 표시해야 함
@@ -224,8 +238,12 @@ Admin Frontend는 문서 작성자/배포자(Admin)를 위한 관리 인터페�
 
 ### Document Editing
 
-- **@uiw/react-md-editor** 또는 **CodeMirror** - Markdown 에디터
-- **react-markdown** + **remark-gfm** - Markdown 렌더링
+- **BlockNote** - Notion-style 블록 기반 WYSIWYG 에디터
+  - 커스텀 블록: Callout, CodeBlock (Shiki 문법 하이라이팅)
+  - 커스텀 인라인: Mention (Concept/Document 연결 → 그래프 관계 생성)
+  - 커스텀 스타일: Highlight, Underline, Small Caps, Font Size
+  - Edit/View 토글 지원
+- **react-markdown** + **remark-gfm** - Markdown 렌더링 (필요시)
 
 ### Graph Visualization
 

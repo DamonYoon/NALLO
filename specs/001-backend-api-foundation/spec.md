@@ -2,8 +2,15 @@
 
 **Feature Branch**: `001-backend-api-foundation`  
 **Created**: 2025-12-07  
-**Status**: Draft  
+**Status**: In Progress  
+**Version**: 1.2.0  
+**Last Updated**: 2025-12-09  
 **Input**: User description: "Build backend API foundation with core services for Phase 1 features: document management, glossary management, version/page management, and search. Include GraphDB and PostgreSQL connection layers, basic authentication/authorization structure. UI will be added later, so focus on API-first architecture that can be easily connected when UI is ready."
+
+**Changes**:
+- v1.2.0 (2025-12-09): Phase 1-6 완료, MinIO 스토리지 아키텍처 적용, Tag/Relationship API 완료
+- v1.1.0 (2025-12-08): 스토리지 아키텍처 변경 (PostgreSQL → MinIO), Attachment API 추가
+- v1.0.0 (2025-12-07): 최초 작성
 
 ## User Scenarios & Testing *(mandatory)*
 

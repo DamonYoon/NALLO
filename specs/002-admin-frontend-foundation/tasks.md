@@ -111,55 +111,64 @@ Backend API 클라이언트와 컴포넌트 테스트용 Mock 데이터를 설�
 
 ---
 
-### TASK-005: MarkdownEditor 컴포넌트
+### TASK-005: BlockNote 블록 기반 에디터 ✅
 
 **Priority**: P0  
-**Estimate**: 4h  
-**Dependencies**: TASK-002, TASK-003
+**Estimate**: 6h  
+**Dependencies**: TASK-002, TASK-003  
+**Status**: ✅ 완료
 
 **Description**:
-Markdown 편집기 컴포넌트를 개발하고 Playground에서 테스트합니다.
+Notion-style 블록 기반 WYSIWYG 에디터를 개발하고 Playground에서 테스트합니다.
 
 **Subtasks**:
 
-- [ ] `@uiw/react-md-editor` 또는 CodeMirror 통합
-- [ ] `MarkdownEditor` 컴포넌트 생성 (`components/documents/markdown-editor.tsx`)
-- [ ] 툴바 커스터마이징 (볼드, 이탤릭, 링크, 이미지, 코드)
-- [ ] Split view (편집기 + 미리보기)
-- [ ] onChange, value props 인터페이스
-- [ ] `/playground/markdown-editor` 테스트 페이지 생성
-- [ ] 다양한 Props로 테스트 (초기값, 읽기 전용, 높이 조절)
+- [x] BlockNote 에디터 기본 통합 (`@blocknote/core`, `@blocknote/react`, `@blocknote/mantine`)
+- [x] 코드 블록 문법 하이라이팅 (Shiki + `@blocknote/code-block`)
+- [x] ` ```lang + Enter ` 단축키로 코드 블록 생성
+- [x] 커스텀 Callout 블록 (7가지 타입: tip, info, warning, success, error, important, quote)
+- [x] 커스텀 Mention 인라인 컨텐츠 (Concept/Document 연결)
+  - [x] Concept 멘션 → USES_CONCEPT 관계 생성 예정
+  - [x] Document 멘션 → LINKS_TO 관계 생성 예정
+  - [x] 없는 Concept/Document 검색 시 빈 껍데기(stub) 노드 생성
+- [x] 커스텀 스타일 (Highlight, Underline, Small Caps, Font Size)
+- [x] Edit/View 토글 기능
+- [x] 다크/라이트 모드 지원
+- [x] `/playground/blocknote-editor` 테스트 페이지 생성
 
 **Acceptance Criteria**:
 
-- Playground에서 Markdown 입력 시 실시간 미리보기 동작
-- 툴바 버튼으로 서식 적용 가능
-- 다크/라이트 모드에서 정상 동작
+- [x] Playground에서 블록 에디터 정상 동작
+- [x] 슬래시 커맨드(`/`)로 블록 생성 가능
+- [x] 멘션(`@`)으로 Concept/Document 연결 가능
+- [x] Edit/View 모드 전환 가능
+- [x] 다크/라이트 모드에서 정상 동작
 
 ---
 
-### TASK-006: MarkdownViewer 컴포넌트
+### TASK-006: MarkdownViewer 컴포넌트 ✅
 
 **Priority**: P0  
 **Estimate**: 2h  
-**Dependencies**: TASK-002, TASK-003
+**Dependencies**: TASK-002, TASK-003  
+**Status**: ✅ 완료
 
 **Description**:
 Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 
 **Subtasks**:
 
-- [ ] `react-markdown` + `remark-gfm` 설정
-- [ ] `MarkdownViewer` 컴포넌트 생성 (`components/documents/markdown-viewer.tsx`)
-- [ ] 코드 블록 하이라이팅 (rehype-highlight 또는 shiki)
-- [ ] 테이블, 체크리스트 렌더링
-- [ ] `/playground/markdown-viewer` 테스트 페이지 생성
+- [x] `react-markdown` + `remark-gfm` 설정
+- [x] `MarkdownViewer` 컴포넌트 생성 (`components/documents/markdown-viewer.tsx`)
+- [x] 코드 블록 하이라이팅 (`react-syntax-highlighter`)
+- [x] 테이블, 체크리스트 렌더링
+- [x] 코드 블록 복사 버튼
 
 **Acceptance Criteria**:
 
-- Playground에서 Markdown이 올바르게 렌더링됨
-- 코드 블록에 구문 하이라이팅 적용됨
-- GFM (GitHub Flavored Markdown) 지원
+- [x] Markdown이 올바르게 렌더링됨
+- [x] 코드 블록에 구문 하이라이팅 적용됨
+- [x] GFM (GitHub Flavored Markdown) 지원
 
 ---
 
@@ -522,12 +531,12 @@ Markdown 렌더링 뷰어 컴포넌트를 개발합니다.
 
 | Task ID  | Task Name                      | Priority | Estimate | Status |
 | -------- | ------------------------------ | -------- | -------- | ------ |
-| TASK-001 | Next.js 프로젝트 초기 설정     | P0       | 2h       | ⬜     |
-| TASK-002 | Tailwind CSS 및 shadcn/ui 설정 | P0       | 2h       | ⬜     |
-| TASK-003 | Component Playground 설정      | P0       | 2h       | ⬜     |
-| TASK-004 | API 클라이언트 및 Mock 데이터  | P0       | 3h       | ⬜     |
-| TASK-005 | MarkdownEditor 컴포넌트        | P0       | 4h       | ⬜     |
-| TASK-006 | MarkdownViewer 컴포넌트        | P0       | 2h       | ⬜     |
+| TASK-001 | Next.js 프로젝트 초기 설정     | P0       | 2h       | ✅     |
+| TASK-002 | Tailwind CSS 및 shadcn/ui 설정 | P0       | 2h       | ✅     |
+| TASK-003 | Component Playground 설정      | P0       | 2h       | ✅     |
+| TASK-004 | API 클라이언트 및 Mock 데이터  | P0       | 3h       | ✅     |
+| TASK-005 | BlockNote 블록 기반 에디터     | P0       | 6h       | ✅     |
+| TASK-006 | MarkdownViewer 컴포넌트        | P0       | 2h       | ✅     |
 | TASK-007 | DataTable 컴포넌트             | P1       | 4h       | ⬜     |
 | TASK-008 | DocumentForm 컴포넌트          | P1       | 3h       | ⬜     |
 | TASK-009 | ConceptForm 및 ImpactAnalysis  | P1       | 3h       | ⬜     |
