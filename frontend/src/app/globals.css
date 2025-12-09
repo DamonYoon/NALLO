@@ -1,0 +1,330 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   NALLO Design System - Based on Figma Design
+   ============================================ */
+
+@theme inline {
+  /* Colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* NALLO Brand Colors */
+  --color-brand: var(--brand);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-light: var(--brand-light);
+  --color-global-bg: var(--global-bg);
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  /* Base */
+  --radius: 0.5rem;
+  --font-size-base: 14px;
+
+  /* NALLO Brand Colors */
+  --brand: #fc8658;
+  --brand-dark: #e85102;
+  --brand-light: #fff5f0;
+  --global-bg: #1e1e1e;
+
+  /* Semantic Colors - Light Mode */
+  --background: #ffffff;
+  --foreground: #3b3b3b;
+  --card: #ffffff;
+  --card-foreground: #3b3b3b;
+  --popover: #ffffff;
+  --popover-foreground: #3b3b3b;
+
+  /* Primary = Brand Orange */
+  --primary: #fc8658;
+  --primary-foreground: #ffffff;
+
+  /* Secondary */
+  --secondary: #f5f5f5;
+  --secondary-foreground: #3b3b3b;
+
+  /* Muted */
+  --muted: #f9f9f9;
+  --muted-foreground: #7d706a;
+
+  /* Accent */
+  --accent: #fff5f0;
+  --accent-foreground: #fc8658;
+
+  /* Destructive */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  /* Border & Input */
+  --border: #e3e3e3;
+  --input: #f3f3f5;
+  --ring: #fc8658;
+
+  /* Status Colors */
+  --success: #059669;
+  --success-bg: #d1fae5;
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --info: #2563eb;
+  --info-bg: #dbeafe;
+  --error: #ef4444;
+  --error-bg: #fee2e2;
+
+  /* Chart Colors */
+  --chart-1: #fc8658;
+  --chart-2: #10b981;
+  --chart-3: #3b82f6;
+  --chart-4: #f59e0b;
+  --chart-5: #8b5cf6;
+
+  /* Sidebar */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #3b3b3b;
+  --sidebar-primary: #fc8658;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fff5f0;
+  --sidebar-accent-foreground: #fc8658;
+  --sidebar-border: #d4d4d4;
+  --sidebar-ring: #fc8658;
+  --sidebar-width: 260px;
+
+  /* Layout */
+  --header-height: 39px;
+  --function-header-height: 45px;
+}
+
+.dark {
+  /* NALLO Dark Mode */
+  --background: #1e1e1e;
+  --foreground: #ffffff;
+  --card: #2a2a2a;
+  --card-foreground: #ffffff;
+  --popover: #2a2a2a;
+  --popover-foreground: #ffffff;
+
+  /* Primary stays brand orange */
+  --primary: #fc8658;
+  --primary-foreground: #ffffff;
+
+  /* Secondary */
+  --secondary: #3a3a3a;
+  --secondary-foreground: #ffffff;
+
+  /* Muted */
+  --muted: #2a2a2a;
+  --muted-foreground: #9ca3af;
+
+  /* Accent */
+  --accent: rgba(252, 134, 88, 0.15);
+  --accent-foreground: #fc8658;
+
+  /* Destructive */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  /* Border & Input */
+  --border: #3a3a3a;
+  --input: #3a3a3a;
+  --ring: #fc8658;
+
+  /* Chart Colors */
+  --chart-1: #fc8658;
+  --chart-2: #34d399;
+  --chart-3: #60a5fa;
+  --chart-4: #fbbf24;
+  --chart-5: #a78bfa;
+
+  /* Sidebar */
+  --sidebar: #2a2a2a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #fc8658;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(252, 134, 88, 0.15);
+  --sidebar-accent-foreground: #fc8658;
+  --sidebar-border: #3a3a3a;
+  --sidebar-ring: #fc8658;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    font-size: var(--font-size-base);
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* ============================================
+   NALLO Custom Utilities
+   ============================================ */
+
+@layer utilities {
+  /* Text Colors */
+  .text-brand {
+    color: var(--brand);
+  }
+
+  .text-secondary-text {
+    color: var(--muted-foreground);
+  }
+
+  /* Background Colors */
+  .bg-global {
+    background-color: var(--global-bg);
+  }
+
+  .bg-brand {
+    background-color: var(--brand);
+  }
+
+  .bg-brand-light {
+    background-color: var(--brand-light);
+  }
+
+  /* Status Badges */
+  .badge-draft {
+    background-color: #f3f4f6;
+    color: #6b7280;
+  }
+
+  .badge-in-review {
+    background-color: var(--warning-bg);
+    color: var(--warning);
+  }
+
+  .badge-publish {
+    background-color: var(--info-bg);
+    color: var(--info);
+  }
+
+  .badge-done {
+    background-color: var(--success-bg);
+    color: var(--success);
+  }
+
+  .badge-error {
+    background-color: var(--error-bg);
+    color: var(--error);
+  }
+
+  /* Hover Effects */
+  .hover-brand:hover {
+    background-color: var(--brand);
+    color: white;
+  }
+
+  /* Active State */
+  .nav-active {
+    background-color: var(--brand-light);
+    color: var(--brand);
+  }
+
+  .nav-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: var(--brand);
+    border-radius: 0 2px 2px 0;
+  }
+}
+
+/* ============================================
+   Typography Presets
+   ============================================ */
+
+@layer base {
+  h1 {
+    @apply text-xl font-medium;
+  }
+
+  h2 {
+    @apply text-lg font-medium;
+  }
+
+  h3 {
+    @apply text-base font-medium;
+  }
+
+  h4 {
+    @apply text-sm font-medium;
+  }
+}
+
+/* ============================================
+   Scrollbar Styling
+   ============================================ */
+
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+}
