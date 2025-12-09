@@ -83,9 +83,10 @@ const metricColors = {
 
 interface DashboardProps {
   onViewDocuments?: () => void;
+  onCreateDocument?: () => void;
 }
 
-export function Dashboard({ onViewDocuments }: DashboardProps) {
+export function Dashboard({ onViewDocuments, onCreateDocument }: DashboardProps) {
   return (
     <div className="px-6 py-5">
       {/* Header */}
@@ -96,7 +97,10 @@ export function Dashboard({ onViewDocuments }: DashboardProps) {
             문서 작업 현황을 한눈에 확인하세요
           </p>
         </div>
-        <Button className="bg-brand hover:bg-brand-dark text-white">
+        <Button
+          onClick={onCreateDocument}
+          className="bg-brand hover:bg-brand-dark text-white"
+        >
           <Plus size={16} className="mr-1.5" />
           문서 생성
         </Button>

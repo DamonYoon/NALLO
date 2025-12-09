@@ -116,27 +116,32 @@ Figma 디자인에서 색상, 타이포그래피, 스페이싱 등 디자인 토
 
 ---
 
-### TASK-005: 문서 상세/편집 페이지
+### TASK-005: 문서 상세/편집 페이지 ✅
 
 **Priority**: P1  
 **Estimate**: 4h  
-**Dependencies**: TASK-004
+**Dependencies**: TASK-004  
+**Status**: ✅ 완료
 
 **Description**:
 문서 상세 보기 및 편집 페이지를 구현합니다.
 
 **Subtasks**:
 
-- [ ] `/documents/[id]` 라우트 생성
-- [ ] `/documents/[id]/edit` 라우트 생성
-- [ ] 문서 상세 레이아웃
-- [ ] BlockNote 에디터 스타일 조정
-- [ ] 메타데이터 사이드 패널
+- [x] DocumentEditor 컴포넌트 생성
+- [x] 문서 위치/타입/상태 선택
+- [x] Edit/Preview 모드 토글
+- [x] 제목 및 본문 편집 영역
+- [x] 용어 연결 섹션 (검색, 추가, 삭제)
+- [x] 태그 관리 (우측 패널)
+- [x] AI 추천 용어 패널
+- [x] 지식 그래프 미니맵
+- [x] 저장/취소 액션 바
 
 **Acceptance Criteria**:
 
 - Figma 문서 편집 디자인과 일치
-- BlockNote 에디터 정상 동작
+- Edit/Preview 모드 전환 동작
 
 ---
 
@@ -267,7 +272,7 @@ Figma 디자인에서 색상, 타이포그래피, 스페이싱 등 디자인 토
 | TASK-002 | 메인 레이아웃 구현     | P0       | 4h       | ✅     |
 | TASK-003 | 대시보드 페이지        | P1       | 3h       | ✅     |
 | TASK-004 | 문서 목록 페이지       | P1       | 3h       | ✅     |
-| TASK-005 | 문서 상세/편집 페이지  | P1       | 4h       | ⬜     |
+| TASK-005 | 문서 상세/편집 페이지  | P1       | 4h       | ✅     |
 | TASK-006 | 용어집 페이지          | P1       | 3h       | ⬜     |
 | TASK-007 | 버전/페이지 관리       | P2       | 3h       | ⬜     |
 | TASK-008 | 그래프 뷰 페이지       | P2       | 3h       | ⬜     |

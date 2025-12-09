@@ -138,7 +138,17 @@ const typeLabels = {
   tutorial: "Tutorial",
 };
 
-export function DocumentList() {
+interface DocumentListProps {
+  onViewDocument?: (docId: string) => void;
+  onCreateDocument?: () => void;
+  onBackToDashboard?: () => void;
+}
+
+export function DocumentList({
+  onViewDocument,
+  onCreateDocument,
+  onBackToDashboard,
+}: DocumentListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -177,7 +187,10 @@ export function DocumentList() {
             총 {mockDocuments.length}개의 문서
           </p>
         </div>
-        <Button className="bg-brand hover:bg-brand-dark text-white">
+        <Button
+          onClick={onCreateDocument}
+          className="bg-brand hover:bg-brand-dark text-white"
+        >
           <Plus size={16} className="mr-1.5" />새 문서
         </Button>
       </div>
@@ -292,7 +305,10 @@ export function DocumentList() {
                     className="text-muted-foreground flex-shrink-0"
                   />
                   <div className="min-w-0">
-                    <p className="text-sm text-foreground truncate hover:text-brand cursor-pointer">
+                    <p
+                      onClick={() => onViewDocument?.(doc.id)}
+                      className="text-sm text-foreground truncate hover:text-brand cursor-pointer"
+                    >
                       {doc.title}
                     </p>
                     <p className="text-xs text-muted-foreground">
