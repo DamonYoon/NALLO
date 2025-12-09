@@ -93,7 +93,7 @@ CREATE INDEX page_id_index IF NOT EXISTS FOR (p:Page) ON (p.id);
 # Health check 엔드포인트로 확인
 npm run dev
 # 다른 터미널에서
-curl http://localhost:3000/health
+curl http://localhost:8000/health
 ```
 
 또는 테스트 실행:
@@ -162,7 +162,7 @@ npm run dev
 다른 터미널에서:
 
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:8000/health
 ```
 
 예상 응답:

@@ -39,7 +39,7 @@ docker-compose up -d
 ```bash
 npm run dev
 # In another terminal:
-curl http://localhost:3000/health
+curl http://localhost:8000/health
 ```
 
 5. Run database migrations (when available):
@@ -94,8 +94,8 @@ npm run type-check
 ## API Documentation
 
 Once the server is running, access API documentation at:
-- Swagger UI: http://localhost:3000/api-docs
-- OpenAPI spec: http://localhost:3000/api/v1/openapi.json
+- Swagger UI: http://localhost:8000/api-docs
+- OpenAPI spec: http://localhost:8000/api/v1/openapi.json
 
 ## Project Structure
 

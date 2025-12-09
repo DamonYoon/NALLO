@@ -36,7 +36,7 @@ const envSchema = z.object({
   // Application Configuration
   API_V1_PREFIX: z.string().default('/api/v1'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().default(3000),
+  PORT: z.coerce.number().default(8000),
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
 
   // TypeORM Configuration (if using TypeORM)
@@ -96,7 +96,7 @@ const parseEnv = () => {
           JWT_EXPIRATION_HOURS: 24,
           API_V1_PREFIX: '/api/v1',
           NODE_ENV: 'test',
-          PORT: 3000,
+          PORT: 8000,
           LOG_LEVEL: 'info',
           TYPEORM_SYNCHRONIZE: 'false',
           TYPEORM_LOGGING: 'false',

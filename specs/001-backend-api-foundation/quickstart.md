@@ -177,7 +177,7 @@ npm start
 #### Check Health Endpoint
 
 ```bash
-curl http://localhost:3000/api/v1/health
+curl http://localhost:8000/api/v1/health
 ```
 
 Expected response:
@@ -196,8 +196,8 @@ Expected response:
 
 #### Access API Documentation
 
-- Swagger UI: http://localhost:3000/api-docs (if using swagger-ui-express)
-- Or check OpenAPI spec: http://localhost:3000/api/v1/openapi.json
+- Swagger UI: http://localhost:8000/api-docs (if using swagger-ui-express)
+- Or check OpenAPI spec: http://localhost:8000/api/v1/openapi.json
 
 ## Running Tests
 
@@ -290,7 +290,7 @@ const user = await authService.createUser({
 ### Create Sample Document
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/documents \
+curl -X POST http://localhost:8000/api/v1/documents \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -304,7 +304,7 @@ curl -X POST http://localhost:3000/api/v1/documents \
 ### Create Sample Concept
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/concepts \
+curl -X POST http://localhost:8000/api/v1/concepts \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
