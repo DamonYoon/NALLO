@@ -15,15 +15,25 @@ import {
   FileText,
   BookOpen,
   Tag,
+  Sparkles,
+  Plus,
 } from "lucide-react";
 import Link from "next/link";
 import { useHealth } from "@/lib/hooks";
 import { documentsApi, conceptsApi, versionsApi } from "@/lib/api";
 import { getErrorMessage } from "@/lib/api/client";
 import type { Document, Concept, Version } from "@/lib/types/api";
+import {
+  SEED_VERSIONS,
+  SEED_CONCEPTS,
+  SEED_DOCUMENTS,
+  SEED_DATA_SUMMARY,
+} from "@/lib/seed-data";
 
 export default function ApiTestPlayground() {
-  const [activeTab, setActiveTab] = useState<"health" | "data">("health");
+  const [activeTab, setActiveTab] = useState<"health" | "data" | "seed">(
+    "health"
+  );
 
   const { data: health, isLoading, error, refetch } = useHealth();
 
@@ -34,6 +44,16 @@ export default function ApiTestPlayground() {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [deleteResult, setDeleteResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+
+  // Seed state
+  const [isSeedingVersions, setIsSeedingVersions] = useState(false);
+  const [isSeedingConcepts, setIsSeedingConcepts] = useState(false);
+  const [isSeedingDocuments, setIsSeedingDocuments] = useState(false);
+  const [isSeedingAll, setIsSeedingAll] = useState(false);
+  const [seedResult, setSeedResult] = useState<{
     success: boolean;
     message: string;
   } | null>(null);
@@ -62,7 +82,7 @@ export default function ApiTestPlayground() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === "data") {
+    if (activeTab === "data" || activeTab === "seed") {
       loadAllData();
     }
   }, [activeTab, loadAllData]);
@@ -233,6 +253,149 @@ export default function ApiTestPlayground() {
     loadAllData();
   };
 
+  // Seed Versions
+  const handleSeedVersions = async () => {
+    setIsSeedingVersions(true);
+    setSeedResult(null);
+    let created = 0;
+    let failed = 0;
+
+    for (const version of SEED_VERSIONS) {
+      try {
+        await versionsApi.create(version);
+        created++;
+      } catch (error) {
+        console.error(`Failed to create version ${version.name}:`, error);
+        failed++;
+      }
+    }
+
+    setIsSeedingVersions(false);
+    setSeedResult({
+      success: failed === 0,
+      message:
+        failed === 0
+          ? `버전 ${created}개가 생성되었습니다.`
+          : `${created}개 생성, ${failed}개 실패`,
+    });
+    loadAllData();
+  };
+
+  // Seed Concepts
+  const handleSeedConcepts = async () => {
+    setIsSeedingConcepts(true);
+    setSeedResult(null);
+    let created = 0;
+    let failed = 0;
+
+    for (const concept of SEED_CONCEPTS) {
+      try {
+        await conceptsApi.create(concept);
+        created++;
+      } catch (error) {
+        console.error(`Failed to create concept ${concept.term}:`, error);
+        failed++;
+      }
+    }
+
+    setIsSeedingConcepts(false);
+    setSeedResult({
+      success: failed === 0,
+      message:
+        failed === 0
+          ? `용어 ${created}개가 생성되었습니다.`
+          : `${created}개 생성, ${failed}개 실패`,
+    });
+    loadAllData();
+  };
+
+  // Seed Documents
+  const handleSeedDocuments = async () => {
+    setIsSeedingDocuments(true);
+    setSeedResult(null);
+    let created = 0;
+    let failed = 0;
+
+    for (const doc of SEED_DOCUMENTS) {
+      try {
+        await documentsApi.create(doc);
+        created++;
+      } catch (error) {
+        console.error(`Failed to create document ${doc.title}:`, error);
+        failed++;
+      }
+    }
+
+    setIsSeedingDocuments(false);
+    setSeedResult({
+      success: failed === 0,
+      message:
+        failed === 0
+          ? `문서 ${created}개가 생성되었습니다.`
+          : `${created}개 생성, ${failed}개 실패`,
+    });
+    loadAllData();
+  };
+
+  // Seed All Data
+  const handleSeedAll = async () => {
+    if (
+      !confirm(
+        `GraphDB에 테스트 데이터를 생성합니다.\n\n- 버전: ${SEED_DATA_SUMMARY.versions}개\n- 용어: ${SEED_DATA_SUMMARY.concepts}개\n- 문서: ${SEED_DATA_SUMMARY.documents}개\n\n진행하시겠습니까?`
+      )
+    ) {
+      return;
+    }
+
+    setIsSeedingAll(true);
+    setSeedResult(null);
+    let totalCreated = 0;
+    let totalFailed = 0;
+
+    // Create Versions first
+    for (const version of SEED_VERSIONS) {
+      try {
+        await versionsApi.create(version);
+        totalCreated++;
+      } catch (error) {
+        console.error(`Failed to create version ${version.name}:`, error);
+        totalFailed++;
+      }
+    }
+
+    // Create Concepts
+    for (const concept of SEED_CONCEPTS) {
+      try {
+        await conceptsApi.create(concept);
+        totalCreated++;
+      } catch (error) {
+        console.error(`Failed to create concept ${concept.term}:`, error);
+        totalFailed++;
+      }
+    }
+
+    // Create Documents
+    for (const doc of SEED_DOCUMENTS) {
+      try {
+        await documentsApi.create(doc);
+        totalCreated++;
+      } catch (error) {
+        console.error(`Failed to create document ${doc.title}:`, error);
+        totalFailed++;
+      }
+    }
+
+    setIsSeedingAll(false);
+    setSeedResult({
+      success: totalFailed === 0,
+      message:
+        totalFailed === 0
+          ? `총 ${totalCreated}개의 데이터가 생성되었습니다.`
+          : `${totalCreated}개 생성, ${totalFailed}개 실패`,
+    });
+    loadAllData();
+  };
+
   // Delete single item
   const handleDeleteDocument = async (doc: Document) => {
     try {
@@ -313,6 +476,13 @@ export default function ApiTestPlayground() {
         >
           <Database className="h-4 w-4 mr-2" />
           Data Management
+        </Button>
+        <Button
+          variant={activeTab === "seed" ? "default" : "outline"}
+          onClick={() => setActiveTab("seed")}
+        >
+          <Sparkles className="h-4 w-4 mr-2" />
+          Seed Data
         </Button>
       </div>
 
@@ -688,6 +858,319 @@ export default function ApiTestPlayground() {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {activeTab === "seed" && (
+        <div className="grid gap-6">
+          {/* Seed Result */}
+          {seedResult && (
+            <Card
+              className={
+                seedResult.success
+                  ? "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30"
+                  : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30"
+              }
+            >
+              <CardContent className="py-3">
+                <div className="flex items-center gap-2">
+                  {seedResult.success ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-600" />
+                  )}
+                  <span
+                    className={
+                      seedResult.success
+                        ? "text-green-700 dark:text-green-300"
+                        : "text-red-700 dark:text-red-300"
+                    }
+                  >
+                    {seedResult.message}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Seed All */}
+          <Card className="border-primary/50">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                GraphDB Dummy Data 생성
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                테스트를 위한 샘플 데이터를 GraphDB에 생성합니다. 버전, 용어,
+                문서가 함께 생성됩니다.
+              </p>
+              <div className="p-4 bg-muted rounded-lg mb-4">
+                <h4 className="font-medium mb-2">생성될 데이터:</h4>
+                <ul className="text-sm space-y-1 text-muted-foreground">
+                  <li>
+                    • 버전 (Versions): {SEED_DATA_SUMMARY.versions}개 - Initial
+                    Release, Feature Update, Beta
+                  </li>
+                  <li>
+                    • 용어 (Concepts): {SEED_DATA_SUMMARY.concepts}개 - GraphDB,
+                    Neo4j, JWT, CRUD 등
+                  </li>
+                  <li>
+                    • 문서 (Documents): {SEED_DATA_SUMMARY.documents}개 - API
+                    가이드, 튜토리얼, 아키텍처 문서 등
+                  </li>
+                </ul>
+              </div>
+              <Button onClick={handleSeedAll} disabled={isSeedingAll}>
+                {isSeedingAll ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4 mr-2" />
+                )}
+                모든 데이터 생성 (
+                {SEED_DATA_SUMMARY.versions +
+                  SEED_DATA_SUMMARY.concepts +
+                  SEED_DATA_SUMMARY.documents}
+                개)
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Individual Seed Options */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Versions */}
+            <Card>
+              <CardHeader className="py-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  Versions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="py-3">
+                <div className="text-3xl font-bold mb-2">
+                  {SEED_DATA_SUMMARY.versions}
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Initial Release, Feature Update, Beta Release
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={handleSeedVersions}
+                  disabled={isSeedingVersions || isSeedingAll}
+                >
+                  {isSeedingVersions ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  버전 생성
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Concepts */}
+            <Card>
+              <CardHeader className="py-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Concepts
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="py-3">
+                <div className="text-3xl font-bold mb-2">
+                  {SEED_DATA_SUMMARY.concepts}
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  GraphDB, Neo4j, JWT, CRUD, REST API 등
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={handleSeedConcepts}
+                  disabled={isSeedingConcepts || isSeedingAll}
+                >
+                  {isSeedingConcepts ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  용어 생성
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Documents */}
+            <Card>
+              <CardHeader className="py-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Documents
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="py-3">
+                <div className="text-3xl font-bold mb-2">
+                  {SEED_DATA_SUMMARY.documents}
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  API 가이드, 튜토리얼, 아키텍처 문서 등
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={handleSeedDocuments}
+                  disabled={isSeedingDocuments || isSeedingAll}
+                >
+                  {isSeedingDocuments ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  문서 생성
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Seed Data Preview */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Seed Data 미리보기</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Versions Preview */}
+                <div>
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <Tag className="h-4 w-4" />
+                    Versions ({SEED_VERSIONS.length})
+                  </h4>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {SEED_VERSIONS.map((v, i) => (
+                      <div
+                        key={i}
+                        className="text-sm p-2 bg-muted rounded flex items-center justify-between"
+                      >
+                        <span>
+                          {v.name} ({v.version})
+                        </span>
+                        <div className="flex gap-1">
+                          {v.is_main && (
+                            <span className="text-xs px-1.5 py-0.5 bg-primary text-primary-foreground rounded">
+                              Main
+                            </span>
+                          )}
+                          {v.is_public ? (
+                            <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded">
+                              Public
+                            </span>
+                          ) : (
+                            <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 rounded">
+                              Private
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Concepts Preview */}
+                <div>
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Concepts ({SEED_CONCEPTS.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-1">
+                    {SEED_CONCEPTS.map((c, i) => (
+                      <span
+                        key={i}
+                        className="text-xs px-2 py-1 bg-muted rounded"
+                        title={c.description}
+                      >
+                        {c.term}
+                        {c.category && (
+                          <span className="text-muted-foreground ml-1">
+                            ({c.category})
+                          </span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Documents Preview */}
+                <div>
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Documents ({SEED_DOCUMENTS.length})
+                  </h4>
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                    {SEED_DOCUMENTS.map((d, i) => (
+                      <div
+                        key={i}
+                        className="text-sm p-2 bg-muted rounded flex items-center justify-between"
+                      >
+                        <span>{d.title}</span>
+                        <span
+                          className={`text-xs px-1.5 py-0.5 rounded ${
+                            d.type === "api"
+                              ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                              : d.type === "tutorial"
+                              ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                              : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                          }`}
+                        >
+                          {d.type}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Current Data Status */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg">현재 DB 상태</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadAllData}
+                disabled={isLoadingData}
+              >
+                {isLoadingData ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                )}
+                새로고침
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-muted rounded">
+                  <div className="text-2xl font-bold">{versions.length}</div>
+                  <div className="text-sm text-muted-foreground">Versions</div>
+                </div>
+                <div className="text-center p-4 bg-muted rounded">
+                  <div className="text-2xl font-bold">{concepts.length}</div>
+                  <div className="text-sm text-muted-foreground">Concepts</div>
+                </div>
+                <div className="text-center p-4 bg-muted rounded">
+                  <div className="text-2xl font-bold">{documents.length}</div>
+                  <div className="text-sm text-muted-foreground">Documents</div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

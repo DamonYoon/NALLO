@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NALLO Admin",
-  description: "NALLO Documentation Admin",
+  title: "NALLO Playground",
+  description: "NALLO Playground for Backend-Frontend Integration Test",
 };
 
 export default function RootLayout({
