@@ -107,11 +107,15 @@ const getCustomSlashMenuItems = (editor: CustomEditor) => {
     subtext: "코드 블록 (Syntax Highlighting)",
     onItemClick: () => {
       const currentBlock = editor.getTextCursorPosition().block;
-      editor.insertBlocks(
-        [{ type: "codeBlock", props: { language: "typescript" } }],
-        currentBlock,
-        "after"
-      );
+      // 현재 블록을 코드 블록으로 변환 (슬래시 명령어가 입력된 위치에 생성)
+      editor.updateBlock(currentBlock, {
+        type: "codeBlock",
+        props: { language: "typescript" },
+        content: [],
+      });
+      setTimeout(() => {
+        editor.setTextCursorPosition(currentBlock, "start");
+      }, 0);
     },
     aliases: ["code", "코드", "```"],
     group: "Other",
@@ -125,11 +129,15 @@ const getCustomSlashMenuItems = (editor: CustomEditor) => {
       subtext: `${type.title} 콜아웃 블록`,
       onItemClick: () => {
         const currentBlock = editor.getTextCursorPosition().block;
-        editor.insertBlocks(
-          [{ type: "callout", props: { type: type.value } }],
-          currentBlock,
-          "after"
-        );
+        // 현재 블록을 콜아웃으로 변환 (슬래시 명령어가 입력된 위치에 생성)
+        editor.updateBlock(currentBlock, {
+          type: "callout",
+          props: { type: type.value },
+          content: [],
+        });
+        setTimeout(() => {
+          editor.setTextCursorPosition(currentBlock, "start");
+        }, 0);
       },
       aliases: [type.value, `callout-${type.value}`],
       group: "Callouts",
@@ -142,11 +150,15 @@ const getCustomSlashMenuItems = (editor: CustomEditor) => {
     subtext: "콜아웃 블록 추가",
     onItemClick: () => {
       const currentBlock = editor.getTextCursorPosition().block;
-      editor.insertBlocks(
-        [{ type: "callout", props: { type: "info" } }],
-        currentBlock,
-        "after"
-      );
+      // 현재 블록을 콜아웃으로 변환 (슬래시 명령어가 입력된 위치에 생성)
+      editor.updateBlock(currentBlock, {
+        type: "callout",
+        props: { type: "info" },
+        content: [],
+      });
+      setTimeout(() => {
+        editor.setTextCursorPosition(currentBlock, "start");
+      }, 0);
     },
     aliases: ["callout", "콜아웃", "alert"],
     group: "Other",
@@ -181,15 +193,69 @@ export function BlockNoteEditor({
     schema,
   });
 
-  // Handle ```lang + Enter to create code block
+  // Handle keyboard shortcuts
   useEffect(() => {
     if (!isMounted) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      const currentBlock = editor.getTextCursorPosition().block;
+      if (!currentBlock) return;
+
+      // Handle Backspace in empty callout - convert to paragraph
+      if (e.key === "Backspace" && currentBlock.type === "callout") {
+        // DOM에서 직접 텍스트 확인 - 현재 selection 위치에서 callout-content 찾기
+        const selection = window.getSelection();
+        const focusNode = selection?.focusNode;
+        const calloutContent =
+          focusNode instanceof Element
+            ? focusNode.closest(".callout-content")
+            : focusNode?.parentElement?.closest(".callout-content");
+        const domText = calloutContent?.textContent?.trim() || "";
+
+        // BlockNote content에서도 확인 (fallback)
+        const content = currentBlock.content as any[];
+        const contentText =
+          content
+            ?.map((item) => {
+              if (item.type === "text") return item.text || "";
+              if (item.type === "mention") return item.props?.name || "";
+              return "";
+            })
+            .join("")
+            .trim() || "";
+
+        // 이미 비어있는지 확인
+        const isEmpty = domText === "" && contentText === "";
+
+        // keydown은 삭제 전에 발생하므로, 1글자만 남았을 때도 처리
+        // 선택 영역이 없고 (collapsed), 1글자만 남아있으면 삭제 후 빈 상태가 됨
+        const isCollapsed = selection?.isCollapsed ?? true;
+        const willBeEmptyAfterDelete =
+          isCollapsed &&
+          (domText.length === 1 ||
+            (domText === "" && contentText.length === 1));
+
+        if (isEmpty || willBeEmptyAfterDelete) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          editor.updateBlock(currentBlock, {
+            type: "paragraph",
+            props: {},
+            content: [],
+          });
+
+          setTimeout(() => {
+            editor.setTextCursorPosition(currentBlock, "start");
+          }, 0);
+          return;
+        }
+      }
+
+      // Handle ```lang + Enter to create code block
       if (e.key !== "Enter") return;
 
-      const currentBlock = editor.getTextCursorPosition().block;
-      if (!currentBlock || currentBlock.type !== "paragraph") return;
+      if (currentBlock.type !== "paragraph") return;
 
       const textContent = (currentBlock.content as any[])
         ?.filter((item) => item.type === "text")
@@ -360,7 +426,9 @@ export function BlockNoteEditor({
 
   if (!isMounted) {
     return (
-      <div className={`flex items-center justify-center h-full ${className || ""}`}>
+      <div
+        className={`flex items-center justify-center h-full ${className || ""}`}
+      >
         <div className="text-muted-foreground">에디터 로딩 중...</div>
       </div>
     );
@@ -381,19 +449,22 @@ export function BlockNoteEditor({
               .map((block: any) => {
                 if (block.type === "heading") {
                   const level = block.props?.level || 1;
-                  const text = block.content
-                    ?.map((c: any) => c.text)
-                    .join("") || "";
+                  const text =
+                    block.content?.map((c: any) => c.text).join("") || "";
                   return `${"#".repeat(level)} ${text}`;
                 }
                 if (block.type === "paragraph") {
                   return block.content?.map((c: any) => c.text).join("") || "";
                 }
                 if (block.type === "bulletListItem") {
-                  return `- ${block.content?.map((c: any) => c.text).join("") || ""}`;
+                  return `- ${
+                    block.content?.map((c: any) => c.text).join("") || ""
+                  }`;
                 }
                 if (block.type === "numberedListItem") {
-                  return `1. ${block.content?.map((c: any) => c.text).join("") || ""}`;
+                  return `1. ${
+                    block.content?.map((c: any) => c.text).join("") || ""
+                  }`;
                 }
                 return "";
               })
@@ -427,4 +498,3 @@ export function BlockNoteEditor({
     </div>
   );
 }
-

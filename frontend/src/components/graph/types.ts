@@ -97,20 +97,42 @@ export interface TagColor {
 }
 
 // ========================================
-// Constants
+// Color Constants
 // ========================================
 
+/**
+ * Node Type Colors
+ * Note: These are also defined as CSS variables in globals.css
+ * --node-page, --node-document, --node-concept, --node-tag
+ */
 export const NODE_COLORS: Record<GraphNodeType, string> = {
-  page: "#22c55e", // green-500
-  document: "#3b82f6", // blue-500
-  concept: "#a855f7", // purple-500
-  tag: "#f97316", // orange-500
+  page: "var(--node-page, #22c55e)",
+  document: "var(--node-document, #3b82f6)",
+  concept: "var(--node-concept, #a855f7)",
+  tag: "var(--node-tag, #f97316)",
+};
+
+/**
+ * Static color values for canvas rendering (NVL doesn't support CSS variables)
+ */
+export const NODE_COLORS_STATIC: Record<GraphNodeType, string> = {
+  page: "#22c55e",
+  document: "#3b82f6",
+  concept: "#a855f7",
+  tag: "#f97316",
 };
 
 export const DEFAULT_NODE_COLOR = "#94a3b8"; // slate-400
 export const DEFAULT_EDGE_COLOR = "#64748b"; // slate-500
-export const SELECTED_NODE_COLOR = "#fc8658"; // accent orange
-export const BROKEN_EDGE_COLOR = "#ef4444"; // red-500
+export const SELECTED_NODE_COLOR = "#fc8658"; // accent orange (brand)
+export const BROKEN_EDGE_COLOR = "#ef4444"; // red-500 (error)
+
+/** Dimmed colors for non-focused nodes/edges */
+export const DIMMED_NODE_COLOR = "#1f1f1f";
+export const DIMMED_EDGE_COLOR = "#1a1a1a";
+
+/** Graph canvas background */
+export const GRAPH_BG_COLOR = "#0d0d0d"; // surface-sunken in dark mode
 
 export const AVAILABLE_TAGS = [
   "Web3",
@@ -121,7 +143,22 @@ export const AVAILABLE_TAGS = [
 ];
 
 // ========================================
-// Default Filter State
+// Color Palette for Tags
+// ========================================
+
+export const TAG_COLOR_PALETTE = [
+  "#fc8658", // brand
+  "#3b82f6", // blue
+  "#22c55e", // green
+  "#a855f7", // purple
+  "#f472b6", // pink
+  "#fbbf24", // yellow
+  "#ef4444", // red
+  "#94a3b8", // slate
+];
+
+// ========================================
+// Default States
 // ========================================
 
 export const DEFAULT_FILTER_STATE: GraphFilterState = {
@@ -143,3 +180,10 @@ export const DEFAULT_STYLE_CONFIG: GraphStyleConfig = {
   labelVisibility: "important",
 };
 
+export const DEFAULT_TAG_COLORS: TagColor[] = [
+  { tag: "Web3", color: "#fc8658" },
+  { tag: "Blockchain", color: "#60a5fa" },
+  { tag: "API", color: "#34d399" },
+  { tag: "Tutorial", color: "#f472b6" },
+  { tag: "Guide", color: "#a78bfa" },
+];

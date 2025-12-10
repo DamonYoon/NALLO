@@ -16,6 +16,9 @@ import dynamic from "next/dynamic";
 import type { Node, Relationship, NVL } from "@neo4j-nvl/base";
 import { GraphFilter } from "./graph-filter";
 import { GraphNodeDetail } from "./graph-node-detail";
+import { GraphLoadingInline } from "./graph-loading";
+import { IconButton } from "@/components/ui/icon-button";
+import { cn } from "@/lib/utils";
 import {
   GraphNode,
   GraphEdge,
@@ -24,23 +27,26 @@ import {
   TagColor,
   DEFAULT_FILTER_STATE,
   DEFAULT_STYLE_CONFIG,
-  NODE_COLORS,
+  DEFAULT_TAG_COLORS,
+  NODE_COLORS_STATIC,
   DEFAULT_NODE_COLOR,
   DEFAULT_EDGE_COLOR,
   SELECTED_NODE_COLOR,
+  BROKEN_EDGE_COLOR,
+  DIMMED_NODE_COLOR,
+  DIMMED_EDGE_COLOR,
+  GRAPH_BG_COLOR,
 } from "./types";
-import { generateMockNodes, generateMockEdges } from "./mock-data";
+import { generateMockNodes, generateMockEdges } from "@/lib/mocks/graph";
 
 // NVL은 클라이언트 전용이므로 동적 import 사용
 const InteractiveNvlWrapper = dynamic(
   () => import("@neo4j-nvl/react").then((mod) => mod.InteractiveNvlWrapper),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => <GraphLoadingInline />,
+  }
 );
-
-// NVL이 rgba 투명도를 덜 반영할 때를 대비해 비포커스 색을 어둡게 고정
-// 너무 안 보이지 않도록 이전보다 약간 밝게 조정
-const DIMMED_NODE_COLOR = "#1f1f1f";
-const DIMMED_EDGE_COLOR = "#1a1a1a";
 
 // ========================================
 // NVL Node/Relationship Conversion
@@ -96,7 +102,8 @@ function toNvlNode(node: GraphNode, context: NodeConversionContext): Node {
       : null;
 
   // 색상 결정: 기본은 타입 색상 유지 (선택/연결 시에도 색상 고정)
-  let nodeColor: string = NODE_COLORS[node.type] || DEFAULT_NODE_COLOR;
+  // NVL은 CSS 변수를 지원하지 않으므로 static 값 사용
+  let nodeColor: string = NODE_COLORS_STATIC[node.type] || DEFAULT_NODE_COLOR;
 
   // 선택된 노드가 있을 때 관련 없는 노드는 투명하게
   const shouldDim = !!(selectedNodeId && !isSelected && !isConnectedToSelected);
@@ -148,7 +155,7 @@ function toNvlRelationship(
 
   let edgeColor: string;
   if (edge.isBroken) {
-    edgeColor = "#ef4444";
+    edgeColor = BROKEN_EDGE_COLOR;
   } else if (isConnectedToSelected) {
     edgeColor = SELECTED_NODE_COLOR;
   } else if (shouldDim) {
@@ -185,6 +192,9 @@ interface GraphViewProps {
 // Component
 // ========================================
 
+// 최소 로딩 표시 시간 (ms)
+const MIN_LOADING_TIME = 800;
+
 export function GraphView({
   initialNodes,
   initialEdges,
@@ -196,10 +206,18 @@ export function GraphView({
 
   const nvlRef = useRef<NVL | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
-  // 클라이언트 사이드에서만 렌더링
+  // 클라이언트 사이드에서만 렌더링 + 최소 로딩 시간 보장
   useEffect(() => {
     setIsMounted(true);
+
+    // 최소 로딩 시간 후에 ready 상태로 전환
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, MIN_LOADING_TIME);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // 그래프 데이터
@@ -222,13 +240,7 @@ export function GraphView({
     useState<GraphStyleConfig>(DEFAULT_STYLE_CONFIG);
 
   // 태그 색상
-  const [tagColors, setTagColors] = useState<TagColor[]>([
-    { tag: "Web3", color: "#fc8658" },
-    { tag: "Blockchain", color: "#60a5fa" },
-    { tag: "API", color: "#34d399" },
-    { tag: "Tutorial", color: "#f472b6" },
-    { tag: "Guide", color: "#a78bfa" },
-  ]);
+  const [tagColors, setTagColors] = useState<TagColor[]>(DEFAULT_TAG_COLORS);
 
   // 줌 레벨
   const [zoom, setZoom] = useState(1);
@@ -462,22 +474,17 @@ export function GraphView({
   }, []);
 
   // Mouse event callbacks (NVL InteractiveNvlWrapper)
-  // @see https://neo4j.com/docs/api/nvl/current/examples.html?tab=InteractiveReactWrapperExample
   const mouseEventCallbacks = useMemo(
     () => ({
-      // 클릭 이벤트
       onNodeClick: (node: Node) => handleNodeClick(node),
       onCanvasClick: () => handleCanvasClick(),
-      // 드래그 이벤트 - 드래그 후 노드 위치 고정(pin)
       onDragEnd: (nodes: Node[]) => {
-        // 드래그 완료된 노드들은 pinned 상태로 설정하여 레이아웃에서 고정
         if (nvlRef.current && nodes.length > 0) {
           const updates = nodes.map((node) => ({ id: node.id, pinned: true }));
           nvlRef.current.addAndUpdateElementsInGraph(updates, []);
         }
       },
       onPan: true,
-      // 호버 이벤트 - 라벨 표시 (hover 모드일 때)
       onHover: (node: Node | null) => {
         if (styleConfig.labelVisibility === "hover" && node && nvlRef.current) {
           const originalNode = allNodes.find((n) => n.id === node.id);
@@ -500,9 +507,10 @@ export function GraphView({
   return (
     <div
       data-graph-container
-      className={`flex-1 bg-[#0d0d0d] flex overflow-hidden relative ${
-        className || ""
-      }`}
+      className={cn(
+        "flex-1 bg-surface-sunken flex overflow-hidden relative h-full",
+        className
+      )}
     >
       {/* 왼쪽 필터 패널 */}
       <GraphFilter
@@ -518,46 +526,61 @@ export function GraphView({
       {/* 메인 그래프 영역 */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* 플로팅 툴바 */}
-        <div className="absolute top-5 left-5 bg-[#1e1e1e]/90 backdrop-blur-sm rounded-lg border border-[#2a2a2a] shadow-lg flex flex-col overflow-hidden z-10">
-          <button
+        <div className="absolute top-5 left-5 bg-background/90 backdrop-blur-sm rounded-lg border border-border shadow-lg flex flex-col overflow-hidden z-10">
+          <IconButton
+            variant="dark"
+            size="lg"
             onClick={handleResetView}
-            className="p-3 hover:bg-[#2a2a2a] transition-colors border-b border-[#2a2a2a]"
-            title="뷰 초기화"
+            tooltip="뷰 초기화"
+            tooltipSide="right"
+            className="rounded-none border-b border-border"
           >
-            <RotateCcw size={18} className="text-[#d1d5db]" />
-          </button>
-          <button
+            <RotateCcw size={18} />
+          </IconButton>
+          <IconButton
+            variant="dark"
+            size="lg"
             onClick={handleZoomIn}
-            className="p-3 hover:bg-[#2a2a2a] transition-colors border-b border-[#2a2a2a]"
-            title="확대"
+            tooltip="확대"
+            tooltipSide="right"
+            className="rounded-none border-b border-border"
           >
-            <ZoomIn size={18} className="text-[#d1d5db]" />
-          </button>
-          <button
+            <ZoomIn size={18} />
+          </IconButton>
+          <IconButton
+            variant="dark"
+            size="lg"
             onClick={handleZoomOut}
-            className="p-3 hover:bg-[#2a2a2a] transition-colors border-b border-[#2a2a2a]"
-            title="축소"
+            tooltip="축소"
+            tooltipSide="right"
+            className="rounded-none border-b border-border"
           >
-            <ZoomOut size={18} className="text-[#d1d5db]" />
-          </button>
-          <button
-            className="p-3 hover:bg-[#2a2a2a] transition-colors border-b border-[#2a2a2a]"
-            title="내보내기"
+            <ZoomOut size={18} />
+          </IconButton>
+          <IconButton
+            variant="dark"
+            size="lg"
+            tooltip="내보내기"
+            tooltipSide="right"
+            className="rounded-none border-b border-border"
           >
-            <Download size={18} className="text-[#d1d5db]" />
-          </button>
-          <button
+            <Download size={18} />
+          </IconButton>
+          <IconButton
+            variant="dark"
+            size="lg"
             onClick={handleFullscreen}
-            className="p-3 hover:bg-[#2a2a2a] transition-colors"
-            title="전체화면"
+            tooltip="전체화면"
+            tooltipSide="right"
+            className="rounded-none"
           >
-            <Maximize2 size={18} className="text-[#d1d5db]" />
-          </button>
+            <Maximize2 size={18} />
+          </IconButton>
         </div>
 
         {/* NVL 그래프 캔버스 */}
         <div className="flex-1 relative">
-          {isMounted && (
+          {isMounted && isReady && (
             <InteractiveNvlWrapper
               ref={nvlRef as React.RefObject<NVL>}
               nodes={nvlNodes}
@@ -565,11 +588,10 @@ export function GraphView({
               nvlOptions={{
                 initialZoom: 0.7,
                 layout: "d3Force",
-                renderer: "canvas", // caption 표시를 위해 canvas 렌더러 필요
+                renderer: "canvas",
                 allowDynamicMinZoom: true,
                 minZoom: 0.1,
                 maxZoom: 3,
-                // 비포커스(disabled) 색상을 강제 지정하여 시인성 낮춤
                 styling: {
                   disabledItemColor: DIMMED_NODE_COLOR,
                   disabledItemFontColor: DIMMED_NODE_COLOR,
@@ -582,27 +604,23 @@ export function GraphView({
               style={{
                 width: "100%",
                 height: "100%",
-                backgroundColor: "#0d0d0d",
+                backgroundColor: GRAPH_BG_COLOR,
               }}
             />
           )}
-          {!isMounted && (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-[#9ca3af]">그래프 로딩 중...</div>
-            </div>
-          )}
+          {(!isMounted || !isReady) && <GraphLoadingInline />}
         </div>
 
         {/* 통계 푸터 */}
-        <div className="absolute bottom-5 left-5 bg-[#1e1e1e]/90 backdrop-blur-sm rounded-lg px-4 py-2.5 shadow-lg border border-[#2a2a2a] pointer-events-none">
-          <div className="flex items-center gap-5 text-[12px] text-[#9ca3af]">
-            <span className="text-[#e5e5e5]">{filteredNodes.length}</span>
+        <div className="absolute bottom-5 left-5 bg-background/90 backdrop-blur-sm rounded-lg px-4 py-2.5 shadow-lg border border-border pointer-events-none">
+          <div className="flex items-center gap-5 text-[12px] text-text-tertiary">
+            <span className="text-text-primary">{filteredNodes.length}</span>
             <span>노드</span>
             <span>•</span>
-            <span className="text-[#e5e5e5]">{filteredEdges.length}</span>
+            <span className="text-text-primary">{filteredEdges.length}</span>
             <span>연결</span>
             <span>•</span>
-            <span className="text-[#e5e5e5]">{Math.round(zoom * 100)}%</span>
+            <span className="text-text-primary">{Math.round(zoom * 100)}%</span>
             <span>배율</span>
           </div>
         </div>

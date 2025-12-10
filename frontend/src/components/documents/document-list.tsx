@@ -4,17 +4,16 @@ import { useState } from "react";
 import {
   Plus,
   Search,
-  Filter,
   MoreHorizontal,
   FileText,
   Edit,
   Trash2,
   Eye,
-  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { IconButton } from "@/components/ui/icon-button";
+import { StatusBadge, type DocumentStatus } from "@/components/ui/status-badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,131 +29,44 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import {
+  mockDocuments,
+  documentTypeLabels,
+  type Document,
+  type DocumentType,
+} from "@/lib/mocks/documents";
 
-interface Document {
-  id: string;
-  title: string;
-  type: "api-guide" | "general" | "tutorial";
-  status: "Draft" | "In Review" | "Done" | "Publish";
-  author: string;
-  updatedAt: string;
-  version: string;
-  linkedTerms: number;
-}
-
-const mockDocuments: Document[] = [
-  {
-    id: "1",
-    title: "Using Nodit with AI & LLM Tools",
-    type: "tutorial",
-    status: "In Review",
-    author: "Bailey",
-    updatedAt: "2시간 전",
-    version: "v2.1.0",
-    linkedTerms: 5,
-  },
-  {
-    id: "2",
-    title: "arbitrum-eth_blocknumber",
-    type: "api-guide",
-    status: "Publish",
-    author: "Damon",
-    updatedAt: "5시간 전",
-    version: "v1.3.2",
-    linkedTerms: 3,
-  },
-  {
-    id: "3",
-    title: "Polygon Quickstart",
-    type: "tutorial",
-    status: "Draft",
-    author: "Jonny",
-    updatedAt: "1일 전",
-    version: "v0.8.1",
-    linkedTerms: 8,
-  },
-  {
-    id: "4",
-    title: "Webhook Security & Reliability",
-    type: "general",
-    status: "Done",
-    author: "Ben",
-    updatedAt: "2025.12.04",
-    version: "v1.3.5",
-    linkedTerms: 2,
-  },
-  {
-    id: "5",
-    title: "Web3 Data API Overview",
-    type: "api-guide",
-    status: "Publish",
-    author: "Bailey",
-    updatedAt: "2025.12.03",
-    version: "v2.0.0",
-    linkedTerms: 12,
-  },
-  {
-    id: "6",
-    title: "Getting Started with Elastic Node",
-    type: "tutorial",
-    status: "In Review",
-    author: "Damon",
-    updatedAt: "2025.12.02",
-    version: "v1.1.0",
-    linkedTerms: 6,
-  },
-  {
-    id: "7",
-    title: "Dedicated Node Configuration",
-    type: "general",
-    status: "Draft",
-    author: "Jonny",
-    updatedAt: "2025.12.01",
-    version: "v0.5.0",
-    linkedTerms: 4,
-  },
-  {
-    id: "8",
-    title: "GraphQL API Reference",
-    type: "api-guide",
-    status: "Done",
-    author: "Ben",
-    updatedAt: "2025.11.30",
-    version: "v3.0.0",
-    linkedTerms: 15,
-  },
-];
-
-const statusStyles = {
-  Draft: { bg: "bg-gray-100", text: "text-gray-600" },
-  "In Review": { bg: "bg-amber-100", text: "text-amber-700" },
-  Done: { bg: "bg-emerald-100", text: "text-emerald-700" },
-  Publish: { bg: "bg-blue-100", text: "text-blue-700" },
-};
-
-const typeLabels = {
-  "api-guide": "API Guide",
-  general: "General",
-  tutorial: "Tutorial",
-};
+/* ============================================
+   Types
+   ============================================ */
 
 interface DocumentListProps {
+  documents?: Document[];
   onViewDocument?: (docId: string) => void;
+  onEditDocument?: (docId: string) => void;
+  onDeleteDocument?: (docId: string) => void;
   onCreateDocument?: () => void;
-  onBackToDashboard?: () => void;
+  onBulkDelete?: (docIds: string[]) => void;
 }
 
+/* ============================================
+   Component
+   ============================================ */
+
 export function DocumentList({
+  documents = mockDocuments,
   onViewDocument,
+  onEditDocument,
+  onDeleteDocument,
   onCreateDocument,
-  onBackToDashboard,
+  onBulkDelete,
 }: DocumentListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
 
-  const filteredDocuments = mockDocuments.filter((doc) => {
+  const filteredDocuments = documents.filter((doc) => {
     const matchesSearch = doc.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -177,6 +89,11 @@ export function DocumentList({
     }
   };
 
+  const handleBulkDelete = () => {
+    onBulkDelete?.(selectedDocs);
+    setSelectedDocs([]);
+  };
+
   return (
     <div className="px-6 py-5">
       {/* Header */}
@@ -184,13 +101,10 @@ export function DocumentList({
         <div>
           <h1 className="text-foreground">문서 관리</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            총 {mockDocuments.length}개의 문서
+            총 {documents.length}개의 문서
           </p>
         </div>
-        <Button
-          onClick={onCreateDocument}
-          className="bg-brand hover:bg-brand-dark text-white"
-        >
+        <Button variant="brand" onClick={onCreateDocument}>
           <Plus size={16} className="mr-1.5" />새 문서
         </Button>
       </div>
@@ -244,7 +158,7 @@ export function DocumentList({
             <span className="text-sm text-muted-foreground">
               {selectedDocs.length}개 선택됨
             </span>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleBulkDelete}>
               <Trash2 size={14} className="mr-1" />
               삭제
             </Button>
@@ -253,7 +167,7 @@ export function DocumentList({
       </div>
 
       {/* Document Table */}
-      <div className="bg-white border border-border rounded-lg overflow-hidden">
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
         {/* Table Header */}
         <div className="grid grid-cols-[auto_1fr_120px_100px_100px_100px_80px_48px] gap-4 px-4 py-3 bg-muted/50 border-b border-border text-xs font-medium text-muted-foreground">
           <div className="flex items-center">
@@ -278,109 +192,17 @@ export function DocumentList({
 
         {/* Table Body */}
         <div className="divide-y divide-border">
-          {filteredDocuments.map((doc) => {
-            const statusStyle = statusStyles[doc.status];
-            return (
-              <div
-                key={doc.id}
-                className={cn(
-                  "grid grid-cols-[auto_1fr_120px_100px_100px_100px_80px_48px] gap-4 px-4 py-3 items-center hover:bg-muted/30 transition-colors",
-                  selectedDocs.includes(doc.id) && "bg-accent/50"
-                )}
-              >
-                {/* Checkbox */}
-                <div>
-                  <input
-                    type="checkbox"
-                    checked={selectedDocs.includes(doc.id)}
-                    onChange={() => toggleSelectDoc(doc.id)}
-                    className="rounded border-border"
-                  />
-                </div>
-
-                {/* Title */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <FileText
-                    size={16}
-                    className="text-muted-foreground flex-shrink-0"
-                  />
-                  <div className="min-w-0">
-                    <p
-                      onClick={() => onViewDocument?.(doc.id)}
-                      className="text-sm text-foreground truncate hover:text-brand cursor-pointer"
-                    >
-                      {doc.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      연결된 용어 {doc.linkedTerms}개
-                    </p>
-                  </div>
-                </div>
-
-                {/* Type */}
-                <div>
-                  <span className="text-xs text-muted-foreground">
-                    {typeLabels[doc.type]}
-                  </span>
-                </div>
-
-                {/* Status */}
-                <div>
-                  <Badge
-                    variant="secondary"
-                    className={cn(
-                      "text-[11px]",
-                      statusStyle.bg,
-                      statusStyle.text
-                    )}
-                  >
-                    {doc.status}
-                  </Badge>
-                </div>
-
-                {/* Author */}
-                <div className="text-sm text-muted-foreground">
-                  {doc.author}
-                </div>
-
-                {/* Updated */}
-                <div className="text-sm text-muted-foreground">
-                  {doc.updatedAt}
-                </div>
-
-                {/* Version */}
-                <div className="text-xs text-muted-foreground">
-                  {doc.version}
-                </div>
-
-                {/* Actions */}
-                <div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreHorizontal size={16} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Eye size={14} className="mr-2" />
-                        보기
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Edit size={14} className="mr-2" />
-                        편집
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">
-                        <Trash2 size={14} className="mr-2" />
-                        삭제
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            );
-          })}
+          {filteredDocuments.map((doc) => (
+            <DocumentRow
+              key={doc.id}
+              doc={doc}
+              isSelected={selectedDocs.includes(doc.id)}
+              onSelect={() => toggleSelectDoc(doc.id)}
+              onView={() => onViewDocument?.(doc.id)}
+              onEdit={() => onEditDocument?.(doc.id)}
+              onDelete={() => onDeleteDocument?.(doc.id)}
+            />
+          ))}
         </div>
 
         {/* Empty State */}
@@ -409,6 +231,111 @@ export function DocumentList({
             다음
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================
+   Document Row Subcomponent
+   ============================================ */
+
+interface DocumentRowProps {
+  doc: Document;
+  isSelected: boolean;
+  onSelect: () => void;
+  onView?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+}
+
+function DocumentRow({
+  doc,
+  isSelected,
+  onSelect,
+  onView,
+  onEdit,
+  onDelete,
+}: DocumentRowProps) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-[auto_1fr_120px_100px_100px_100px_80px_48px] gap-4 px-4 py-3 items-center",
+        "hover:bg-surface-hover transition-colors",
+        isSelected && "bg-accent/50"
+      )}
+    >
+      {/* Checkbox */}
+      <div>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={onSelect}
+          className="rounded border-border"
+        />
+      </div>
+
+      {/* Title */}
+      <div className="flex items-center gap-3 min-w-0">
+        <FileText size={16} className="text-muted-foreground flex-shrink-0" />
+        <div className="min-w-0">
+          <p
+            onClick={onView}
+            className="text-sm text-foreground truncate hover:text-brand cursor-pointer"
+          >
+            {doc.title}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            연결된 용어 {doc.linkedTerms}개
+          </p>
+        </div>
+      </div>
+
+      {/* Type */}
+      <div>
+        <span className="text-xs text-muted-foreground">
+          {documentTypeLabels[doc.type]}
+        </span>
+      </div>
+
+      {/* Status */}
+      <div>
+        <StatusBadge status={doc.status} />
+      </div>
+
+      {/* Author */}
+      <div className="text-sm text-muted-foreground">{doc.author}</div>
+
+      {/* Updated */}
+      <div className="text-sm text-muted-foreground">{doc.updatedAt}</div>
+
+      {/* Version */}
+      <div className="text-xs text-muted-foreground">{doc.version}</div>
+
+      {/* Actions */}
+      <div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <IconButton variant="muted" size="sm">
+              <MoreHorizontal size={16} />
+            </IconButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onView}>
+              <Eye size={14} className="mr-2" />
+              보기
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>
+              <Edit size={14} className="mr-2" />
+              편집
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive" onClick={onDelete}>
+              <Trash2 size={14} className="mr-2" />
+              삭제
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

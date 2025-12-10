@@ -25,6 +25,7 @@ import {
   TagColor,
   NODE_COLORS,
   AVAILABLE_TAGS,
+  TAG_COLOR_PALETTE,
 } from "./types";
 
 // ========================================
@@ -47,19 +48,58 @@ interface GraphFilterProps {
 }
 
 // ========================================
-// Color Options
+// Subcomponents
 // ========================================
 
-const COLOR_OPTIONS = [
-  "#fc8658", // accent orange
-  "#3b82f6", // blue
-  "#22c55e", // green
-  "#a855f7", // purple
-  "#f472b6", // pink
-  "#fbbf24", // yellow
-  "#ef4444", // red
-  "#94a3b8", // slate
-];
+interface NodeTypeButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  count: number;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+function NodeTypeButton({
+  icon,
+  label,
+  count,
+  isActive,
+  onClick,
+}: NodeTypeButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors",
+        isActive
+          ? "bg-brand/20 border border-brand"
+          : "bg-surface border border-border"
+      )}
+    >
+      <div className="flex items-center gap-2">
+        <span className={isActive ? "text-brand" : "text-text-tertiary"}>
+          {icon}
+        </span>
+        <span
+          className={cn(
+            "text-[13px]",
+            isActive ? "text-brand" : "text-text-secondary"
+          )}
+        >
+          {label}
+        </span>
+      </div>
+      <span
+        className={cn(
+          "text-[13px]",
+          isActive ? "text-brand" : "text-text-tertiary"
+        )}
+      >
+        {count}
+      </span>
+    </button>
+  );
+}
 
 // ========================================
 // Component
@@ -96,7 +136,7 @@ export function GraphFilter({
   }, [tagSearch, filters.selectedTags]);
 
   const getRandomColor = () =>
-    COLOR_OPTIONS[Math.floor(Math.random() * COLOR_OPTIONS.length)];
+    TAG_COLOR_PALETTE[Math.floor(Math.random() * TAG_COLOR_PALETTE.length)];
 
   const toggleTag = (tag: string) => {
     const isSelected = filters.selectedTags.includes(tag);
@@ -113,220 +153,105 @@ export function GraphFilter({
   };
 
   return (
-    <div className="w-[280px] bg-[#1e1e1e] border-r border-[#2a2a2a] overflow-y-auto flex-shrink-0">
+    <div className="w-filter bg-background border-r border-border overflow-y-auto flex-shrink-0">
       <div className="p-5 space-y-6">
         {/* 노드 검색 */}
         <section>
-          <h4 className="text-[13px] text-[#e5e5e5] mb-3">노드 검색</h4>
+          <h4 className="text-[13px] text-text-primary mb-3">노드 검색</h4>
           <div className="relative">
             <Search
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary"
             />
             <Input
               type="text"
               placeholder="노드 이름으로 검색..."
               value={filters.searchQuery}
               onChange={(e) => updateFilter("searchQuery", e.target.value)}
-              className="pl-9 bg-[#2a2a2a] border-[#2a2a2a] text-[#d1d5db] placeholder:text-[#6b7280] focus:border-[#fc8658]"
+              className="pl-9 bg-surface border-border text-text-secondary placeholder:text-text-disabled focus:border-brand"
             />
           </div>
         </section>
 
-        <hr className="border-t border-[#2a2a2a]" />
+        <hr className="border-t border-border" />
 
         {/* 노드 타입 필터 */}
         <section>
-          <h4 className="text-[13px] text-[#e5e5e5] mb-3">노드 타입</h4>
+          <h4 className="text-[13px] text-text-primary mb-3">노드 타입</h4>
           <div className="space-y-2">
-            {/* 페이지 */}
-            <button
+            <NodeTypeButton
+              icon={<Package size={14} />}
+              label="페이지"
+              count={nodeStats.pages}
+              isActive={filters.showPages}
               onClick={() => updateFilter("showPages", !filters.showPages)}
-              className={cn(
-                "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors",
-                filters.showPages
-                  ? "bg-[#fc8658]/20 border border-[#fc8658]"
-                  : "bg-[#2a2a2a] border border-[#2a2a2a]"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <Package
-                  size={14}
-                  className={
-                    filters.showPages ? "text-[#fc8658]" : "text-[#9ca3af]"
-                  }
-                />
-                <span
-                  className={cn(
-                    "text-[13px]",
-                    filters.showPages ? "text-[#fc8658]" : "text-[#d1d5db]"
-                  )}
-                >
-                  페이지
-                </span>
-              </div>
-              <span
-                className={cn(
-                  "text-[13px]",
-                  filters.showPages ? "text-[#fc8658]" : "text-[#9ca3af]"
-                )}
-              >
-                {nodeStats.pages}
-              </span>
-            </button>
-
-            {/* 문서 */}
-            <button
+            />
+            <NodeTypeButton
+              icon={<FileText size={14} />}
+              label="문서"
+              count={nodeStats.documents}
+              isActive={filters.showDocuments}
               onClick={() =>
                 updateFilter("showDocuments", !filters.showDocuments)
               }
-              className={cn(
-                "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors",
-                filters.showDocuments
-                  ? "bg-[#fc8658]/20 border border-[#fc8658]"
-                  : "bg-[#2a2a2a] border border-[#2a2a2a]"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <FileText
-                  size={14}
-                  className={
-                    filters.showDocuments ? "text-[#fc8658]" : "text-[#9ca3af]"
-                  }
-                />
-                <span
-                  className={cn(
-                    "text-[13px]",
-                    filters.showDocuments ? "text-[#fc8658]" : "text-[#d1d5db]"
-                  )}
-                >
-                  문서
-                </span>
-              </div>
-              <span
-                className={cn(
-                  "text-[13px]",
-                  filters.showDocuments ? "text-[#fc8658]" : "text-[#9ca3af]"
-                )}
-              >
-                {nodeStats.documents}
-              </span>
-            </button>
-
-            {/* 용어 */}
-            <button
+            />
+            <NodeTypeButton
+              icon={<BookOpen size={14} />}
+              label="용어"
+              count={nodeStats.concepts}
+              isActive={filters.showConcepts}
               onClick={() =>
                 updateFilter("showConcepts", !filters.showConcepts)
               }
-              className={cn(
-                "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors",
-                filters.showConcepts
-                  ? "bg-[#fc8658]/20 border border-[#fc8658]"
-                  : "bg-[#2a2a2a] border border-[#2a2a2a]"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <BookOpen
-                  size={14}
-                  className={
-                    filters.showConcepts ? "text-[#fc8658]" : "text-[#9ca3af]"
-                  }
-                />
-                <span
-                  className={cn(
-                    "text-[13px]",
-                    filters.showConcepts ? "text-[#fc8658]" : "text-[#d1d5db]"
-                  )}
-                >
-                  용어
-                </span>
-              </div>
-              <span
-                className={cn(
-                  "text-[13px]",
-                  filters.showConcepts ? "text-[#fc8658]" : "text-[#9ca3af]"
-                )}
-              >
-                {nodeStats.concepts}
-              </span>
-            </button>
-
-            {/* 태그 */}
-            <button
+            />
+            <NodeTypeButton
+              icon={<Hash size={14} />}
+              label="태그"
+              count={nodeStats.tags}
+              isActive={filters.showTags}
               onClick={() => updateFilter("showTags", !filters.showTags)}
-              className={cn(
-                "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors",
-                filters.showTags
-                  ? "bg-[#fc8658]/20 border border-[#fc8658]"
-                  : "bg-[#2a2a2a] border border-[#2a2a2a]"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <Hash
-                  size={14}
-                  className={
-                    filters.showTags ? "text-[#fc8658]" : "text-[#9ca3af]"
-                  }
-                />
-                <span
-                  className={cn(
-                    "text-[13px]",
-                    filters.showTags ? "text-[#fc8658]" : "text-[#d1d5db]"
-                  )}
-                >
-                  태그
-                </span>
-              </div>
-              <span
-                className={cn(
-                  "text-[13px]",
-                  filters.showTags ? "text-[#fc8658]" : "text-[#9ca3af]"
-                )}
-              >
-                {nodeStats.tags}
-              </span>
-            </button>
+            />
           </div>
         </section>
 
-        <hr className="border-t border-[#2a2a2a]" />
+        <hr className="border-t border-border" />
 
         {/* 관계 타입 필터 */}
         <section>
-          <h4 className="text-[13px] text-[#e5e5e5] mb-3">관계 타입</h4>
+          <h4 className="text-[13px] text-text-primary mb-3">관계 타입</h4>
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-[13px] text-[#d1d5db]">
+              <span className="text-[13px] text-text-secondary">
                 문서 간 관계 보기
               </span>
               <Switch
                 checked={filters.showDocDocEdges}
                 onCheckedChange={(v) => updateFilter("showDocDocEdges", v)}
-                className="data-[state=checked]:bg-[#fc8658]"
+                className="data-[state=checked]:bg-brand"
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[13px] text-[#d1d5db]">
+              <span className="text-[13px] text-text-secondary">
                 문서가 사용하는 용어 보기
               </span>
               <Switch
                 checked={filters.showDocConceptEdges}
                 onCheckedChange={(v) => updateFilter("showDocConceptEdges", v)}
-                className="data-[state=checked]:bg-[#fc8658]"
+                className="data-[state=checked]:bg-brand"
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[13px] text-[#d1d5db]">
+              <span className="text-[13px] text-text-secondary">
                 문서-태그 연결 보기
               </span>
               <Switch
                 checked={filters.showDocTagEdges}
                 onCheckedChange={(v) => updateFilter("showDocTagEdges", v)}
-                className="data-[state=checked]:bg-[#fc8658]"
+                className="data-[state=checked]:bg-brand"
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[13px] text-[#d1d5db]">
+              <span className="text-[13px] text-text-secondary">
                 용어간 관계 보기
               </span>
               <Switch
@@ -334,34 +259,36 @@ export function GraphFilter({
                 onCheckedChange={(v) =>
                   updateFilter("showConceptConceptEdges", v)
                 }
-                className="data-[state=checked]:bg-[#fc8658]"
+                className="data-[state=checked]:bg-brand"
               />
             </div>
           </div>
         </section>
 
-        <hr className="border-t border-[#2a2a2a]" />
+        <hr className="border-t border-border" />
 
         {/* 태그 필터 & 색상 */}
         <section>
-          <h4 className="text-[13px] text-[#e5e5e5] mb-3">태그 필터 & 색상</h4>
+          <h4 className="text-[13px] text-text-primary mb-3">
+            태그 필터 & 색상
+          </h4>
           <div className="space-y-3">
             {/* 태그 검색 + 인풋 내 드롭다운 */}
             <div className="relative">
               <Search
                 size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary"
               />
               <Input
                 value={tagSearch}
                 onChange={(e) => setTagSearch(e.target.value)}
                 placeholder="태그 검색 후 추가..."
-                className="pl-9 bg-[#2a2a2a] border-[#2a2a2a] text-[#d1d5db] placeholder:text-[#6b7280] focus:border-[#fc8658]"
+                className="pl-9 bg-surface border-border text-text-secondary placeholder:text-text-disabled focus:border-brand"
               />
               {tagSearch.trim() !== "" && (
-                <div className="absolute left-0 right-0 top-[110%] bg-[#1f1f1f] border border-[#2a2a2a] rounded-lg shadow-lg z-30 max-h-48 overflow-y-auto">
+                <div className="absolute left-0 right-0 top-[110%] bg-surface-elevated border border-border rounded-lg shadow-lg z-30 max-h-48 overflow-y-auto">
                   {filteredTags.length === 0 ? (
-                    <p className="px-3 py-2 text-[12px] text-[#6b7280]">
+                    <p className="px-3 py-2 text-[12px] text-text-disabled">
                       검색 결과가 없습니다.
                     </p>
                   ) : (
@@ -379,7 +306,7 @@ export function GraphFilter({
                             toggleTag(tag);
                             setTagSearch("");
                           }}
-                          className="w-full flex items-center justify-between px-3 py-2 text-left text-[13px] text-[#d1d5db] hover:bg-[#2a2a2a]"
+                          className="w-full flex items-center justify-between px-3 py-2 text-left text-[13px] text-text-secondary hover:bg-surface-hover"
                         >
                           <div className="flex items-center gap-2">
                             <div
@@ -388,7 +315,7 @@ export function GraphFilter({
                             />
                             <span>#{tag}</span>
                           </div>
-                          <span className="text-[12px] text-[#9ca3af]">
+                          <span className="text-[12px] text-text-tertiary">
                             추가
                           </span>
                         </button>
@@ -407,13 +334,13 @@ export function GraphFilter({
                   return (
                     <div
                       key={`selected-${tag}`}
-                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] bg-[#fc8658]/15 text-[#e5e5e5] border border-[#fc8658]/50 w-full"
+                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] bg-brand/15 text-text-primary border border-brand/50 w-full"
                       title="선택된 태그"
                     >
                       {/* 단일 색상 버튼(팔레트 역할) */}
                       <div className="relative group">
                         <button
-                          className="p-1 rounded-md hover:bg-[#333333] transition-colors"
+                          className="p-1 rounded-md hover:bg-surface-hover transition-colors"
                           title="색상 변경"
                         >
                           <div
@@ -421,12 +348,12 @@ export function GraphFilter({
                             style={{ backgroundColor: tagColor }}
                           />
                         </button>
-                        <div className="absolute top-full left-0 mt-1 bg-[#2a2a2a] border border-[#333333] rounded-lg p-3 shadow-lg z-30 hidden group-hover:block min-w-[180px]">
-                          <p className="text-[12px] text-[#9ca3af] mb-2">
+                        <div className="absolute top-full left-0 mt-1 bg-surface border border-border-strong rounded-lg p-3 shadow-lg z-30 hidden group-hover:block min-w-[180px]">
+                          <p className="text-[12px] text-text-tertiary mb-2">
                             색상 선택
                           </p>
                           <div className="grid grid-cols-4 gap-1.5">
-                            {COLOR_OPTIONS.map((color) => (
+                            {TAG_COLOR_PALETTE.map((color) => (
                               <button
                                 key={color}
                                 onClick={() => onTagColorChange(tag, color)}
@@ -445,10 +372,10 @@ export function GraphFilter({
                       <span className="flex-1 min-w-0 truncate">#{tag}</span>
                       <button
                         onClick={() => toggleTag(tag)}
-                        className="p-1 rounded-md hover:bg-[#333333] transition-colors"
+                        className="p-1 rounded-md hover:bg-surface-hover transition-colors"
                         title="필터에서 제거"
                       >
-                        <X size={12} className="text-[#d1d5db]" />
+                        <X size={12} className="text-text-secondary" />
                       </button>
                     </div>
                   );
@@ -458,15 +385,15 @@ export function GraphFilter({
           </div>
         </section>
 
-        <hr className="border-t border-[#2a2a2a]" />
+        <hr className="border-t border-border" />
 
         {/* 그래프 스타일 */}
         <section>
-          <h4 className="text-[13px] text-[#e5e5e5] mb-3">그래프 스타일</h4>
+          <h4 className="text-[13px] text-text-primary mb-3">그래프 스타일</h4>
           <div className="space-y-4">
             {/* 노드 크기 */}
             <div>
-              <label className="text-[12px] text-[#9ca3af] mb-1.5 block">
+              <label className="text-[12px] text-text-tertiary mb-1.5 block">
                 노드 크기
               </label>
               <Slider
@@ -477,13 +404,13 @@ export function GraphFilter({
                 onValueChange={([v]) =>
                   onStyleConfigChange({ ...styleConfig, nodeSize: v })
                 }
-                className="[&_[role=slider]]:bg-[#fc8658]"
+                className="[&_[role=slider]]:bg-brand"
               />
             </div>
 
             {/* 엣지 굵기 */}
             <div>
-              <label className="text-[12px] text-[#9ca3af] mb-1.5 block">
+              <label className="text-[12px] text-text-tertiary mb-1.5 block">
                 엣지 굵기
               </label>
               <Slider
@@ -494,13 +421,13 @@ export function GraphFilter({
                 onValueChange={([v]) =>
                   onStyleConfigChange({ ...styleConfig, edgeWidth: v })
                 }
-                className="[&_[role=slider]]:bg-[#fc8658]"
+                className="[&_[role=slider]]:bg-brand"
               />
             </div>
 
             {/* 라벨 표시 */}
             <div>
-              <label className="text-[12px] text-[#9ca3af] mb-1.5 block">
+              <label className="text-[12px] text-text-tertiary mb-1.5 block">
                 라벨 표시
               </label>
               <Select
@@ -512,10 +439,10 @@ export function GraphFilter({
                   })
                 }
               >
-                <SelectTrigger className="bg-[#2a2a2a] border-[#2a2a2a] text-[#d1d5db]">
+                <SelectTrigger className="bg-surface border-border text-text-secondary">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#2a2a2a] border-[#333333]">
+                <SelectContent className="bg-surface border-border-strong">
                   <SelectItem value="always">항상 표시</SelectItem>
                   <SelectItem value="hover">Hover 시 표시</SelectItem>
                   <SelectItem value="important">중요 노드만</SelectItem>
@@ -528,4 +455,3 @@ export function GraphFilter({
     </div>
   );
 }
-

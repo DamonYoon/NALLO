@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { IconButton } from "@/components/ui/icon-button";
+import { StatusBadge, type DocumentStatus } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
 import { GraphNode, TagColor, NODE_COLORS } from "./types";
 
@@ -41,27 +43,6 @@ interface GraphNodeDetailProps {
 }
 
 // ========================================
-// Status Badge Component
-// ========================================
-
-function StatusBadge({ status }: { status?: string }) {
-  if (!status) return null;
-
-  const colorMap: Record<string, string> = {
-    Publish: "text-[#10b981]",
-    Done: "text-[#60a5fa]",
-    "In Review": "text-[#fbbf24]",
-    Draft: "text-[#9ca3af]",
-  };
-
-  return (
-    <span className={cn("text-[11px]", colorMap[status] || "text-[#9ca3af]")}>
-      {status}
-    </span>
-  );
-}
-
-// ========================================
 // Connected Node Item
 // ========================================
 
@@ -74,31 +55,31 @@ function ConnectedNodeItem({ node, onClick }: ConnectedNodeItemProps) {
   return (
     <div
       onClick={onClick}
-      className="p-2.5 bg-[#2a2a2a] rounded-md hover:bg-[#333333] transition-colors cursor-pointer group"
+      className="p-2.5 bg-surface rounded-md hover:bg-surface-hover transition-colors cursor-pointer group"
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-1.5 mb-1">
             {node.type === "document" ? (
-              <FileText size={14} className="text-[#fc8658]" />
+              <FileText size={14} className="text-node-document" />
             ) : (
-              <BookOpen size={14} className="text-[#a855f7]" />
+              <BookOpen size={14} className="text-node-concept" />
             )}
-            <span className="text-[13px] text-[#e5e5e5]">{node.label}</span>
+            <span className="text-[13px] text-text-primary">{node.label}</span>
           </div>
           {node.status && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] text-[#9ca3af]">
+              <span className="text-[11px] text-text-tertiary">
                 {node.type === "document" ? "Document" : "Concept"}
               </span>
-              <span className="text-[11px] text-[#6b7280]">•</span>
-              <StatusBadge status={node.status} />
+              <span className="text-[11px] text-text-disabled">•</span>
+              <StatusBadge status={node.status as DocumentStatus} className="text-[11px] px-1.5 py-0" />
             </div>
           )}
         </div>
         <ExternalLink
           size={14}
-          className="text-[#9ca3af] opacity-0 group-hover:opacity-100 transition-opacity"
+          className="text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity"
         />
       </div>
     </div>
@@ -134,7 +115,7 @@ export function GraphNodeDetail({
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
-      className="w-[380px] h-full bg-[#1e1e1e] border-l border-[#2a2a2a] overflow-hidden flex flex-col flex-shrink-0"
+      className="w-panel h-full bg-background border-l border-border overflow-hidden flex flex-col flex-shrink-0"
     >
       <ScrollArea className="flex-1">
         <div className="p-6 space-y-5">
@@ -143,80 +124,70 @@ export function GraphNodeDetail({
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 {isDocument ? (
-                  <FileText size={20} className="text-[#fc8658]" />
+                  <FileText size={20} className="text-node-document" />
                 ) : isTag ? (
-                  <Hash size={20} className="text-[#f97316]" />
+                  <Hash size={20} className="text-node-tag" />
                 ) : (
-                  <BookOpen size={20} className="text-[#a855f7]" />
+                  <BookOpen size={20} className="text-node-concept" />
                 )}
-                <h2 className="text-lg text-[#e5e5e5] font-medium">
+                <h2 className="text-lg text-text-primary font-medium">
                   {node.label}
                 </h2>
               </div>
               <div className="flex items-center gap-1.5 flex-wrap">
                 <Badge
-                  variant="secondary"
-                  className={cn(
-                    "text-[12px]",
-                    isDocument
-                      ? "bg-[#fc8658]/20 text-[#fc8658]"
-                      : isTag
-                      ? "bg-[#f97316]/20 text-[#f97316]"
-                      : "bg-[#a855f7]/20 text-[#a855f7]"
-                  )}
+                  variant={isDocument ? "document" : isTag ? "tag" : "concept"}
+                  className="text-[12px]"
                 >
                   {typeLabel}
                 </Badge>
                 {node.isNew && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-[#fef3c7]/20 text-[#fbbf24] text-[12px]"
-                  >
+                  <Badge variant="in-review" className="text-[12px]">
                     NEW
                   </Badge>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-[#9ca3af] hover:text-[#d1d5db] hover:bg-[#2a2a2a]"
+              <IconButton
+                variant="muted"
+                size="sm"
                 onClick={() => onEditNode?.(node.id)}
+                tooltip="편집"
               >
                 <Edit3 size={16} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-[#9ca3af] hover:text-[#d1d5db] hover:bg-[#2a2a2a]"
+              </IconButton>
+              <IconButton
+                variant="muted"
+                size="sm"
                 onClick={onClose}
+                tooltip="닫기"
               >
                 <X size={18} />
-              </Button>
+              </IconButton>
             </div>
           </div>
 
-          <hr className="border-t border-[#2a2a2a]" />
+          <hr className="border-t border-border" />
 
           {/* 메타데이터 */}
           <div className="space-y-2">
             <div className="flex justify-between text-[13px]">
-              <span className="text-[#9ca3af]">생성일</span>
-              <span className="text-[#d1d5db]">{node.createdAt || "-"}</span>
+              <span className="text-text-tertiary">생성일</span>
+              <span className="text-text-secondary">{node.createdAt || "-"}</span>
             </div>
             {node.updatedAt && (
               <div className="flex justify-between text-[13px]">
-                <span className="text-[#9ca3af]">수정일</span>
-                <span className="text-[#d1d5db]">{node.updatedAt}</span>
+                <span className="text-text-tertiary">수정일</span>
+                <span className="text-text-secondary">{node.updatedAt}</span>
               </div>
             )}
           </div>
 
           {/* 설명 */}
           <div>
-            <h3 className="text-[13px] text-[#9ca3af] mb-2">설명</h3>
-            <p className="text-[14px] text-[#d1d5db] leading-relaxed">
+            <h3 className="text-[13px] text-text-tertiary mb-2">설명</h3>
+            <p className="text-[14px] text-text-secondary leading-relaxed">
               {node.description || "설명이 없습니다."}
             </p>
           </div>
@@ -224,12 +195,12 @@ export function GraphNodeDetail({
           {/* 태그 */}
           {node.tags && node.tags.length > 0 && (
             <div>
-              <h3 className="text-[13px] text-[#9ca3af] mb-2">태그</h3>
+              <h3 className="text-[13px] text-text-tertiary mb-2">태그</h3>
               <div className="flex flex-wrap gap-1.5">
                 {node.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="px-2.5 py-1 rounded-md bg-[#2a2a2a] text-[12px] text-[#9ca3af] flex items-center gap-1.5"
+                    className="px-2.5 py-1 rounded-md bg-surface text-[12px] text-text-tertiary flex items-center gap-1.5"
                   >
                     <div
                       className="w-2 h-2 rounded-full"
@@ -242,22 +213,23 @@ export function GraphNodeDetail({
             </div>
           )}
 
-          <hr className="border-t border-[#2a2a2a]" />
+          <hr className="border-t border-border" />
 
           {/* 액션 버튼 */}
           <div className="flex gap-2">
             {isDocument ? (
               <>
                 <Button
-                  className="flex-1 bg-[#fc8658] hover:bg-[#e67847] text-white"
+                  variant="brand"
+                  className="flex-1"
                   onClick={() => onOpenDocument?.(node.id)}
                 >
                   <ExternalLink size={16} className="mr-2" />
                   문서 열기
                 </Button>
                 <Button
-                  variant="outline"
-                  className="flex-1 border-[#fc8658] text-[#fc8658] hover:bg-[#fc8658]/10"
+                  variant="brand-outline"
+                  className="flex-1"
                   onClick={() => onCreateConnection?.(node.id)}
                 >
                   <Plus size={16} className="mr-2" />
@@ -267,8 +239,8 @@ export function GraphNodeDetail({
             ) : isTag ? (
               <>
                 <Button
-                  variant="outline"
-                  className="flex-1 border-[#f97316] text-[#f97316] hover:bg-[#f97316]/10"
+                  variant="brand-outline"
+                  className="flex-1"
                   onClick={() => onCreateConnection?.(node.id)}
                 >
                   <Plus size={16} className="mr-2" />
@@ -276,7 +248,7 @@ export function GraphNodeDetail({
                 </Button>
                 <Button
                   variant="ghost"
-                  className="flex-1 text-[#9ca3af] hover:text-[#d1d5db] hover:bg-[#2a2a2a]"
+                  className="flex-1 text-text-tertiary hover:text-text-secondary"
                   onClick={() => onEditNode?.(node.id)}
                 >
                   <Edit3 size={16} className="mr-2" />
@@ -286,15 +258,16 @@ export function GraphNodeDetail({
             ) : (
               <>
                 <Button
-                  className="flex-1 bg-[#fc8658] hover:bg-[#e67847] text-white"
+                  variant="brand"
+                  className="flex-1"
                   onClick={() => onEditNode?.(node.id)}
                 >
                   <Edit3 size={16} className="mr-2" />
                   용어 편집
                 </Button>
                 <Button
-                  variant="outline"
-                  className="flex-1 border-[#fc8658] text-[#fc8658] hover:bg-[#fc8658]/10"
+                  variant="brand-outline"
+                  className="flex-1"
                   onClick={() => onCreateConnection?.(node.id)}
                 >
                   <Plus size={16} className="mr-2" />
@@ -304,20 +277,20 @@ export function GraphNodeDetail({
             )}
           </div>
 
-          <hr className="border-t border-[#2a2a2a]" />
+          <hr className="border-t border-border" />
 
           {/* 연결 정보 탭 */}
           <Tabs defaultValue="documents" className="w-full">
-            <TabsList className="w-full bg-transparent border-b border-[#2a2a2a] rounded-none p-0">
+            <TabsList className="w-full bg-transparent border-b border-border rounded-none p-0">
               <TabsTrigger
                 value="documents"
-                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-[#fc8658] data-[state=active]:text-[#fc8658] data-[state=active]:bg-transparent text-[#9ca3af] text-[13px]"
+                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-brand data-[state=active]:text-brand data-[state=active]:bg-transparent text-text-tertiary text-[13px]"
               >
                 연결된 문서 ({connectedDocuments.length})
               </TabsTrigger>
               <TabsTrigger
                 value="concepts"
-                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-[#fc8658] data-[state=active]:text-[#fc8658] data-[state=active]:bg-transparent text-[#9ca3af] text-[13px]"
+                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-brand data-[state=active]:text-brand data-[state=active]:bg-transparent text-text-tertiary text-[13px]"
               >
                 연결된 용어 ({connectedConcepts.length})
               </TabsTrigger>
@@ -333,7 +306,7 @@ export function GraphNodeDetail({
                   />
                 ))
               ) : (
-                <p className="text-[13px] text-[#6b7280] py-4 text-center">
+                <p className="text-[13px] text-text-disabled py-4 text-center">
                   연결된 문서가 없습니다.
                 </p>
               )}
@@ -349,7 +322,7 @@ export function GraphNodeDetail({
                   />
                 ))
               ) : (
-                <p className="text-[13px] text-[#6b7280] py-4 text-center">
+                <p className="text-[13px] text-text-disabled py-4 text-center">
                   연결된 용어가 없습니다.
                 </p>
               )}
@@ -360,4 +333,3 @@ export function GraphNodeDetail({
     </motion.div>
   );
 }
-

@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Plus,
   Search,
-  Filter,
   MoreVertical,
   FileText,
   Grid,
@@ -12,7 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { CategoryBadge } from "@/components/ui/category-badge";
 import {
   Select,
   SelectContent,
@@ -27,111 +26,45 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import {
+  mockGlossaryTerms,
+  glossaryCategoryOptions,
+  type GlossaryTerm,
+  type GlossaryCategory,
+} from "@/lib/mocks/glossary";
 
-interface GlossaryTerm {
-  id: string;
-  name: string;
-  description: string;
-  category: "API 요소" | "개념" | "기능";
-  documentCount: number;
-  linkedDocumentCount: number;
-  lastModified: string;
-}
-
-const CATEGORY_STYLES = {
-  "API 요소": { bg: "bg-amber-100", text: "text-amber-800" },
-  개념: { bg: "bg-blue-100", text: "text-blue-800" },
-  기능: { bg: "bg-emerald-100", text: "text-emerald-800" },
-};
-
-const mockTerms: GlossaryTerm[] = [
-  {
-    id: "1",
-    name: "REST API",
-    description: "HTTP 기반의 웹 서비스 아키텍처 스타일",
-    category: "API 요소",
-    documentCount: 5,
-    linkedDocumentCount: 12,
-    lastModified: "2025.12.02",
-  },
-  {
-    id: "2",
-    name: "Webhook",
-    description: "이벤트 기반 실시간 데이터 전송 방식",
-    category: "개념",
-    documentCount: 5,
-    linkedDocumentCount: 12,
-    lastModified: "2025.12.02",
-  },
-  {
-    id: "3",
-    name: "Authentication",
-    description: "사용자 신원 확인 및 인증 프로세스",
-    category: "기능",
-    documentCount: 5,
-    linkedDocumentCount: 12,
-    lastModified: "2025.12.02",
-  },
-  {
-    id: "4",
-    name: "Rate Limiting",
-    description: "API 호출 횟수 제한 정책",
-    category: "API 요소",
-    documentCount: 3,
-    linkedDocumentCount: 8,
-    lastModified: "2025.12.01",
-  },
-  {
-    id: "5",
-    name: "Token",
-    description: "인증 및 권한 부여를 위한 디지털 키",
-    category: "개념",
-    documentCount: 7,
-    linkedDocumentCount: 15,
-    lastModified: "2025.11.30",
-  },
-  {
-    id: "6",
-    name: "API Key",
-    description: "개발자 인증을 위한 고유 식별자",
-    category: "API 요소",
-    documentCount: 4,
-    linkedDocumentCount: 10,
-    lastModified: "2025.11.28",
-  },
-  {
-    id: "7",
-    name: "Endpoint",
-    description: "API 리소스에 접근하기 위한 URL",
-    category: "개념",
-    documentCount: 6,
-    linkedDocumentCount: 14,
-    lastModified: "2025.11.25",
-  },
-  {
-    id: "8",
-    name: "JSON Response",
-    description: "API 응답 데이터의 표준 형식",
-    category: "기능",
-    documentCount: 8,
-    linkedDocumentCount: 20,
-    lastModified: "2025.11.20",
-  },
-];
+/* ============================================
+   Props
+   ============================================ */
 
 interface GlossaryListProps {
+  terms?: GlossaryTerm[];
   onCreateTerm?: () => void;
   onViewTerm?: (termId: string) => void;
+  onEditTerm?: (termId: string) => void;
+  onDuplicateTerm?: (termId: string) => void;
+  onDeleteTerm?: (termId: string) => void;
 }
 
-export function GlossaryList({ onCreateTerm, onViewTerm }: GlossaryListProps) {
+/* ============================================
+   Component
+   ============================================ */
+
+export function GlossaryList({
+  terms = mockGlossaryTerms,
+  onCreateTerm,
+  onViewTerm,
+  onEditTerm,
+  onDuplicateTerm,
+  onDeleteTerm,
+}: GlossaryListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const filteredTerms = mockTerms.filter((term) => {
+  const filteredTerms = terms.filter((term) => {
     const matchesSearch =
       term.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       term.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -158,17 +91,14 @@ export function GlossaryList({ onCreateTerm, onViewTerm }: GlossaryListProps) {
               프로젝트에서 자주 사용하는 중요한 용어를 등록해보세요.
             </p>
           </div>
-          <Button
-            onClick={onCreateTerm}
-            className="bg-brand hover:bg-brand-dark text-white"
-          >
+          <Button variant="brand" onClick={onCreateTerm}>
             <Plus size={16} className="mr-1.5" />
             용어 생성
           </Button>
         </div>
 
         {/* Search & Filter */}
-        <div className="bg-white rounded-xl p-5 mb-5 shadow-sm border border-border">
+        <div className="bg-card rounded-xl p-5 mb-5 shadow-sm border border-border">
           <div className="flex gap-3 items-center">
             {/* Category Dropdown */}
             <Select
@@ -179,10 +109,11 @@ export function GlossaryList({ onCreateTerm, onViewTerm }: GlossaryListProps) {
                 <SelectValue placeholder="카테고리" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">전체 카테고리</SelectItem>
-                <SelectItem value="API 요소">API 요소</SelectItem>
-                <SelectItem value="개념">개념</SelectItem>
-                <SelectItem value="기능">기능</SelectItem>
+                {glossaryCategoryOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -237,7 +168,7 @@ export function GlossaryList({ onCreateTerm, onViewTerm }: GlossaryListProps) {
 
         {/* Terms List */}
         {viewMode === "list" ? (
-          <div className="bg-white rounded-xl shadow-sm border border-border overflow-hidden">
+          <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
             {/* Table Header */}
             <div className="grid grid-cols-[2fr_1fr_100px_100px_120px_48px] gap-4 px-5 py-3 bg-muted/50 border-b border-border">
               <div className="text-xs font-medium text-muted-foreground">
@@ -260,145 +191,31 @@ export function GlossaryList({ onCreateTerm, onViewTerm }: GlossaryListProps) {
 
             {/* Table Body */}
             <div className="divide-y divide-border">
-              {paginatedTerms.map((term) => {
-                const categoryStyle = CATEGORY_STYLES[term.category];
-                return (
-                  <div
-                    key={term.id}
-                    onClick={() => onViewTerm?.(term.id)}
-                    className="grid grid-cols-[2fr_1fr_100px_100px_120px_48px] gap-4 px-5 py-4 hover:bg-muted/30 transition-colors cursor-pointer group"
-                  >
-                    {/* Term Name & Description */}
-                    <div className="min-w-0">
-                      <div className="text-sm text-foreground mb-1 group-hover:text-brand transition-colors">
-                        {term.name}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {term.description}
-                      </div>
-                    </div>
-
-                    {/* Category */}
-                    <div className="flex items-center">
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          "text-[11px]",
-                          categoryStyle.bg,
-                          categoryStyle.text
-                        )}
-                      >
-                        {term.category}
-                      </Badge>
-                    </div>
-
-                    {/* Document Count */}
-                    <div className="flex items-center justify-center">
-                      <div className="flex items-center gap-1.5 text-sm text-foreground">
-                        <FileText size={14} className="text-muted-foreground" />
-                        <span>{term.documentCount}</span>
-                      </div>
-                    </div>
-
-                    {/* Linked Document Count */}
-                    <div className="flex items-center justify-center">
-                      <div className="flex items-center gap-1.5 text-sm text-foreground">
-                        <FileText size={14} className="text-muted-foreground" />
-                        <span>{term.linkedDocumentCount}</span>
-                      </div>
-                    </div>
-
-                    {/* Last Modified */}
-                    <div className="flex items-center justify-center text-sm text-muted-foreground">
-                      {term.lastModified}
-                    </div>
-
-                    {/* More Actions */}
-                    <div className="flex items-center justify-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            onClick={(e) => e.stopPropagation()}
-                            className="p-1 rounded text-muted-foreground hover:bg-border transition-colors opacity-0 group-hover:opacity-100"
-                          >
-                            <MoreVertical size={16} />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>편집</DropdownMenuItem>
-                          <DropdownMenuItem>복제</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            삭제
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                );
-              })}
+              {paginatedTerms.map((term) => (
+                <TermRow
+                  key={term.id}
+                  term={term}
+                  onView={() => onViewTerm?.(term.id)}
+                  onEdit={() => onEditTerm?.(term.id)}
+                  onDuplicate={() => onDuplicateTerm?.(term.id)}
+                  onDelete={() => onDeleteTerm?.(term.id)}
+                />
+              ))}
             </div>
           </div>
         ) : (
           /* Grid View */
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            {paginatedTerms.map((term) => {
-              const categoryStyle = CATEGORY_STYLES[term.category];
-              return (
-                <div
-                  key={term.id}
-                  onClick={() => onViewTerm?.(term.id)}
-                  className="bg-white rounded-xl p-5 shadow-sm border border-border hover:border-brand/50 hover:shadow-md transition-all cursor-pointer group"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        "text-[11px]",
-                        categoryStyle.bg,
-                        categoryStyle.text
-                      )}
-                    >
-                      {term.category}
-                    </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          className="p-1 rounded text-muted-foreground hover:bg-muted transition-colors"
-                        >
-                          <MoreVertical size={16} />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>편집</DropdownMenuItem>
-                        <DropdownMenuItem>복제</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          삭제
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  <h3 className="text-base font-medium text-foreground mb-2 group-hover:text-brand transition-colors">
-                    {term.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mb-4 line-clamp-2">
-                    {term.description}
-                  </p>
-
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <FileText size={12} />
-                      <span>문서 {term.documentCount}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <FileText size={12} />
-                      <span>연결 {term.linkedDocumentCount}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {paginatedTerms.map((term) => (
+              <TermCard
+                key={term.id}
+                term={term}
+                onView={() => onViewTerm?.(term.id)}
+                onEdit={() => onEditTerm?.(term.id)}
+                onDuplicate={() => onDuplicateTerm?.(term.id)}
+                onDelete={() => onDeleteTerm?.(term.id)}
+              />
+            ))}
           </div>
         )}
 
@@ -431,7 +248,7 @@ export function GlossaryList({ onCreateTerm, onViewTerm }: GlossaryListProps) {
                         "w-8 h-8 rounded-md text-sm transition-colors",
                         currentPage === page
                           ? "bg-brand text-white"
-                          : "bg-white border border-border text-muted-foreground hover:bg-muted"
+                          : "bg-card border border-border text-muted-foreground hover:bg-muted"
                       )}
                     >
                       {page}
@@ -455,5 +272,150 @@ export function GlossaryList({ onCreateTerm, onViewTerm }: GlossaryListProps) {
         )}
       </div>
     </div>
+  );
+}
+
+/* ============================================
+   Term Row Subcomponent
+   ============================================ */
+
+interface TermItemProps {
+  term: GlossaryTerm;
+  onView?: () => void;
+  onEdit?: () => void;
+  onDuplicate?: () => void;
+  onDelete?: () => void;
+}
+
+function TermRow({ term, onView, onEdit, onDuplicate, onDelete }: TermItemProps) {
+  return (
+    <div
+      onClick={onView}
+      className="grid grid-cols-[2fr_1fr_100px_100px_120px_48px] gap-4 px-5 py-4 hover:bg-muted/30 transition-colors cursor-pointer group"
+    >
+      {/* Term Name & Description */}
+      <div className="min-w-0">
+        <div className="text-sm text-foreground mb-1 group-hover:text-brand transition-colors">
+          {term.name}
+        </div>
+        <div className="text-xs text-muted-foreground truncate">
+          {term.description}
+        </div>
+      </div>
+
+      {/* Category */}
+      <div className="flex items-center">
+        <CategoryBadge category={term.category} />
+      </div>
+
+      {/* Document Count */}
+      <div className="flex items-center justify-center">
+        <div className="flex items-center gap-1.5 text-sm text-foreground">
+          <FileText size={14} className="text-muted-foreground" />
+          <span>{term.documentCount}</span>
+        </div>
+      </div>
+
+      {/* Linked Document Count */}
+      <div className="flex items-center justify-center">
+        <div className="flex items-center gap-1.5 text-sm text-foreground">
+          <FileText size={14} className="text-muted-foreground" />
+          <span>{term.linkedDocumentCount}</span>
+        </div>
+      </div>
+
+      {/* Last Modified */}
+      <div className="flex items-center justify-center text-sm text-muted-foreground">
+        {term.lastModified}
+      </div>
+
+      {/* More Actions */}
+      <div className="flex items-center justify-center">
+        <TermDropdownMenu
+          onEdit={onEdit}
+          onDuplicate={onDuplicate}
+          onDelete={onDelete}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ============================================
+   Term Card Subcomponent
+   ============================================ */
+
+function TermCard({ term, onView, onEdit, onDuplicate, onDelete }: TermItemProps) {
+  return (
+    <div
+      onClick={onView}
+      className="bg-card rounded-xl p-5 shadow-sm border border-border hover:border-brand/50 hover:shadow-md transition-all cursor-pointer group"
+    >
+      <div className="flex items-start justify-between mb-3">
+        <CategoryBadge category={term.category} />
+        <TermDropdownMenu
+          onEdit={onEdit}
+          onDuplicate={onDuplicate}
+          onDelete={onDelete}
+        />
+      </div>
+
+      <h3 className="text-base font-medium text-foreground mb-2 group-hover:text-brand transition-colors">
+        {term.name}
+      </h3>
+      <p className="text-xs text-muted-foreground mb-4 line-clamp-2">
+        {term.description}
+      </p>
+
+      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1">
+          <FileText size={12} />
+          <span>문서 {term.documentCount}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <FileText size={12} />
+          <span>연결 {term.linkedDocumentCount}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================
+   Term Dropdown Menu Subcomponent
+   ============================================ */
+
+interface TermDropdownMenuProps {
+  onEdit?: () => void;
+  onDuplicate?: () => void;
+  onDelete?: () => void;
+}
+
+function TermDropdownMenu({ onEdit, onDuplicate, onDelete }: TermDropdownMenuProps) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          onClick={(e) => e.stopPropagation()}
+          className="p-1 rounded text-muted-foreground hover:bg-border transition-colors opacity-0 group-hover:opacity-100"
+        >
+          <MoreVertical size={16} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit?.(); }}>
+          편집
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDuplicate?.(); }}>
+          복제
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          className="text-destructive"
+          onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+        >
+          삭제
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

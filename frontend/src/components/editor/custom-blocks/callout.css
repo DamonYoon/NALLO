@@ -129,12 +129,35 @@
 .callout-content {
   flex: 1;
   min-width: 0;
+  min-height: 24px;
   font-size: 14px;
   line-height: 1.6;
+  outline: none;
+  caret-color: currentColor;
+}
+
+/* Placeholder for empty content */
+.callout-content:empty::before {
+  content: "내용을 입력하세요...";
+  color: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+[data-color-scheme="dark"] .callout-content:empty::before {
+  color: rgba(255, 255, 255, 0.35);
 }
 
 /* Make inline content wrap properly */
 .callout-content > * {
   display: inline;
+}
+
+/* Ensure cursor is visible when focused */
+.callout-content:focus {
+  caret-color: #333;
+}
+
+[data-color-scheme="dark"] .callout-content:focus {
+  caret-color: #fff;
 }
 

@@ -2,8 +2,15 @@
 
 **Feature Branch**: `004-frontend-ui`
 **Created**: 2025-12-10
-**Status**: In Progress
+**Status**: Done
 **Depends On**: `001-backend-api-foundation`
+**Version**: 1.1.0
+**Last Updated**: 2025-12-10
+
+**Changes**:
+
+- v1.1.0: Graph, GlossaryList 컴포넌트 디자인 시스템 적용 완료
+- v1.0.0: 최초 작성 (디자인 토큰, 기초 UI, 레이아웃, DocumentList)
 
 ---
 

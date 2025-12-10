@@ -10,7 +10,7 @@ import {
   GraphNodeType,
   NODE_COLORS,
   AVAILABLE_TAGS,
-} from "./types";
+} from "@/components/graph/types";
 
 // ========================================
 // Mock Node Generation
@@ -273,18 +273,17 @@ export function generateMockEdges(nodes: GraphNode[]): GraphEdge[] {
         type: bothDocs
           ? "doc-doc"
           : bothConcepts
-          ? "concept-concept"
-          : docPage
-          ? "doc-page"
-          : "doc-concept",
-        label:
-          bothDocs
-            ? "LINKS_TO"
-            : bothConcepts
+            ? "concept-concept"
+            : docPage
+              ? "doc-page"
+              : "doc-concept",
+        label: bothDocs
+          ? "LINKS_TO"
+          : bothConcepts
             ? "RELATED_TO"
             : docPage
-            ? "HAS_PAGE"
-            : undefined,
+              ? "HAS_PAGE"
+              : undefined,
       });
     }
   }

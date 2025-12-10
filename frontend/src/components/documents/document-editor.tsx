@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import {
   ArrowLeft,
@@ -15,11 +15,10 @@ import {
   Save,
   Edit3,
   Eye,
-  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { IconButton } from "@/components/ui/icon-button";
 import {
   Select,
   SelectContent,
@@ -30,6 +29,16 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import {
+  mockGlossaryTerms,
+  mockExistingDocument,
+  defaultDocumentData,
+  documentTypeOptions,
+  documentStatusOptions,
+  type LinkedTerm,
+  type GlossaryTermSuggestion,
+  type DocumentFormData,
+} from "@/lib/mocks/editor";
 
 // BlockNote 에디터는 클라이언트 전용이므로 동적 import
 const BlockNoteEditor = dynamic(
@@ -37,63 +46,200 @@ const BlockNoteEditor = dynamic(
   { ssr: false }
 );
 
+/* ============================================
+   Types
+   ============================================ */
+
 interface DocumentEditorProps {
   documentId?: string;
   onBack: () => void;
+  onSave?: (data: DocumentFormData) => void;
 }
 
-const mockGlossaryTerms = [
-  { name: "Web3 Data API", description: "Web3 블록체인 데이터를 조회하는 API" },
-  { name: "API Key", description: "API 인증을 위한 고유 키" },
-  { name: "Endpoint", description: "API 요청을 받는 URL 경로" },
-  { name: "Event Log", description: "블록체인에서 발생한 이벤트 기록" },
-  { name: "SDK", description: "소프트웨어 개발 키트" },
-];
+/* ============================================
+   Subcomponents
+   ============================================ */
 
-export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
+interface ViewModeToggleProps {
+  mode: "edit" | "preview";
+  onChange: (mode: "edit" | "preview") => void;
+}
+
+function ViewModeToggle({ mode, onChange }: ViewModeToggleProps) {
+  return (
+    <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
+      <button
+        onClick={() => onChange("edit")}
+        className={cn(
+          "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] transition-colors",
+          mode === "edit"
+            ? "bg-card text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        <Edit3 size={14} />
+        Edit
+      </button>
+      <button
+        onClick={() => onChange("preview")}
+        className={cn(
+          "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] transition-colors",
+          mode === "preview"
+            ? "bg-card text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        <Eye size={14} />
+        Preview
+      </button>
+    </div>
+  );
+}
+
+interface TagChipProps {
+  tag: string;
+  onRemove: () => void;
+}
+
+function TagChip({ tag, onRemove }: TagChipProps) {
+  return (
+    <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-brand text-white text-xs">
+      <Hash size={11} />
+      {tag}
+      <button
+        onClick={onRemove}
+        className="ml-0.5 text-white/80 hover:text-white transition-colors"
+      >
+        <X size={13} />
+      </button>
+    </div>
+  );
+}
+
+interface LinkedTermChipProps {
+  term: LinkedTerm;
+  onRemove: () => void;
+}
+
+function LinkedTermChip({ term, onRemove }: LinkedTermChipProps) {
+  return (
+    <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-accent border border-brand/20 text-[13px] text-brand">
+      <Link2 size={12} />
+      {term.name}
+      <button
+        onClick={onRemove}
+        className="ml-0.5 text-brand hover:text-brand-hover transition-colors"
+      >
+        <X size={14} />
+      </button>
+    </div>
+  );
+}
+
+interface TermSuggestionDropdownProps {
+  suggestions: GlossaryTermSuggestion[];
+  onSelect: (term: GlossaryTermSuggestion) => void;
+}
+
+function TermSuggestionDropdown({
+  suggestions,
+  onSelect,
+}: TermSuggestionDropdownProps) {
+  if (suggestions.length === 0) return null;
+
+  return (
+    <div className="absolute z-10 w-full bg-card border border-border rounded-lg shadow-lg mt-1 max-h-[180px] overflow-auto">
+      {suggestions.map((term) => (
+        <button
+          key={term.id}
+          onClick={() => onSelect(term)}
+          className="w-full px-3 py-2 text-left hover:bg-surface-hover transition-colors border-b border-border/50 last:border-b-0"
+        >
+          <div className="text-xs text-foreground">{term.name}</div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">
+            {term.description}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+interface AITermSuggestionCardProps {
+  term: GlossaryTermSuggestion;
+  onAdd: () => void;
+}
+
+function AITermSuggestionCard({ term, onAdd }: AITermSuggestionCardProps) {
+  return (
+    <div className="flex items-center justify-between p-2.5 bg-muted rounded-md border border-border hover:border-brand transition-colors cursor-pointer">
+      <div className="flex-1">
+        <div className="text-xs text-foreground">{term.name}</div>
+        <div className="text-[11px] text-muted-foreground mt-0.5">
+          {term.description}
+        </div>
+      </div>
+      <Button size="xs" variant="brand" onClick={onAdd}>
+        추가
+      </Button>
+    </div>
+  );
+}
+
+/* ============================================
+   Main Component
+   ============================================ */
+
+export function DocumentEditor({
+  documentId,
+  onBack,
+  onSave,
+}: DocumentEditorProps) {
+  // Initialize with existing document or default
+  const initialData = documentId ? mockExistingDocument : defaultDocumentData;
+
   const [viewMode, setViewMode] = useState<"edit" | "preview">("edit");
-  const [documentType, setDocumentType] = useState("api-guide");
-  const [documentStatus, setDocumentStatus] = useState<
-    "Draft" | "In Review" | "Done" | "Publish"
-  >("Draft");
-  const [documentLocation, setDocumentLocation] = useState(
-    "Getting Started > Features"
-  );
+  const [documentType, setDocumentType] = useState(initialData.type);
+  const [documentStatus, setDocumentStatus] = useState(initialData.status);
+  const [documentLocation] = useState(initialData.location);
 
-  const [title, setTitle] = useState(
-    documentId ? "Web3 Data API Quickstart" : ""
-  );
-  const [content, setContent] = useState(
-    documentId
-      ? `BNB Chain의 온체인 데이터를 빠르게 조회할 수 있는 Web3 Data API의 기본 사용법을 안내합니다.`
-      : ""
-  );
+  const [title, setTitle] = useState(initialData.title);
+  const [content, setContent] = useState(initialData.content);
 
-  const [tags, setTags] = useState<string[]>(
-    documentId ? ["Quickstart", "beginner"] : []
-  );
+  const [tags, setTags] = useState<string[]>(initialData.tags);
   const [tagInput, setTagInput] = useState("");
 
-  const [linkedTerms, setLinkedTerms] = useState<
-    Array<{ name: string; description: string }>
-  >(documentId ? mockGlossaryTerms.slice(0, 3) : []);
+  const [linkedTerms, setLinkedTerms] = useState<LinkedTerm[]>(
+    initialData.linkedTerms
+  );
   const [termInput, setTermInput] = useState("");
-  const [termSuggestions, setTermSuggestions] = useState<
-    Array<{ name: string; description: string }>
-  >([]);
   const [showTermDropdown, setShowTermDropdown] = useState(false);
 
-  const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
+  const [isRightPanelOpen] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  // Filter term suggestions based on input
+  const termSuggestions = useMemo(() => {
+    if (!termInput.trim()) return [];
+    return mockGlossaryTerms.filter(
+      (term) =>
+        (term.name.toLowerCase().includes(termInput.toLowerCase()) ||
+          term.description.toLowerCase().includes(termInput.toLowerCase())) &&
+        !linkedTerms.find((t) => t.id === term.id)
+    );
+  }, [termInput, linkedTerms]);
+
+  // Handlers
   const handleAddTag = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && tagInput.trim()) {
       e.preventDefault();
-      setTags([...tags, tagInput.trim()]);
+      if (!tags.includes(tagInput.trim())) {
+        setTags([...tags, tagInput.trim()]);
+      }
       setTagInput("");
     }
   };
@@ -104,23 +250,15 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
 
   const handleTermInputChange = (value: string) => {
     setTermInput(value);
-    if (value.trim()) {
-      const filtered = mockGlossaryTerms.filter(
-        (term) =>
-          term.name.toLowerCase().includes(value.toLowerCase()) ||
-          term.description.toLowerCase().includes(value.toLowerCase())
-      );
-      setTermSuggestions(filtered);
-      setShowTermDropdown(true);
-    } else {
-      setTermSuggestions([]);
-      setShowTermDropdown(false);
-    }
+    setShowTermDropdown(!!value.trim());
   };
 
-  const handleSelectTerm = (term: { name: string; description: string }) => {
-    if (!linkedTerms.find((t) => t.name === term.name)) {
-      setLinkedTerms([...linkedTerms, term]);
+  const handleSelectTerm = (term: GlossaryTermSuggestion) => {
+    if (!linkedTerms.find((t) => t.id === term.id)) {
+      setLinkedTerms([
+        ...linkedTerms,
+        { id: term.id, name: term.name, description: term.description },
+      ]);
     }
     setTermInput("");
     setShowTermDropdown(false);
@@ -130,8 +268,23 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
     setLinkedTerms(linkedTerms.filter((_, i) => i !== index));
   };
 
+  const handleSave = () => {
+    onSave?.({
+      title,
+      content,
+      type: documentType,
+      status: documentStatus,
+      location: documentLocation,
+      tags,
+      linkedTerms,
+    });
+  };
+
+  // Location breadcrumb parts
+  const locationParts = documentLocation.split(" > ");
+
   return (
-    <div className="flex-1 flex overflow-hidden bg-white">
+    <div className="flex-1 flex overflow-hidden bg-card">
       {/* Main Editor Area */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Main Content Area */}
@@ -143,18 +296,13 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
               <div className="flex-1 space-y-3">
                 {/* Back Button + Document Location */}
                 <div className="flex items-center gap-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onBack}
-                    className="h-8 px-2"
-                  >
+                  <IconButton variant="muted" size="sm" onClick={onBack}>
                     <ArrowLeft size={16} />
-                  </Button>
+                  </IconButton>
 
                   <button className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-brand transition-colors">
                     <MapPin size={14} />
-                    {documentLocation.split(" > ").map((part, idx, arr) => (
+                    {locationParts.map((part, idx) => (
                       <span key={idx} className="flex items-center gap-1.5">
                         {idx > 0 && <ChevronRight size={12} />}
                         <span>{part}</span>
@@ -165,98 +313,47 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
 
                 {/* Document Type & Status */}
                 <div className="flex items-center gap-2 ml-10">
-                  <Select value={documentType} onValueChange={setDocumentType}>
+                  <Select
+                    value={documentType}
+                    onValueChange={(v) =>
+                      setDocumentType(v as typeof documentType)
+                    }
+                  >
                     <SelectTrigger className="w-[120px] h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="api-guide">API Guide</SelectItem>
-                      <SelectItem value="general">General</SelectItem>
-                      <SelectItem value="tutorial">Tutorial</SelectItem>
+                      {documentTypeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
 
                   <Select
                     value={documentStatus}
                     onValueChange={(v) =>
-                      setDocumentStatus(
-                        v as "Draft" | "In Review" | "Done" | "Publish"
-                      )
+                      setDocumentStatus(v as typeof documentStatus)
                     }
                   >
                     <SelectTrigger className="w-[110px] h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Draft">Draft</SelectItem>
-                      <SelectItem value="In Review">In Review</SelectItem>
-                      <SelectItem value="Done">Done</SelectItem>
-                      <SelectItem value="Publish">Publish</SelectItem>
+                      {documentStatusOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               {/* Right Side - Edit/Preview Toggle */}
-              <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode("edit")}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] transition-colors",
-                    viewMode === "edit"
-                      ? "bg-white text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <Edit3 size={14} />
-                  Edit
-                </button>
-                <button
-                  onClick={() => setViewMode("preview")}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] transition-colors",
-                    viewMode === "preview"
-                      ? "bg-white text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <Eye size={14} />
-                  Preview
-                </button>
-              </div>
+              <ViewModeToggle mode={viewMode} onChange={setViewMode} />
             </div>
-
-            {/* Editor Tips - Only show in edit mode
-            {viewMode === "edit" && (
-              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Info className="h-5 w-5 text-emerald-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm">
-                    <p className="font-medium text-emerald-900 mb-1">
-                      💡 에디터 사용법
-                    </p>
-                    <div className="grid grid-cols-2 gap-3 text-emerald-700 text-xs">
-                      <div>
-                        <span className="font-medium">/</span> 슬래시 커맨드로
-                        블록 추가
-                      </div>
-                      <div>
-                        <span className="font-medium">@</span> 멘션으로 용어/문서
-                        연결
-                      </div>
-                      <div>
-                        <span className="font-medium">드래그</span>로 블록 순서
-                        변경
-                      </div>
-                      <div>
-                        <span className="font-medium">```ts</span> + Enter로
-                        코드 블록
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )} */}
 
             {/* Title */}
             <div className="mb-4">
@@ -265,7 +362,7 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="문서 제목을 입력하세요"
-                className="w-full text-[32px] font-bold text-foreground placeholder:text-muted-foreground/50 focus:outline-none pb-4 border-b border-border"
+                className="w-full text-[32px] font-bold text-foreground placeholder:text-muted-foreground/50 focus:outline-none pb-4 border-b border-border bg-transparent"
                 readOnly={viewMode === "preview"}
               />
             </div>
@@ -311,41 +408,21 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
                 />
 
                 {/* Autocomplete Dropdown */}
-                {showTermDropdown && termSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full bg-white border border-border rounded-lg shadow-lg mt-1 max-h-[180px] overflow-auto">
-                    {termSuggestions.map((term, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSelectTerm(term)}
-                        className="w-full px-3 py-2 text-left hover:bg-muted transition-colors border-b border-border/50 last:border-b-0"
-                      >
-                        <div className="text-xs text-foreground">
-                          {term.name}
-                        </div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5">
-                          {term.description}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                {showTermDropdown && (
+                  <TermSuggestionDropdown
+                    suggestions={termSuggestions}
+                    onSelect={handleSelectTerm}
+                  />
                 )}
               </div>
 
               <div className="flex flex-wrap gap-1.5">
                 {linkedTerms.map((term, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-accent border border-brand/20 text-[13px] text-brand"
-                  >
-                    <Link2 size={12} />
-                    {term.name}
-                    <button
-                      onClick={() => handleRemoveTerm(index)}
-                      className="ml-0.5 text-brand hover:text-brand-dark transition-colors"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
+                  <LinkedTermChip
+                    key={term.id}
+                    term={term}
+                    onRemove={() => handleRemoveTerm(index)}
+                  />
                 ))}
               </div>
             </div>
@@ -361,7 +438,7 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
             <Button variant="outline" onClick={onBack}>
               취소
             </Button>
-            <Button className="bg-brand hover:bg-brand-dark text-white">
+            <Button variant="brand" onClick={handleSave}>
               <Save size={16} className="mr-1.5" />
               저장하기
             </Button>
@@ -374,7 +451,7 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
         <div className="w-[320px] bg-muted border-l border-border overflow-auto flex-shrink-0">
           <div className="p-5 space-y-6">
             {/* Tags Section */}
-            <div>
+            <section>
               <div className="flex items-center gap-2 mb-3">
                 <Hash size={16} className="text-brand" />
                 <h3 className="text-sm font-medium text-foreground">태그</h3>
@@ -389,34 +466,26 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
               />
               <div className="flex flex-wrap gap-1.5">
                 {tags.map((tag, index) => (
-                  <div
+                  <TagChip
                     key={index}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-brand text-white text-xs"
-                  >
-                    <Hash size={11} />
-                    {tag}
-                    <button
-                      onClick={() => handleRemoveTag(index)}
-                      className="ml-0.5 text-white/80 hover:text-white transition-colors"
-                    >
-                      <X size={13} />
-                    </button>
-                  </div>
+                    tag={tag}
+                    onRemove={() => handleRemoveTag(index)}
+                  />
                 ))}
               </div>
-            </div>
+            </section>
 
             <Separator />
 
             {/* AI Recommended Terms */}
-            <div>
+            <section>
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles size={16} className="text-brand" />
                 <h3 className="text-sm font-medium text-foreground">
                   AI 추천 용어
                 </h3>
               </div>
-              <div className="bg-white rounded-lg p-4 border border-border">
+              <div className="bg-card rounded-lg p-4 border border-border">
                 {content.length === 0 ? (
                   <div className="text-center py-8">
                     <Sparkles
@@ -431,42 +500,27 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {mockGlossaryTerms.slice(0, 3).map((term, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between p-2.5 bg-muted rounded-md border border-border hover:border-brand transition-colors cursor-pointer"
-                      >
-                        <div className="flex-1">
-                          <div className="text-xs text-foreground">
-                            {term.name}
-                          </div>
-                          <div className="text-[11px] text-muted-foreground mt-0.5">
-                            {term.description}
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          onClick={() => handleSelectTerm(term)}
-                          className="h-6 px-2 text-[11px] bg-brand hover:bg-brand-dark"
-                        >
-                          추가
-                        </Button>
-                      </div>
+                    {mockGlossaryTerms.slice(0, 3).map((term) => (
+                      <AITermSuggestionCard
+                        key={term.id}
+                        term={term}
+                        onAdd={() => handleSelectTerm(term)}
+                      />
                     ))}
                   </div>
                 )}
               </div>
-            </div>
+            </section>
 
             {/* Knowledge Graph Preview */}
-            <div>
+            <section>
               <div className="flex items-center gap-2 mb-3">
                 <Network size={16} className="text-brand" />
                 <h3 className="text-sm font-medium text-foreground">
                   지식 그래프
                 </h3>
               </div>
-              <div className="bg-white rounded-lg p-4 border border-border">
+              <div className="bg-card rounded-lg p-4 border border-border">
                 {linkedTerms.length === 0 ? (
                   <div className="text-center py-8">
                     <Network
@@ -499,8 +553,8 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
 
                           return (
                             <div
-                              key={idx}
-                              className="absolute top-1/2 left-1/2 w-12 h-12 rounded-full bg-white border-2 border-brand flex items-center justify-center text-[9px] text-foreground text-center shadow-md"
+                              key={term.id}
+                              className="absolute top-1/2 left-1/2 w-12 h-12 rounded-full bg-card border-2 border-brand flex items-center justify-center text-[9px] text-foreground text-center shadow-md"
                               style={{
                                 transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
                               }}
@@ -515,7 +569,7 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
                     </div>
 
                     <div className="flex justify-center pt-4 border-t border-border mt-4">
-                      <button className="flex items-center gap-1.5 text-xs text-brand hover:text-brand-dark transition-colors">
+                      <button className="flex items-center gap-1.5 text-xs text-brand hover:text-brand-hover transition-colors">
                         <ExternalLink size={14} />
                         그래프에서 보기
                       </button>
@@ -523,7 +577,7 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
                   </>
                 )}
               </div>
-            </div>
+            </section>
           </div>
         </div>
       )}
