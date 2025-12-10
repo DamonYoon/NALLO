@@ -9,6 +9,8 @@ import {
   Edit,
   Trash2,
   Eye,
+  RefreshCw,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,20 +30,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useDocuments } from "@/lib/api";
+import type { Document as ApiDocument, DocumentStatus as ApiDocumentStatus, DocumentType as ApiDocumentType } from "@/lib/api";
+
+// Mock data for fallback (development only)
 import {
   mockDocuments,
   documentTypeLabels,
-  type Document,
-  type DocumentType,
+  type Document as MockDocument,
 } from "@/lib/mocks/documents";
 
 /* ============================================
    Types
    ============================================ */
 
+// Unified document type for display
+interface DisplayDocument {
+  id: string;
+  title: string;
+  type: string;
+  typeLabel: string;
+  status: DocumentStatus;
+  author: string;
+  updatedAt: string;
+  version: string;
+  linkedTerms: number;
+}
+
 interface DocumentListProps {
-  documents?: Document[];
+  useMockData?: boolean; // Flag to use mock data for development
   onViewDocument?: (docId: string) => void;
   onEditDocument?: (docId: string) => void;
   onDeleteDocument?: (docId: string) => void;
@@ -50,11 +69,74 @@ interface DocumentListProps {
 }
 
 /* ============================================
+   Helpers
+   ============================================ */
+
+const API_TYPE_LABELS: Record<ApiDocumentType, string> = {
+  api: "API Guide",
+  general: "General",
+  tutorial: "Tutorial",
+};
+
+const API_STATUS_MAP: Record<ApiDocumentStatus, DocumentStatus> = {
+  draft: "Draft",
+  in_review: "In Review",
+  done: "Done",
+  publish: "Publish",
+};
+
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffHours < 1) return "방금 전";
+  if (diffHours < 24) return `${diffHours}시간 전`;
+  if (diffDays < 7) return `${diffDays}일 전`;
+  
+  return date.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).replace(/\. /g, ".").replace(/\.$/, "");
+}
+
+function transformApiDocument(doc: ApiDocument): DisplayDocument {
+  return {
+    id: doc.id,
+    title: doc.title,
+    type: doc.type,
+    typeLabel: API_TYPE_LABELS[doc.type] || doc.type,
+    status: API_STATUS_MAP[doc.status] || "Draft",
+    author: "Admin", // TODO: Add author field to backend
+    updatedAt: formatRelativeTime(doc.updated_at),
+    version: "v1.0.0", // TODO: Add version field to backend
+    linkedTerms: 0, // TODO: Fetch linked concepts count
+  };
+}
+
+function transformMockDocument(doc: MockDocument): DisplayDocument {
+  return {
+    id: doc.id,
+    title: doc.title,
+    type: doc.type,
+    typeLabel: documentTypeLabels[doc.type],
+    status: doc.status,
+    author: doc.author,
+    updatedAt: doc.updatedAt,
+    version: doc.version,
+    linkedTerms: doc.linkedTerms,
+  };
+}
+
+/* ============================================
    Component
    ============================================ */
 
 export function DocumentList({
-  documents = mockDocuments,
+  useMockData = false,
   onViewDocument,
   onEditDocument,
   onDeleteDocument,
@@ -66,12 +148,36 @@ export function DocumentList({
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
 
+  // API Query
+  const { 
+    data: apiData, 
+    isLoading, 
+    isError, 
+    error,
+    refetch 
+  } = useDocuments({
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    type: typeFilter !== "all" ? typeFilter : undefined,
+    limit: 50,
+  });
+
+  // Transform data based on source
+  const documents: DisplayDocument[] = useMockData
+    ? mockDocuments.map(transformMockDocument)
+    : (apiData?.items || []).map(transformApiDocument);
+
+  // Client-side search filter (API doesn't support full-text search yet)
   const filteredDocuments = documents.filter((doc) => {
     const matchesSearch = doc.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || doc.status === statusFilter;
-    const matchesType = typeFilter === "all" || doc.type === typeFilter;
+    // Status and type filters are handled by API, but keep for mock data
+    const matchesStatus = useMockData 
+      ? statusFilter === "all" || doc.status === statusFilter
+      : true;
+    const matchesType = useMockData 
+      ? typeFilter === "all" || doc.type === typeFilter
+      : true;
     return matchesSearch && matchesStatus && matchesType;
   });
 
@@ -94,6 +200,21 @@ export function DocumentList({
     setSelectedDocs([]);
   };
 
+  // Loading state
+  if (isLoading && !useMockData) {
+    return <DocumentListSkeleton />;
+  }
+
+  // Error state
+  if (isError && !useMockData) {
+    return (
+      <DocumentListError 
+        error={error} 
+        onRetry={() => refetch()} 
+      />
+    );
+  }
+
   return (
     <div className="px-6 py-5">
       {/* Header */}
@@ -101,12 +222,20 @@ export function DocumentList({
         <div>
           <h1 className="text-foreground">문서 관리</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            총 {documents.length}개의 문서
+            총 {apiData?.total ?? documents.length}개의 문서
+            {useMockData && <span className="text-amber-500 ml-2">(Mock 데이터)</span>}
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          {!useMockData && (
+            <IconButton variant="muted" onClick={() => refetch()}>
+              <RefreshCw size={16} />
+            </IconButton>
+          )}
         <Button variant="brand" onClick={onCreateDocument}>
           <Plus size={16} className="mr-1.5" />새 문서
         </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -132,10 +261,10 @@ export function DocumentList({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">모든 상태</SelectItem>
-            <SelectItem value="Draft">Draft</SelectItem>
-            <SelectItem value="In Review">In Review</SelectItem>
-            <SelectItem value="Done">Done</SelectItem>
-            <SelectItem value="Publish">Publish</SelectItem>
+            <SelectItem value={useMockData ? "Draft" : "draft"}>Draft</SelectItem>
+            <SelectItem value={useMockData ? "In Review" : "in_review"}>In Review</SelectItem>
+            <SelectItem value={useMockData ? "Done" : "done"}>Done</SelectItem>
+            <SelectItem value={useMockData ? "Publish" : "publish"}>Publish</SelectItem>
           </SelectContent>
         </Select>
 
@@ -146,7 +275,7 @@ export function DocumentList({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">모든 타입</SelectItem>
-            <SelectItem value="api-guide">API Guide</SelectItem>
+            <SelectItem value={useMockData ? "api-guide" : "api"}>API Guide</SelectItem>
             <SelectItem value="general">General</SelectItem>
             <SelectItem value="tutorial">Tutorial</SelectItem>
           </SelectContent>
@@ -212,7 +341,9 @@ export function DocumentList({
               size={48}
               className="mx-auto text-muted-foreground/50 mb-4"
             />
-            <p className="text-muted-foreground">검색 결과가 없습니다</p>
+            <p className="text-muted-foreground">
+              {searchQuery ? "검색 결과가 없습니다" : "문서가 없습니다"}
+            </p>
           </div>
         )}
       </div>
@@ -241,7 +372,7 @@ export function DocumentList({
    ============================================ */
 
 interface DocumentRowProps {
-  doc: Document;
+  doc: DisplayDocument;
   isSelected: boolean;
   onSelect: () => void;
   onView?: () => void;
@@ -293,9 +424,7 @@ function DocumentRow({
 
       {/* Type */}
       <div>
-        <span className="text-xs text-muted-foreground">
-          {documentTypeLabels[doc.type]}
-        </span>
+        <span className="text-xs text-muted-foreground">{doc.typeLabel}</span>
       </div>
 
       {/* Status */}
@@ -336,6 +465,73 @@ function DocumentRow({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================
+   Loading Skeleton
+   ============================================ */
+
+function DocumentListSkeleton() {
+  return (
+    <div className="px-6 py-5">
+      {/* Header Skeleton */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <Skeleton className="h-8 w-32 mb-2" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+        <Skeleton className="h-9 w-24" />
+      </div>
+
+      {/* Filters Skeleton */}
+      <div className="flex items-center gap-3 mb-4">
+        <Skeleton className="h-9 flex-1 max-w-md" />
+        <Skeleton className="h-9 w-[140px]" />
+        <Skeleton className="h-9 w-[140px]" />
+      </div>
+
+      {/* Table Skeleton */}
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 bg-muted/50 border-b border-border">
+          <Skeleton className="h-4 w-full" />
+        </div>
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="px-4 py-3 border-b border-border">
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================
+   Error State
+   ============================================ */
+
+interface DocumentListErrorProps {
+  error: Error | null;
+  onRetry: () => void;
+}
+
+function DocumentListError({ error, onRetry }: DocumentListErrorProps) {
+  return (
+    <div className="px-6 py-5">
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <AlertCircle size={48} className="text-destructive mb-4" />
+        <h2 className="text-lg font-semibold text-foreground mb-2">
+          문서를 불러오는데 실패했습니다
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4 max-w-md">
+          {error?.message || "서버와의 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."}
+        </p>
+        <Button onClick={onRetry}>
+          <RefreshCw size={16} className="mr-2" />
+          다시 시도
+        </Button>
       </div>
     </div>
   );

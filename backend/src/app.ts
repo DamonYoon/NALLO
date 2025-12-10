@@ -20,6 +20,7 @@ import tagsRouter, {
   pageTagsRouter,
 } from '@/api/routes/tags';
 import { searchRouter } from '@/api/routes/search';
+import graphRouter from '@/api/routes/graph';
 
 /**
  * Create and configure Express application
@@ -49,6 +50,7 @@ export function createApp(): Express {
   app.use(`${config.API_V1_PREFIX}/pages`, pagesRouter);
   app.use(`${config.API_V1_PREFIX}/tags`, tagsRouter);
   app.use(`${config.API_V1_PREFIX}/search`, searchRouter);
+  app.use(`${config.API_V1_PREFIX}/graph`, graphRouter);
 
   // HAS_TAG relationship routes (nested under resources)
   app.use(`${config.API_V1_PREFIX}/documents/:documentId/tags`, documentTagsRouter);
@@ -68,6 +70,7 @@ export function createApp(): Express {
         pages: `${config.API_V1_PREFIX}/pages`,
         tags: `${config.API_V1_PREFIX}/tags`,
         search: `${config.API_V1_PREFIX}/search`,
+        graph: `${config.API_V1_PREFIX}/graph`,
         health: '/health',
       },
     });

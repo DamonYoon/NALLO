@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Dashboard } from "@/components/dashboard";
 
-export default function AdminDashboardPage() {
+export default function DocumentsDashboardPage() {
   const router = useRouter();
 
   return (

@@ -11,8 +11,7 @@ export default function DocumentEditorPage() {
   return (
     <DocumentEditor
       documentId={documentId}
-      onBack={() => router.push("/documents/list")}
+      onBack={() => router.push("/admin/documents")}
     />
   );
 }
-

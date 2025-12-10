@@ -21,7 +21,9 @@
     "type-check": "tsc --noEmit",
     "migration:generate": "typeorm migration:generate",
     "migration:run": "typeorm migration:run",
-    "migration:revert": "typeorm migration:revert"
+    "migration:revert": "typeorm migration:revert",
+    "seed": "ts-node -r tsconfig-paths/register scripts/seed-graph.ts",
+    "seed:reset": "ts-node -r tsconfig-paths/register scripts/seed-graph.ts --reset"
   },
   "keywords": [
     "nallo",
