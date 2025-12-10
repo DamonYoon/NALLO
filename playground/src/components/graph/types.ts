@@ -140,5 +140,5 @@ export const DEFAULT_FILTER_STATE: GraphFilterState = {
 export const DEFAULT_STYLE_CONFIG: GraphStyleConfig = {
   nodeSize: 100,
   edgeWidth: 1,
-  labelVisibility: "important",
+  labelVisibility: "always",
 };

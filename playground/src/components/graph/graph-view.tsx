@@ -10,7 +10,14 @@
  */
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { RotateCcw, ZoomIn, ZoomOut, Download, Maximize2 } from "lucide-react";
+import {
+  RotateCcw,
+  ZoomIn,
+  ZoomOut,
+  Download,
+  Maximize2,
+  Focus,
+} from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { InteractiveNvlWrapper } from "@neo4j-nvl/react";
 import type { Node, Relationship, NVL } from "@neo4j-nvl/base";
@@ -129,10 +136,14 @@ function toNvlNode(node: GraphNode, context: NodeConversionContext): Node {
   };
 }
 
+// 엣지 라벨 표시 최소 줌 레벨
+const EDGE_LABEL_MIN_ZOOM = 0.9;
+
 function toNvlRelationship(
   edge: GraphEdge,
   styleConfig: GraphStyleConfig,
-  selectedNodeId: string | null
+  selectedNodeId: string | null,
+  zoom: number
 ): Relationship {
   // 선택된 노드와 연결된 엣지인지 확인
   const isConnectedToSelected =
@@ -152,11 +163,19 @@ function toNvlRelationship(
     edgeColor = edge.color || DEFAULT_EDGE_COLOR;
   }
 
+  // 엣지 라벨 결정 (label이 있으면 사용, 없으면 type 사용)
+  const edgeLabel = edge.label || edge.type;
+
+  // 줌 레벨이 임계값 이상이거나 선택된 노드와 연결된 엣지일 때만 라벨 표시
+  const showLabel =
+    !shouldDim && (zoom >= EDGE_LABEL_MIN_ZOOM || isConnectedToSelected);
+
   return {
     id: edge.id,
     from: edge.from,
     to: edge.to,
-    type: edge.label || edge.type,
+    type: edgeLabel,
+    caption: showLabel ? edgeLabel : undefined,
     width: isConnectedToSelected
       ? styleConfig.edgeWidth * 2
       : styleConfig.edgeWidth,
@@ -219,8 +238,8 @@ export function GraphView({
     { tag: "Guide", color: "#a78bfa" },
   ]);
 
-  // 줌 레벨
-  const [zoom, setZoom] = useState(1);
+  // 줌 레벨 (initialZoom과 동일하게 설정)
+  const [zoom, setZoom] = useState(0.7);
 
   // ----------------------------------------
   // Filtered Data
@@ -331,9 +350,9 @@ export function GraphView({
 
   const nvlRelationships: Relationship[] = useMemo(() => {
     return filteredEdges.map((edge) =>
-      toNvlRelationship(edge, styleConfig, selectedNodeId)
+      toNvlRelationship(edge, styleConfig, selectedNodeId, zoom)
     );
-  }, [filteredEdges, styleConfig, selectedNodeId]);
+  }, [filteredEdges, styleConfig, selectedNodeId, zoom]);
 
   // ----------------------------------------
   // Selected Node Data
@@ -460,6 +479,22 @@ export function GraphView({
     }
   }, []);
 
+  // 선택된 노드와 연결된 노드들을 화면에 맞게 보여주기
+  const handleFitSelection = useCallback(() => {
+    if (!nvlRef.current || !selectedNodeId) return;
+
+    try {
+      // 선택된 노드 + 연결된 노드들의 ID 수집
+      const nodeIdsToFit = [
+        selectedNodeId,
+        ...Array.from(connectedToSelectedIds),
+      ];
+      nvlRef.current.fit(nodeIdsToFit, { animated: true });
+    } catch (e) {
+      console.warn("Fit selection failed:", e);
+    }
+  }, [selectedNodeId, connectedToSelectedIds]);
+
   // NVL external callbacks
   const nvlCallbacks = useMemo(
     () => ({
@@ -470,6 +505,11 @@ export function GraphView({
     }),
     []
   );
+
+  // 줌 변경 핸들러
+  const handleZoomChange = useCallback((newZoom: number) => {
+    setZoom(newZoom);
+  }, []);
 
   // Mouse event callbacks (NVL InteractiveNvlWrapper)
   // @see https://neo4j.com/docs/api/nvl/current/examples.html?tab=InteractiveReactWrapperExample
@@ -487,6 +527,7 @@ export function GraphView({
         }
       },
       onPan: true,
+      onZoom: handleZoomChange,
       // 호버 이벤트 - 라벨 표시 (hover 모드일 때)
       onHover: (node: Node | null) => {
         if (styleConfig.labelVisibility === "hover" && node && nvlRef.current) {
@@ -500,7 +541,13 @@ export function GraphView({
         }
       },
     }),
-    [handleNodeClick, handleCanvasClick, styleConfig.labelVisibility, allNodes]
+    [
+      handleNodeClick,
+      handleCanvasClick,
+      handleZoomChange,
+      styleConfig.labelVisibility,
+      allNodes,
+    ]
   );
 
   // ----------------------------------------
@@ -549,6 +596,14 @@ export function GraphView({
             title="축소"
           >
             <ZoomOut size={18} className="text-[#d1d5db]" />
+          </button>
+          <button
+            onClick={handleFitSelection}
+            className="p-3 hover:bg-[#2a2a2a] transition-colors border-b border-[#2a2a2a] disabled:opacity-40 disabled:cursor-not-allowed"
+            title={selectedNodeId ? "선택 노드 포커스" : "노드를 선택하세요"}
+            disabled={!selectedNodeId}
+          >
+            <Focus size={18} className="text-[#d1d5db]" />
           </button>
           <button
             className="p-3 hover:bg-[#2a2a2a] transition-colors border-b border-[#2a2a2a]"
