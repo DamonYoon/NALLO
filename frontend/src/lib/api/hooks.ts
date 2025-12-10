@@ -338,6 +338,13 @@ export function useGraphStats() {
   });
 }
 
+export function useConceptRelations() {
+  return useQuery({
+    queryKey: [...queryKeys.graph.stats, 'conceptRelations'],
+    queryFn: () => graphApi.getConceptRelations(),
+  });
+}
+
 // ============================================================================
 // SEARCH HOOKS
 // ============================================================================

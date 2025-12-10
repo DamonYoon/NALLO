@@ -173,6 +173,12 @@ export interface GraphNeighborsResponse {
   edges: GraphEdge[];
 }
 
+export interface ConceptRelationCounts {
+  conceptId: string;
+  documentCount: number;
+  relatedConceptCount: number;
+}
+
 // ============================================================================
 // SEARCH TYPES
 // ============================================================================

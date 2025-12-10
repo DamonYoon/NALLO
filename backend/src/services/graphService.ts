@@ -9,6 +9,8 @@ import {
   getGraphEdges,
   getNodeNeighbors,
   getGraphStats,
+  getConceptRelationCounts,
+  type ConceptRelationCounts,
 } from '../db/graphdb/graphQueries';
 import {
   GraphNode,
@@ -100,10 +102,21 @@ async function getStats(): Promise<GraphStats> {
   return stats;
 }
 
+/**
+ * Get relationship counts for all concepts
+ */
+async function getConceptRelations(): Promise<ConceptRelationCounts[]> {
+  logger.debug('Fetching concept relations');
+
+  const relations = await getConceptRelationCounts();
+  return relations;
+}
+
 export const graphService = {
   listNodes,
   listEdges,
   getNeighbors,
   getStats,
+  getConceptRelations,
 };
 

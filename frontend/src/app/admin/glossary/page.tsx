@@ -8,8 +8,9 @@ export default function GlossaryPage() {
 
   return (
     <GlossaryList
-      onCreateTerm={() => console.log("Create term")}
-      onViewTerm={(termId) => router.push(`/glossary/${termId}`)}
+      onCreateTerm={() => router.push("/admin/glossary/new")}
+      onViewTerm={(termId) => router.push(`/admin/glossary/${termId}`)}
+      onEditTerm={(termId) => router.push(`/admin/glossary/${termId}/edit`)}
     />
   );
 }

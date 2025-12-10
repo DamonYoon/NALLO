@@ -405,6 +405,49 @@ export async function getNodeNeighbors(
 }
 
 // ============================================================================
+// CONCEPT RELATIONSHIP COUNTS QUERY
+// ============================================================================
+
+const GET_CONCEPT_RELATION_COUNTS_QUERY = `
+  MATCH (c:Concept)
+  OPTIONAL MATCH (d:Document)-[:USES_CONCEPT]->(c)
+  WITH c, count(DISTINCT d) as documentCount
+  OPTIONAL MATCH (c)-[:LINKS_TO|SUBTYPE_OF]-(related:Concept)
+  RETURN c.id as conceptId, documentCount, count(DISTINCT related) as relatedConceptCount
+`;
+
+export interface ConceptRelationCounts {
+  conceptId: string;
+  documentCount: number;
+  relatedConceptCount: number;
+}
+
+/**
+ * Get relationship counts for all concepts
+ * Returns document count and related concept count for each concept
+ */
+export async function getConceptRelationCounts(): Promise<ConceptRelationCounts[]> {
+  const session = getSession();
+
+  try {
+    const result = await session.run(GET_CONCEPT_RELATION_COUNTS_QUERY, {});
+
+    return result.records.map(record => {
+      const docCount = record.get('documentCount');
+      const relatedCount = record.get('relatedConceptCount');
+
+      return {
+        conceptId: String(record.get('conceptId')),
+        documentCount: typeof docCount?.toNumber === 'function' ? docCount.toNumber() : Number(docCount ?? 0),
+        relatedConceptCount: typeof relatedCount?.toNumber === 'function' ? relatedCount.toNumber() : Number(relatedCount ?? 0),
+      };
+    });
+  } finally {
+    await session.close();
+  }
+}
+
+// ============================================================================
 // GRAPH STATS QUERY
 // ============================================================================
 

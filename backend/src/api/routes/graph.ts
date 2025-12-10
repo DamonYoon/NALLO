@@ -136,5 +136,23 @@ router.get('/stats', async (_req: Request, res: Response, next: NextFunction) =>
   }
 });
 
+/**
+ * GET /api/v1/graph/concepts/relations
+ * Get relationship counts for all concepts
+ */
+router.get('/concepts/relations', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const relations = await graphService.getConceptRelations();
+
+    logger.info('Concept relations fetched', { 
+      count: relations.length 
+    });
+
+    res.status(200).json(relations);
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
 

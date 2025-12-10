@@ -13,7 +13,7 @@
 | 1 | GraphDB Seed 데이터 스크립트 | ✅ Done | P1 |
 | 1 | Frontend API 클라이언트 설정 | ✅ Done | P0 |
 | 2 | 문서 목록 API 연동 | ✅ Done | P1 |
-| 2 | 용어집 목록 API 연동 | ⬜ Pending | P2 |
+| 2 | 용어집 목록 API 연동 | ✅ Done | P2 |
 | 2 | Graph 뷰 API 연동 | ⬜ Pending | P2 |
 
 ---
@@ -174,14 +174,33 @@ npm run seed:reset    # 기존 데이터 삭제 후 새로 생성
 
 ### Task 2.2: 용어집 목록 API 연동
 
-**Status**: ⬜ Pending  
-**Priority**: P2
+**Status**: ✅ Done  
+**Priority**: P2  
+**Completed**: 2025-12-10
 
 #### Subtasks
 
-- [ ] useConcepts hook 생성
-- [ ] GlossaryList 컴포넌트 수정
-- [ ] Impact Analysis 연동 (문서 수 표시)
+- [x] useConcepts hook 생성 (hooks.ts에 포함)
+- [x] GlossaryList 컴포넌트 수정
+- [x] 로딩/에러 상태 처리 (Skeleton, Error 컴포넌트)
+- [x] Mock 데이터 fallback (useMockData prop)
+- [ ] Impact Analysis 연동 (문서 수 표시) - TODO(005-GRAPH-RELATIONS)
+
+#### Changes
+
+- `glossary-list.tsx`: API 연동 + Mock fallback 지원
+- 카테고리 자동 추론 함수 추가 (inferCategory)
+- 타입 변환 함수 추가 (API ↔ Display)
+
+#### Usage
+
+```tsx
+// API 사용 (기본)
+<GlossaryList />
+
+// Mock 데이터 사용 (개발/테스트)
+<GlossaryList useMockData />
+```
 
 ---
 

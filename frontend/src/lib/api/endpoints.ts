@@ -22,6 +22,7 @@ import type {
   GraphNodesResponse,
   GraphEdgesResponse,
   GraphNeighborsResponse,
+  ConceptRelationCounts,
   SearchResponse,
   HealthResponse,
   PaginatedResponse,
@@ -187,6 +188,9 @@ export const graphApi = {
   
   getStats: () => 
     apiGet<GraphStats>('graph/stats'),
+  
+  getConceptRelations: () => 
+    apiGet<ConceptRelationCounts[]>('graph/concepts/relations'),
 };
 
 // ============================================================================
