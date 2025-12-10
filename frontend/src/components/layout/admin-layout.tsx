@@ -62,10 +62,6 @@ export function AdminLayout({
     }
   };
 
-  const handleUserModeClick = () => {
-    router.push("/docs");
-  };
-
   const showSidebar = showSidebarForTabs.includes(activeTab);
   const isDarkContent = darkModeForTabs.includes(activeTab);
 
@@ -73,10 +69,7 @@ export function AdminLayout({
     <div className="size-full bg-global pt-0 px-5 pb-5 flex flex-col gap-0.5">
       {/* Global Header - Dark Background Area */}
       <div className="bg-global">
-        <AdminHeader
-          onAskAIClick={() => setIsAIPanelOpen(!isAIPanelOpen)}
-          onUserModeClick={handleUserModeClick}
-        />
+        <AdminHeader onAskAIClick={() => setIsAIPanelOpen(!isAIPanelOpen)} />
       </div>
 
       {/* Main Horizontal Container */}

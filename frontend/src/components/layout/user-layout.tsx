@@ -43,7 +43,6 @@ export function UserLayout({
         onSearchClick={() => console.log("Search")}
         onGraphClick={() => router.push("/my-space/graph")}
         onAskAIClick={() => setIsAIPanelOpen(!isAIPanelOpen)}
-        onAdminModeClick={() => router.push("/admin/documents")}
       />
 
       {/* 2층: Service Navigation */}

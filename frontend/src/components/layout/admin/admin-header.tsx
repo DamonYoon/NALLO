@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings, User, Sparkles, ChevronDown, Users } from "lucide-react";
+import { Settings, User, Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -52,7 +52,6 @@ function HeaderActionButton({
 
 interface AdminHeaderProps {
   onAskAIClick?: () => void;
-  onUserModeClick?: () => void;
   projectName?: string;
   onProjectSelect?: () => void;
 }
@@ -63,7 +62,6 @@ interface AdminHeaderProps {
 
 export function AdminHeader({
   onAskAIClick,
-  onUserModeClick,
   projectName = "Nodit",
   onProjectSelect,
 }: AdminHeaderProps) {
@@ -103,16 +101,6 @@ export function AdminHeader({
 
       {/* Right Side - Action Buttons */}
       <div className="flex items-center gap-2">
-        {/* User Mode Switch Button */}
-        {onUserModeClick && (
-          <HeaderActionButton
-            icon={<Users />}
-            label="사용자 모드"
-            onClick={onUserModeClick}
-            variant="highlight"
-          />
-        )}
-
         <HeaderActionButton icon={<Settings />} label="관리자 설정" />
 
         <HeaderActionButton icon={<User />} label="계정 관리" />

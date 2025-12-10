@@ -13,7 +13,6 @@ interface UserGlobalBarProps {
   onSearchClick?: () => void;
   onGraphClick?: () => void;
   onAskAIClick?: () => void;
-  onAdminModeClick?: () => void;
   className?: string;
 }
 
@@ -25,7 +24,6 @@ export function UserGlobalBar({
   onSearchClick,
   onGraphClick,
   onAskAIClick,
-  onAdminModeClick,
   className,
 }: UserGlobalBarProps) {
   return (
@@ -93,21 +91,6 @@ export function UserGlobalBar({
           <span>Ask AI</span>
         </Button>
 
-        {/* Divider */}
-        <div className="w-px h-6 bg-[#333333]" />
-
-        {/* Admin Mode (Dev) */}
-        <button
-          onClick={onAdminModeClick}
-          className={cn(
-            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md",
-            "bg-purple-600/20 text-purple-400 text-xs",
-            "hover:bg-purple-600/30 transition-colors"
-          )}
-        >
-          <span>관리자 모드</span>
-        </button>
-
         {/* User Profile */}
         <button
           className={cn(
@@ -124,4 +107,3 @@ export function UserGlobalBar({
     </header>
   );
 }
-
