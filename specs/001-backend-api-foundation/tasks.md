@@ -460,3 +460,26 @@ With multiple developers:
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
 - All file paths use TypeScript (.ts) extension
 - Database migrations should be created as needed (TypeORM migrations or Prisma migrations)
+- **Constitution V**: All components must be reusable and modular
+- **Constitution VI**: No hardcoded values - use configuration
+- **Constitution VII**: Track all unimplemented features in the table below
+
+---
+
+## Unimplemented Features (Constitution Principle VII) ⚠️
+
+> **MANDATORY**: Track all unimplemented endpoints, features, or placeholders for future implementation.
+
+| Feature | Location | Task ID | Priority | Description | Notes |
+|---------|----------|---------|----------|-------------|-------|
+| User auth service | backend/src/services/authService.ts | T100-T108 | P2 | JWT authentication 미구현 | Phase 7에서 구현 예정 |
+| Rate limiting | backend/src/api/middleware/ | T114 | P2 | API rate limiting 미구현 | Phase 8 Security hardening |
+| Swagger UI | backend/src/api/ | T117 | P2 | API documentation UI 미구현 | Phase 8 Polish |
+| Acceptance tests (US3) | backend/tests/acceptance/ | T059 | P1 | Version/Page acceptance tests 미작성 | 테스트 보완 필요 |
+| Unit tests (US3) | backend/tests/unit/ | T060-T061 | P1 | Version/Page service unit tests 미작성 | 테스트 보완 필요 |
+
+### Unimplemented Features Checklist
+
+- [ ] All placeholder endpoints return appropriate error messages
+- [ ] All placeholders have TODO(TASK-XXX) comments in code
+- [ ] This table is updated after each development session

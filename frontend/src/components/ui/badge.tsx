@@ -17,6 +17,29 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        // NALLO Status Variants
+        draft:
+          "border-transparent bg-muted text-text-tertiary",
+        "in-review":
+          "border-transparent bg-warning-bg text-warning",
+        publish:
+          "border-transparent bg-info-bg text-info",
+        done:
+          "border-transparent bg-success-bg text-success",
+        error:
+          "border-transparent bg-error-bg text-error",
+        // NALLO Node Type Variants
+        page:
+          "border-transparent bg-node-page/20 text-node-page",
+        document:
+          "border-transparent bg-node-document/20 text-node-document",
+        concept:
+          "border-transparent bg-node-concept/20 text-node-concept",
+        tag:
+          "border-transparent bg-node-tag/20 text-node-tag",
+        // NALLO Brand Variant
+        brand:
+          "border-transparent bg-brand/20 text-brand",
       },
     },
     defaultVariants: {

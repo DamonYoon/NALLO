@@ -110,6 +110,9 @@
   - Performance Requirements (Principle IV): Include performance targets
   - User Experience Consistency (Principle III): Include UX consistency metrics
   - Testing Standards (Principle II): Include testability criteria
+  - Componentization (Principle V): Include component reusability metrics
+  - Configuration (Principle VI): Include no-hardcoding verification
+  - Unimplemented Tracking (Principle VII): Include placeholder documentation
 -->
 
 ### Performance Criteria (Constitution Principle IV)
@@ -126,6 +129,14 @@
 - **SC-UX-002**: [Consistency metric, e.g., "100% of error messages follow established patterns"]
 - **SC-UX-003**: [Accessibility compliance, e.g., "All UI components meet WCAG 2.1 Level AA standards"]
 - **SC-UX-004**: [Terminology consistency, e.g., "100% of user-facing text uses Glossary/Concept system"]
+
+### Architecture Criteria (Constitution Principles V, VI, VII)
+
+- **SC-ARCH-001**: [Componentization, e.g., "All UI elements implemented as reusable components with documented interfaces"]
+- **SC-ARCH-002**: [Modularity, e.g., "Business logic separated from UI in dedicated services/hooks"]
+- **SC-ARCH-003**: [No hardcoding, e.g., "100% of configurable values externalized to config/env"]
+- **SC-ARCH-004**: [Feature tracking, e.g., "All unimplemented features documented in tasks.md with TODO references"]
+- **SC-ARCH-005**: [Placeholder handling, e.g., "All placeholder UI elements show disabled state with user feedback"]
 
 ### Functional Outcomes
 

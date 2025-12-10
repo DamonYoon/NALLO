@@ -10,6 +10,10 @@ description: "Task list template for feature implementation"
 
 **Tests**: Per Constitution Principle II (Testing Standards), tests are MANDATORY for all features. All user stories MUST have corresponding acceptance tests. Unit tests MUST achieve minimum 80% code coverage for business logic. Contract tests MUST be written for external-facing APIs.
 
+**Componentization**: Per Constitution Principle V, all code MUST be structured as reusable, modular components. Business logic MUST be separated from UI components.
+
+**No Hardcoding**: Per Constitution Principle VI, all configurable values MUST be externalized to configuration files or environment variables.
+
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
 ## Format: `[ID] [P?] [Story] Description`
@@ -51,6 +55,7 @@ description: "Task list template for feature implementation"
 - [ ] T001 Create project structure per implementation plan
 - [ ] T002 Initialize [language] project with [framework] dependencies
 - [ ] T003 [P] Configure linting and formatting tools
+- [ ] T004 [P] Setup configuration files (constants, env variables) per Constitution VI
 
 ---
 
@@ -62,12 +67,13 @@ description: "Task list template for feature implementation"
 
 Examples of foundational tasks (adjust based on your project):
 
-- [ ] T004 Setup database schema and migrations framework
-- [ ] T005 [P] Implement authentication/authorization framework
-- [ ] T006 [P] Setup API routing and middleware structure
-- [ ] T007 Create base models/entities that all stories depend on
-- [ ] T008 Configure error handling and logging infrastructure
-- [ ] T009 Setup environment configuration management
+- [ ] T005 Setup database schema and migrations framework
+- [ ] T006 [P] Implement authentication/authorization framework
+- [ ] T007 [P] Setup API routing and middleware structure
+- [ ] T008 Create base models/entities that all stories depend on
+- [ ] T009 Configure error handling and logging infrastructure
+- [ ] T010 Setup environment configuration management
+- [ ] T011 [P] Create base UI component library (Button, Input, Card, etc.) per Constitution V
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -83,20 +89,21 @@ Examples of foundational tasks (adjust based on your project):
 
 > **NOTE: Per Constitution, tests MUST be written FIRST using TDD approach. Write tests, ensure they FAIL, then implement. Tests MUST be independent, repeatable, and fast (< 1 second per test).**
 
-- [ ] T010 [P] [US1] Acceptance test for [user story] in tests/acceptance/test_[name].py (verifies independent functionality)
-- [ ] T011 [P] [US1] Unit tests for business logic in tests/unit/test_[name].py (minimum 80% coverage)
-- [ ] T012 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py (if external-facing API)
-- [ ] T013 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T012 [P] [US1] Acceptance test for [user story] in tests/acceptance/test_[name].py (verifies independent functionality)
+- [ ] T013 [P] [US1] Unit tests for business logic in tests/unit/test_[name].py (minimum 80% coverage)
+- [ ] T014 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py (if external-facing API)
+- [ ] T015 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
 
 ### Implementation for User Story 1
 
-- [ ] T014 [P] [US1] Create [Entity1] model in src/models/[entity1].py
-- [ ] T015 [P] [US1] Create [Entity2] model in src/models/[entity2].py
-- [ ] T016 [US1] Implement [Service] in src/services/[service].py (depends on T014, T015)
-- [ ] T017 [US1] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T018 [US1] Add validation and error handling (per Constitution Principle I: Code Quality)
-- [ ] T019 [US1] Add logging for user story 1 operations
-- [ ] T020 [US1] Add API documentation (docstrings, type hints per Constitution Principle I)
+- [ ] T016 [P] [US1] Create [Entity1] model in src/models/[entity1].py
+- [ ] T017 [P] [US1] Create [Entity2] model in src/models/[entity2].py
+- [ ] T018 [US1] Implement [Service] in src/services/[service].py (depends on T016, T017)
+- [ ] T019 [US1] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T020 [US1] Create reusable UI components in src/components/ (per Constitution V)
+- [ ] T021 [US1] Add validation and error handling (per Constitution Principle I: Code Quality)
+- [ ] T022 [US1] Add logging for user story 1 operations
+- [ ] T023 [US1] Add API documentation (docstrings, type hints per Constitution Principle I)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -112,19 +119,20 @@ Examples of foundational tasks (adjust based on your project):
 
 > **NOTE: Per Constitution, tests MUST be written FIRST using TDD approach. Tests MUST be independent, repeatable, and fast (< 1 second per test).**
 
-- [ ] T018 [P] [US2] Acceptance test for [user story] in tests/acceptance/test_[name].py (verifies independent functionality)
-- [ ] T019 [P] [US2] Unit tests for business logic in tests/unit/test_[name].py (minimum 80% coverage)
-- [ ] T020 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py (if external-facing API)
-- [ ] T021 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T024 [P] [US2] Acceptance test for [user story] in tests/acceptance/test_[name].py (verifies independent functionality)
+- [ ] T025 [P] [US2] Unit tests for business logic in tests/unit/test_[name].py (minimum 80% coverage)
+- [ ] T026 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py (if external-facing API)
+- [ ] T027 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
 
 ### Implementation for User Story 2
 
-- [ ] T022 [P] [US2] Create [Entity] model in src/models/[entity].py
-- [ ] T023 [US2] Implement [Service] in src/services/[service].py
-- [ ] T024 [US2] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T025 [US2] Add validation and error handling (per Constitution Principle I: Code Quality)
-- [ ] T026 [US2] Add API documentation (docstrings, type hints per Constitution Principle I)
-- [ ] T027 [US2] Integrate with User Story 1 components (if needed)
+- [ ] T028 [P] [US2] Create [Entity] model in src/models/[entity].py
+- [ ] T029 [US2] Implement [Service] in src/services/[service].py
+- [ ] T030 [US2] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T031 [US2] Create/extend UI components (per Constitution V)
+- [ ] T032 [US2] Add validation and error handling (per Constitution Principle I: Code Quality)
+- [ ] T033 [US2] Add API documentation (docstrings, type hints per Constitution Principle I)
+- [ ] T034 [US2] Integrate with User Story 1 components (if needed)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -140,18 +148,19 @@ Examples of foundational tasks (adjust based on your project):
 
 > **NOTE: Per Constitution, tests MUST be written FIRST using TDD approach. Tests MUST be independent, repeatable, and fast (< 1 second per test).**
 
-- [ ] T024 [P] [US3] Acceptance test for [user story] in tests/acceptance/test_[name].py (verifies independent functionality)
-- [ ] T025 [P] [US3] Unit tests for business logic in tests/unit/test_[name].py (minimum 80% coverage)
-- [ ] T026 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py (if external-facing API)
-- [ ] T027 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T035 [P] [US3] Acceptance test for [user story] in tests/acceptance/test_[name].py (verifies independent functionality)
+- [ ] T036 [P] [US3] Unit tests for business logic in tests/unit/test_[name].py (minimum 80% coverage)
+- [ ] T037 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py (if external-facing API)
+- [ ] T038 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
 
 ### Implementation for User Story 3
 
-- [ ] T028 [P] [US3] Create [Entity] model in src/models/[entity].py
-- [ ] T029 [US3] Implement [Service] in src/services/[service].py
-- [ ] T030 [US3] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T031 [US3] Add validation and error handling (per Constitution Principle I: Code Quality)
-- [ ] T032 [US3] Add API documentation (docstrings, type hints per Constitution Principle I)
+- [ ] T039 [P] [US3] Create [Entity] model in src/models/[entity].py
+- [ ] T040 [US3] Implement [Service] in src/services/[service].py
+- [ ] T041 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T042 [US3] Create/extend UI components (per Constitution V)
+- [ ] T043 [US3] Add validation and error handling (per Constitution Principle I: Code Quality)
+- [ ] T044 [US3] Add API documentation (docstrings, type hints per Constitution Principle I)
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -166,12 +175,34 @@ Examples of foundational tasks (adjust based on your project):
 **Purpose**: Improvements that affect multiple user stories
 
 - [ ] TXXX [P] Documentation updates in docs/
-- [ ] TXXX Code cleanup and refactoring
+- [ ] TXXX Code cleanup and refactoring (ensure componentization per Constitution V)
 - [ ] TXXX Performance optimization across all stories
 - [ ] TXXX [P] Verify test coverage meets 80% minimum for business logic (per Constitution Principle II)
 - [ ] TXXX [P] Additional unit tests in tests/unit/ to meet coverage requirements
 - [ ] TXXX Security hardening
 - [ ] TXXX Run quickstart.md validation
+- [ ] TXXX Verify no hardcoded values remain (per Constitution VI)
+- [ ] TXXX Review and finalize Unimplemented Features section (per Constitution VII)
+
+---
+
+## Unimplemented Features (Constitution Principle VII) ⚠️
+
+> **MANDATORY**: Track all unimplemented buttons, links, or features for future implementation.
+> Every placeholder MUST have a TODO comment in code and be listed here.
+
+| Feature | Location | Task ID | Priority | Description | User Feedback |
+|---------|----------|---------|----------|-------------|---------------|
+| [Example: Export button] | [Header.tsx:45] | [TASK-XXX] | [P2] | [Export document to PDF] | [Disabled + "Coming soon" tooltip] |
+| [Example: Share feature] | [DocActions.tsx:78] | [TASK-XXX] | [P3] | [Share via email/link] | [Disabled + toast message] |
+
+### Unimplemented Features Checklist
+
+- [ ] All placeholder buttons/links are disabled with appropriate visual indication
+- [ ] All placeholders have TODO(TASK-XXX) comments in code
+- [ ] All placeholders provide user feedback (tooltip, toast, etc.)
+- [ ] This table is updated after each development session
+- [ ] No silent failures for unimplemented features
 
 ---
 
@@ -202,6 +233,8 @@ Examples of foundational tasks (adjust based on your project):
 - Story complete before moving to next priority
 - All code MUST pass linting/formatting (per Constitution Principle I)
 - Test coverage MUST meet 80% minimum for business logic (per Constitution Principle II)
+- Components MUST be reusable and modular (per Constitution Principle V)
+- No hardcoded values (per Constitution Principle VI)
 
 ### Parallel Opportunities
 
@@ -268,3 +301,6 @@ With multiple developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+- **Constitution V**: All components must be reusable and modular
+- **Constitution VI**: No hardcoded values - use configuration
+- **Constitution VII**: Track all unimplemented features in the table above

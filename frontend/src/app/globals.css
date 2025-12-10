@@ -8,7 +8,9 @@
    ============================================ */
 
 @theme inline {
-  /* Colors */
+  /* ----------------------------------------
+     Semantic Colors (Tailwind Integration)
+     ---------------------------------------- */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -29,14 +31,18 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Charts */
+  /* ----------------------------------------
+     Chart Colors
+     ---------------------------------------- */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
-  /* Sidebar */
+  /* ----------------------------------------
+     Sidebar
+     ---------------------------------------- */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -46,22 +52,124 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* NALLO Brand Colors */
+  /* ----------------------------------------
+     NALLO Brand Colors
+     ---------------------------------------- */
   --color-brand: var(--brand);
-  --color-brand-dark: var(--brand-dark);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-active: var(--brand-active);
   --color-brand-light: var(--brand-light);
   --color-global-bg: var(--global-bg);
 
-  /* Fonts */
+  /* ----------------------------------------
+     Extended Semantic Colors
+     ---------------------------------------- */
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-active: var(--surface-active);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-sunken: var(--surface-sunken);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-disabled: var(--text-disabled);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  /* ----------------------------------------
+     Node Type Colors (Graph)
+     ---------------------------------------- */
+  --color-node-page: var(--node-page);
+  --color-node-document: var(--node-document);
+  --color-node-concept: var(--node-concept);
+  --color-node-tag: var(--node-tag);
+  --color-node-default: var(--node-default);
+  --color-edge-default: var(--edge-default);
+  --color-edge-broken: var(--edge-broken);
+
+  /* ----------------------------------------
+     Status Colors
+     ---------------------------------------- */
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+
+  /* ----------------------------------------
+     Fonts
+     ---------------------------------------- */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Radius */
+  /* ----------------------------------------
+     Typography Scale
+     ---------------------------------------- */
+  --font-size-2xs: 10px;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+  --font-size-3xl: 24px;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+
+  /* ----------------------------------------
+     Spacing Scale (extended)
+     ---------------------------------------- */
+  --spacing-0: 0;
+  --spacing-px: 1px;
+  --spacing-0_5: 2px;
+  --spacing-1: 4px;
+  --spacing-1_5: 6px;
+  --spacing-2: 8px;
+  --spacing-2_5: 10px;
+  --spacing-3: 12px;
+  --spacing-3_5: 14px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-7: 28px;
+  --spacing-8: 32px;
+  --spacing-9: 36px;
+  --spacing-10: 40px;
+
+  /* ----------------------------------------
+     Radius
+     ---------------------------------------- */
+  --radius-none: 0;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-full: 9999px;
+
+  /* ----------------------------------------
+     Layout Dimensions
+     ---------------------------------------- */
+  --layout-header-height: var(--header-height);
+  --layout-function-header-height: var(--function-header-height);
+  --layout-sidebar-width: var(--sidebar-width);
+  --layout-panel-width: var(--panel-width);
+  --layout-filter-width: var(--filter-width);
 }
+
+/* ============================================
+   Light Mode (Default)
+   ============================================ */
 
 :root {
   /* Base */
@@ -70,7 +178,8 @@
 
   /* NALLO Brand Colors */
   --brand: #fc8658;
-  --brand-dark: #e85102;
+  --brand-hover: #e67847;
+  --brand-active: #d56a3a;
   --brand-light: #fff5f0;
   --global-bg: #1e1e1e;
 
@@ -104,8 +213,24 @@
 
   /* Border & Input */
   --border: #e3e3e3;
+  --border-subtle: #f0f0f0;
+  --border-strong: #d4d4d4;
   --input: #f3f3f5;
   --ring: #fc8658;
+
+  /* Extended Text Colors */
+  --text-primary: #3b3b3b;
+  --text-secondary: #7d706a;
+  --text-tertiary: #9ca3af;
+  --text-disabled: #c4c4c4;
+  --text-inverse: #ffffff;
+
+  /* Surface Colors */
+  --surface: #ffffff;
+  --surface-hover: #ececec;
+  --surface-active: #e0e0e0;
+  --surface-elevated: #ffffff;
+  --surface-sunken: #f5f5f5;
 
   /* Status Colors */
   --success: #059669;
@@ -116,6 +241,15 @@
   --info-bg: #dbeafe;
   --error: #ef4444;
   --error-bg: #fee2e2;
+
+  /* Node Type Colors (Graph) */
+  --node-page: #22c55e;
+  --node-document: #3b82f6;
+  --node-concept: #a855f7;
+  --node-tag: #f97316;
+  --node-default: #94a3b8;
+  --edge-default: #64748b;
+  --edge-broken: #ef4444;
 
   /* Chart Colors */
   --chart-1: #fc8658;
@@ -135,10 +269,16 @@
   --sidebar-ring: #fc8658;
   --sidebar-width: 260px;
 
-  /* Layout */
+  /* Layout Dimensions */
   --header-height: 39px;
   --function-header-height: 45px;
+  --panel-width: 380px;
+  --filter-width: 280px;
 }
+
+/* ============================================
+   Dark Mode
+   ============================================ */
 
 .dark {
   /* NALLO Dark Mode */
@@ -171,8 +311,33 @@
 
   /* Border & Input */
   --border: #3a3a3a;
+  --border-subtle: #2a2a2a;
+  --border-strong: #4a4a4a;
   --input: #3a3a3a;
   --ring: #fc8658;
+
+  /* Extended Text Colors */
+  --text-primary: #e5e5e5;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --text-disabled: #6b7280;
+  --text-inverse: #1e1e1e;
+
+  /* Surface Colors */
+  --surface: #2a2a2a;
+  --surface-hover: #333333;
+  --surface-active: #3a3a3a;
+  --surface-elevated: #333333;
+  --surface-sunken: #0d0d0d;
+
+  /* Node Type Colors (Graph) - slightly brighter for dark mode */
+  --node-page: #22c55e;
+  --node-document: #60a5fa;
+  --node-concept: #a855f7;
+  --node-tag: #f97316;
+  --node-default: #94a3b8;
+  --edge-default: #64748b;
+  --edge-broken: #ef4444;
 
   /* Chart Colors */
   --chart-1: #fc8658;
@@ -192,6 +357,10 @@
   --sidebar-ring: #fc8658;
 }
 
+/* ============================================
+   Base Styles
+   ============================================ */
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -207,36 +376,157 @@
 }
 
 /* ============================================
+   Typography Presets
+   ============================================ */
+
+@layer base {
+  h1 {
+    @apply text-2xl font-semibold leading-tight;
+  }
+
+  h2 {
+    @apply text-xl font-semibold leading-tight;
+  }
+
+  h3 {
+    @apply text-lg font-medium leading-tight;
+  }
+
+  h4 {
+    @apply text-base font-medium leading-normal;
+  }
+
+  p {
+    @apply text-sm leading-relaxed;
+  }
+
+  small {
+    @apply text-xs leading-normal;
+  }
+}
+
+/* ============================================
    NALLO Custom Utilities
    ============================================ */
 
 @layer utilities {
-  /* Text Colors */
+  /* ----- Brand Colors ----- */
   .text-brand {
     color: var(--brand);
   }
 
-  .text-secondary-text {
-    color: var(--muted-foreground);
-  }
-
-  /* Background Colors */
-  .bg-global {
-    background-color: var(--global-bg);
+  .text-brand-hover {
+    color: var(--brand-hover);
   }
 
   .bg-brand {
     background-color: var(--brand);
   }
 
+  .bg-brand-hover {
+    background-color: var(--brand-hover);
+  }
+
   .bg-brand-light {
     background-color: var(--brand-light);
   }
 
-  /* Status Badges */
+  .border-brand {
+    border-color: var(--brand);
+  }
+
+  /* ----- Text Hierarchy ----- */
+  .text-primary {
+    color: var(--text-primary);
+  }
+
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+
+  .text-tertiary {
+    color: var(--text-tertiary);
+  }
+
+  .text-disabled {
+    color: var(--text-disabled);
+  }
+
+  .text-inverse {
+    color: var(--text-inverse);
+  }
+
+  /* ----- Surface Colors ----- */
+  .bg-surface {
+    background-color: var(--surface);
+  }
+
+  .bg-surface-hover {
+    background-color: var(--surface-hover);
+  }
+
+  .bg-surface-active {
+    background-color: var(--surface-active);
+  }
+
+  .bg-surface-elevated {
+    background-color: var(--surface-elevated);
+  }
+
+  .bg-surface-sunken {
+    background-color: var(--surface-sunken);
+  }
+
+  .bg-global {
+    background-color: var(--global-bg);
+  }
+
+  /* ----- Border Variants ----- */
+  .border-subtle {
+    border-color: var(--border-subtle);
+  }
+
+  .border-strong {
+    border-color: var(--border-strong);
+  }
+
+  /* ----- Node Type Colors (Graph) ----- */
+  .text-node-page {
+    color: var(--node-page);
+  }
+
+  .text-node-document {
+    color: var(--node-document);
+  }
+
+  .text-node-concept {
+    color: var(--node-concept);
+  }
+
+  .text-node-tag {
+    color: var(--node-tag);
+  }
+
+  .bg-node-page {
+    background-color: var(--node-page);
+  }
+
+  .bg-node-document {
+    background-color: var(--node-document);
+  }
+
+  .bg-node-concept {
+    background-color: var(--node-concept);
+  }
+
+  .bg-node-tag {
+    background-color: var(--node-tag);
+  }
+
+  /* ----- Status Badges ----- */
   .badge-draft {
-    background-color: #f3f4f6;
-    color: #6b7280;
+    background-color: var(--muted);
+    color: var(--text-tertiary);
   }
 
   .badge-in-review {
@@ -259,15 +549,23 @@
     color: var(--error);
   }
 
-  /* Hover Effects */
+  /* ----- Interactive States ----- */
   .hover-brand:hover {
     background-color: var(--brand);
-    color: white;
+    color: var(--text-inverse);
   }
 
-  /* Active State */
+  .hover-surface:hover {
+    background-color: var(--surface-hover);
+  }
+
+  .active-surface:active {
+    background-color: var(--surface-active);
+  }
+
+  /* ----- Navigation Active State ----- */
   .nav-active {
-    background-color: var(--brand-light);
+    background-color: var(--accent);
     color: var(--brand);
   }
 
@@ -281,27 +579,45 @@
     background-color: var(--brand);
     border-radius: 0 2px 2px 0;
   }
-}
 
-/* ============================================
-   Typography Presets
-   ============================================ */
-
-@layer base {
-  h1 {
-    @apply text-xl font-medium;
+  /* ----- Layout Utilities ----- */
+  .h-header {
+    height: var(--header-height);
   }
 
-  h2 {
-    @apply text-lg font-medium;
+  .h-function-header {
+    height: var(--function-header-height);
   }
 
-  h3 {
-    @apply text-base font-medium;
+  .w-sidebar {
+    width: var(--sidebar-width);
   }
 
-  h4 {
-    @apply text-sm font-medium;
+  .w-panel {
+    width: var(--panel-width);
+  }
+
+  .w-filter {
+    width: var(--filter-width);
+  }
+
+  /* ----- Typography Utilities ----- */
+  .text-2xs {
+    font-size: var(--font-size-2xs);
+  }
+
+  .text-xs {
+    font-size: var(--font-size-xs);
+  }
+
+  .text-label {
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-normal);
+  }
+
+  .text-caption {
+    font-size: var(--font-size-2xs);
+    line-height: var(--line-height-normal);
   }
 }
 
@@ -326,5 +642,16 @@
 
   ::-webkit-scrollbar-thumb:hover {
     background: var(--muted-foreground);
+  }
+}
+
+/* ============================================
+   Dark Mode Specific Overrides
+   ============================================ */
+
+.dark {
+  .badge-draft {
+    background-color: var(--secondary);
+    color: var(--text-tertiary);
   }
 }

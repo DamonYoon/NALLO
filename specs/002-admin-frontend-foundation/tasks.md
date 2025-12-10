@@ -621,3 +621,27 @@ Neo4j NVL(Network Visualization Library)을 사용하여 문서/용어 관계 �
 - **P1**: 주요 컴포넌트 (Playground에서 테스트)
 - **P2**: 고급 기능, 페이지 통합 (UI 확정 후)
 - **P3**: 추후 추가 기능
+
+---
+
+## Unimplemented Features (Constitution Principle VII) ⚠️
+
+> **MANDATORY**: Track all unimplemented buttons, links, or features for future implementation.
+> Every placeholder MUST have a TODO comment in code and be listed here.
+
+| Feature | Location | Task ID | Priority | Description | User Feedback |
+|---------|----------|---------|----------|-------------|---------------|
+| Error Boundary | app/error.tsx | TASK-016 | P1 | 글로벌 에러 핸들링 | 에러 페이지 표시 예정 |
+| 404 페이지 | app/not-found.tsx | TASK-016 | P1 | 존재하지 않는 페이지 처리 | 404 UI 표시 예정 |
+| Toast 알림 | - | TASK-016 | P1 | API 에러 알림 시스템 | sonner 적용 예정 |
+| Skeleton 로딩 | components/shared/ | TASK-017 | P1 | 데이터 로딩 상태 UI | Skeleton 컴포넌트 예정 |
+| 문서 Import | - | TASK-019 | P2 | 파일 업로드로 문서 생성 | FileUploader 연동 예정 |
+| 인증 시스템 | - | TASK-023 | P3 | 로그인/로그아웃 | Backend auth 연동 후 |
+
+### Unimplemented Features Checklist
+
+- [ ] All placeholder buttons/links are disabled with appropriate visual indication
+- [ ] All placeholders have TODO(TASK-XXX) comments in code
+- [ ] All placeholders provide user feedback (tooltip, toast, etc.)
+- [ ] This table is updated after each development session
+- [ ] No silent failures for unimplemented features

@@ -292,3 +292,26 @@ Figma 디자인에서 색상, 타이포그래피, 스페이싱 등 디자인 토
 - **P0**: 디자인 시스템 기반 (먼저 완료)
 - **P1**: 핵심 페이지 (MVP)
 - **P2**: 부가 페이지 및 폴리시
+
+---
+
+## Unimplemented Features (Constitution Principle VII) ⚠️
+
+> **MANDATORY**: Track all unimplemented buttons, links, or features for future implementation.
+> Every placeholder MUST have a TODO comment in code and be listed here.
+
+| Feature | Location | Task ID | Priority | Description | User Feedback |
+|---------|----------|---------|----------|-------------|---------------|
+| 반응형 사이드바 | components/layout/Sidebar | TASK-002 | P1 | 모바일 햄버거 메뉴 | 미구현 (데스크톱만 지원) |
+| 사이드바 접기/펼치기 | components/layout/Sidebar | TASK-002 | P2 | 사이드바 토글 기능 | 미구현 |
+| 버전/페이지 관리 | app/(admin)/versions/ | TASK-007 | P2 | 버전 및 페이지 트리 관리 | 라우트 미생성 |
+| 사이드바 애니메이션 | components/layout/Sidebar | TASK-009 | P2 | 토글 애니메이션 | 미구현 |
+| 페이지 전환 트랜지션 | - | TASK-009 | P2 | 페이지 간 전환 효과 | 미구현 |
+
+### Unimplemented Features Checklist
+
+- [ ] All placeholder buttons/links are disabled with appropriate visual indication
+- [ ] All placeholders have TODO(TASK-XXX) comments in code
+- [ ] All placeholders provide user feedback (tooltip, toast, etc.)
+- [ ] This table is updated after each development session
+- [ ] No silent failures for unimplemented features

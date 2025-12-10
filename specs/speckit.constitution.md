@@ -152,6 +152,8 @@ specs/
 ### TASK-{NNN}: {Task Name}
 
 ## Task Summary (테이블)
+
+## Unimplemented Features (미구현 기능)
 ```
 
 ### 7. 우선순위 규칙
@@ -260,6 +262,142 @@ PR 리뷰 시 다음 항목을 확인합니다:
 
 ---
 
+## 🏗️ 컴포넌트화 원칙 (Constitution V)
+
+> **모든 코드는 수정 요청에 유연하게 대응할 수 있도록 컴포넌트화되어야 합니다.**
+
+### 컴포넌트화 필수 규칙
+
+| 규칙                        | 설명                                            | 예시                                                 |
+| --------------------------- | ----------------------------------------------- | ---------------------------------------------------- |
+| **단일 책임 원칙**          | 하나의 컴포넌트는 하나의 기능만 담당            | `UserAvatar`, `UserName` (X: `UserCard`에 모두 포함) |
+| **재사용 가능한 구조**      | 동일한 UI 패턴은 공통 컴포넌트로 추출           | `Button`, `Card`, `Modal` 등                         |
+| **비즈니스 로직 분리**      | UI 컴포넌트에서 비즈니스 로직을 분리            | `useDocumentActions` hook 사용                       |
+| **명확한 Props 인터페이스** | 컴포넌트 인터페이스는 타입으로 명시적 정의      | `interface ButtonProps { ... }`                      |
+| **컴포넌트 독립 테스트**    | 전체 앱 컨텍스트 없이 컴포넌트 단독 테스트 가능 | Storybook 또는 단위 테스트                           |
+
+### 컴포넌트 구조 예시
+
+```
+src/components/
+├── ui/                    # 기본 UI 컴포넌트 (Button, Input, Card...)
+├── shared/                # 공통 비즈니스 컴포넌트
+├── features/              # 기능별 컴포넌트
+│   ├── documents/
+│   │   ├── DocumentList.tsx
+│   │   ├── DocumentCard.tsx
+│   │   └── hooks/
+│   │       └── useDocumentActions.ts
+│   └── users/
+└── layout/                # 레이아웃 컴포넌트
+```
+
+### 코드 리뷰 체크리스트 (컴포넌트화)
+
+- [ ] 새 컴포넌트가 단일 책임 원칙을 따르는가?
+- [ ] 재사용 가능한 로직이 적절히 추출되었는가?
+- [ ] 컴포넌트 인터페이스(Props)가 명확하게 정의되었는가?
+- [ ] 비즈니스 로직이 UI와 분리되었는가?
+
+---
+
+## 🚫 하드코딩 지양 원칙 (Constitution VI)
+
+> **변경될 수 있는 모든 값은 설정으로 외부화해야 합니다.**
+
+### 하드코딩 금지 항목
+
+| 항목               | ❌ 금지                              | ✅ 권장                                |
+| ------------------ | ------------------------------------ | -------------------------------------- |
+| **API 엔드포인트** | `fetch('http://localhost:3000/api')` | `fetch(process.env.API_URL)`           |
+| **색상값**         | `color: '#3B82F6'`                   | `color: var(--primary-color)`          |
+| **문자열**         | `'문서를 저장했습니다'`              | `t('document.saved')` 또는 상수        |
+| **숫자 상수**      | `setTimeout(() => {}, 3000)`         | `setTimeout(() => {}, TOAST_DURATION)` |
+| **API 키**         | `const API_KEY = 'sk-xxx'`           | `const API_KEY = process.env.API_KEY`  |
+| **기능 플래그**    | `if (true) { showBetaFeature() }`    | `if (featureFlags.BETA_ENABLED)`       |
+
+### 설정 외부화 위치
+
+```
+src/
+├── config/
+│   ├── constants.ts       # 앱 전역 상수
+│   ├── api.config.ts      # API 관련 설정
+│   └── theme.config.ts    # 테마 관련 설정
+├── styles/
+│   └── variables.css      # CSS 변수 정의
+└── .env.local             # 환경 변수 (gitignore)
+```
+
+### 코드 리뷰 체크리스트 (하드코딩)
+
+- [ ] 환경별로 달라지는 값이 환경 변수를 사용하는가?
+- [ ] Magic number가 named constant로 대체되었는가?
+- [ ] UI 텍스트가 외부화되어 있는가? (최소한 상수로)
+- [ ] 색상, 크기 등 스타일 값이 CSS 변수 또는 테마 설정을 사용하는가?
+
+---
+
+## 📝 미구현 기능 추적 (Constitution VII)
+
+> **개발 중 아직 구현되지 않은 버튼, 기능 등은 반드시 문서화하여 추후 작업을 확인할 수 있도록 합니다.**
+
+### 미구현 기능 표기 방법
+
+#### 1. 코드 내 TODO 주석
+
+```typescript
+// TODO(TASK-015): 알림 기능 구현 필요
+// - 새 문서 생성 시 알림
+// - 멘션 시 알림
+const handleNotification = () => {
+  console.warn("Not implemented: handleNotification");
+  toast.info("Coming soon!"); // 사용자에게 안내
+};
+```
+
+#### 2. UI에서 미구현 표시
+
+```tsx
+// 미구현 버튼은 disabled + tooltip으로 표시
+<Button
+  disabled
+  title="Coming soon: 알림 기능 (TASK-015)"
+  onClick={handleNotification}
+>
+  알림 설정
+</Button>
+```
+
+#### 3. tasks.md 미구현 기능 섹션
+
+```markdown
+## Unimplemented Features (미구현 기능)
+
+| 기능          | 위치                   | 관련 TASK | 우선순위 | 설명                     |
+| ------------- | ---------------------- | --------- | -------- | ------------------------ |
+| 알림 버튼     | Header.tsx:45          | TASK-015  | P2       | 알림 기능 구현 후 활성화 |
+| 공유 기능     | DocumentActions.tsx:78 | TASK-022  | P3       | SNS 공유 기능            |
+| 다크모드 토글 | Settings.tsx:23        | TASK-030  | P2       | 테마 시스템 구현 후      |
+```
+
+### 미구현 기능 추적 워크플로우
+
+1. **개발 중 발견**: 미구현 기능 발견 시 즉시 TODO 주석 추가
+2. **tasks.md 업데이트**: Unimplemented Features 섹션에 기록
+3. **UI 처리**: disabled 상태 + 사용자 피드백 (tooltip/toast)
+4. **주간 리뷰**: 미추적 placeholder가 없는지 확인
+5. **릴리즈 노트**: 알려진 미구현 기능 명시
+
+### 코드 리뷰 체크리스트 (미구현 기능)
+
+- [ ] 모든 placeholder 버튼/기능에 TODO 주석이 있는가?
+- [ ] tasks.md의 Unimplemented Features 섹션이 업데이트되었는가?
+- [ ] 미구현 UI 요소가 적절히 disabled 처리되었는가?
+- [ ] 사용자에게 "Coming soon" 등의 피드백이 제공되는가?
+
+---
+
 ## 🤖 AI 어시스턴트 가이드라인
 
 ### 작업 완료 시 체크리스트
@@ -269,16 +407,24 @@ PR 리뷰 시 다음 항목을 확인합니다:
    - [ ] 관련 `tasks.md` 업데이트 (상태, 서브태스크)
    - [ ] 필요시 `spec.md` 업데이트 (Tech Stack, Requirements)
    - [ ] Task Summary 테이블 업데이트
+   - [ ] 미구현 기능 섹션 업데이트 (있는 경우)
 
 2. **새로운 기능 추가 시**:
 
    - [ ] `tasks.md`에 새 TASK 추가
    - [ ] `spec.md`의 Tech Stack 업데이트
    - [ ] 필요시 `data-model.md` 업데이트
+   - [ ] 컴포넌트화 원칙 준수 확인
 
 3. **기술 스택 변경 시**:
+
    - [ ] `spec.md`의 Tech Stack 섹션 업데이트
    - [ ] 이유와 변경 내용 명시
+
+4. **미구현 기능 추가 시**:
+   - [ ] 코드에 `TODO(TASK-XXX)` 주석 추가
+   - [ ] `tasks.md`의 Unimplemented Features 섹션 업데이트
+   - [ ] UI에 disabled 상태 + 사용자 피드백 적용
 
 ### 문서 업데이트 예시
 
@@ -304,3 +450,4 @@ PR 리뷰 시 다음 항목을 확인합니다:
 | 2025-12-09 | 최초 작성                                                        | AI Assistant |
 | 2025-12-09 | 커밋 메시지 규칙, Feature Spec 생성 규칙, Review 체크리스트 추가 | AI Assistant |
 | 2025-12-09 | 우선순위 규칙, Spec 버전 관리 규칙 추가                          | AI Assistant |
+| 2025-12-10 | 컴포넌트화 원칙, 하드코딩 지양, 미구현 기능 추적 섹션 추가       | AI Assistant |

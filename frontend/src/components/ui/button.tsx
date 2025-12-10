@@ -19,13 +19,24 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // NALLO Custom Variants
+        brand:
+          "bg-brand text-white hover:bg-brand-hover active:bg-brand-active",
+        "brand-outline":
+          "border border-brand text-brand bg-transparent hover:bg-brand/10",
+        "brand-ghost":
+          "text-brand hover:bg-brand/10",
+        "header-action":
+          "bg-white/10 text-white hover:bg-surface-hover hover:text-text-primary rounded-full",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
+        xs: "h-7 rounded-md gap-1 px-2 text-xs has-[>svg]:px-1.5",
         icon: "size-9",
         "icon-sm": "size-8",
+        "icon-xs": "size-7",
         "icon-lg": "size-10",
       },
     },

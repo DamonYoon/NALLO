@@ -62,6 +62,27 @@ Verify compliance with NALLO Constitution principles:
 - [ ] Performance budget defined (bundle size, API response time)
 - [ ] AI operation time limits defined (< 5s for standard operations)
 
+### V. Componentization & Modularity
+- [ ] Component architecture guidelines defined
+- [ ] Reusable component library identified (existing or to be created)
+- [ ] Business logic separation strategy (services/hooks)
+- [ ] Component boundary guidelines established
+- [ ] State management approach defined (local vs global state)
+- [ ] Component interface documentation standards
+
+### VI. Configuration over Hardcoding
+- [ ] Environment variable strategy defined
+- [ ] Constants file structure established
+- [ ] CSS variables / theme configuration approach
+- [ ] Feature flags strategy (if applicable)
+- [ ] No hardcoded API endpoints, secrets, or magic numbers
+
+### VII. Unimplemented Features Tracking
+- [ ] TODO comment format defined (`TODO(TASK-XXX): description`)
+- [ ] Unimplemented Features section will be maintained in tasks.md
+- [ ] Placeholder UI strategy defined (disabled state + user feedback)
+- [ ] Weekly review process for untracked placeholders
+
 **Compliance Status**: [ ] All checks passed | [ ] Violations documented in Complexity Tracking section below
 
 ## Project Structure
@@ -110,6 +131,12 @@ backend/
 frontend/
 ├── src/
 │   ├── components/
+│   │   ├── ui/           # Base UI components (Button, Input, Card...)
+│   │   ├── shared/       # Shared business components
+│   │   ├── features/     # Feature-specific components
+│   │   └── layout/       # Layout components
+│   ├── config/           # Configuration files (constants, API config)
+│   ├── hooks/            # Custom hooks (business logic separation)
 │   ├── pages/
 │   └── services/
 └── tests/
@@ -133,3 +160,4 @@ directories captured above]
 |-----------|------------|-------------------------------------|
 | [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
 | [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| [e.g., Hardcoded value] | [specific justification] | [why configuration not feasible] |
