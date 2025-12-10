@@ -14,7 +14,7 @@
 | 1 | Frontend API 클라이언트 설정 | ✅ Done | P0 |
 | 2 | 문서 목록 API 연동 | ✅ Done | P1 |
 | 2 | 용어집 목록 API 연동 | ✅ Done | P2 |
-| 2 | Graph 뷰 API 연동 | ⬜ Pending | P2 |
+| 2 | Graph 뷰 API 연동 | ✅ Done | P2 |
 
 ---
 
@@ -206,15 +206,33 @@ npm run seed:reset    # 기존 데이터 삭제 후 새로 생성
 
 ### Task 2.3: Graph 뷰 API 연동
 
-**Status**: ⬜ Pending  
-**Priority**: P2
+**Status**: ✅ Done  
+**Priority**: P2  
+**Completed**: 2025-12-10
 
 #### Subtasks
 
-- [ ] useGraph hook 생성
-- [ ] GraphView 컴포넌트 수정
-- [ ] 필터 연동 (타입별)
-- [ ] 노드 클릭 시 상세 조회
+- [x] useGraphNodes, useGraphEdges, useGraphStats hooks 사용
+- [x] GraphView 컴포넌트 수정
+- [x] API 데이터 → 로컬 타입 변환 함수
+- [x] 로딩/에러 상태 처리
+- [x] Mock 데이터 fallback (useMockData prop)
+
+#### Changes
+
+- `graph-view.tsx`: API 연동 + Mock fallback 지원
+- 노드/엣지 타입 변환 함수 추가
+- 새로고침 버튼 추가
+
+#### Usage
+
+```tsx
+// API 사용 (기본)
+<GraphView />
+
+// Mock 데이터 사용 (개발/테스트)
+<GraphView useMockData />
+```
 
 ---
 

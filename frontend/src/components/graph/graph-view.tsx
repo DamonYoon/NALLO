@@ -17,6 +17,8 @@ import {
   Download,
   Maximize2,
   Focus,
+  RefreshCw,
+  AlertCircle,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -25,10 +27,13 @@ import { GraphFilter } from "./graph-filter";
 import { GraphNodeDetail } from "./graph-node-detail";
 import { GraphLoadingInline } from "./graph-loading";
 import { IconButton } from "@/components/ui/icon-button";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   GraphNode,
   GraphEdge,
+  GraphEdgeType,
+  GraphNodeType,
   GraphFilterState,
   GraphStyleConfig,
   TagColor,
@@ -45,6 +50,11 @@ import {
   GRAPH_BG_COLOR,
 } from "./types";
 import { generateMockNodes, generateMockEdges } from "@/lib/mocks/graph";
+import { useGraphNodes, useGraphEdges, useGraphStats } from "@/lib/api";
+import type {
+  GraphNode as ApiGraphNode,
+  GraphEdge as ApiGraphEdge,
+} from "@/lib/api";
 
 // NVL은 클라이언트 전용이므로 동적 import 사용
 const InteractiveNvlWrapper = dynamic(
@@ -198,12 +208,78 @@ function toNvlRelationship(
 }
 
 // ========================================
+// API Data Transformation
+// ========================================
+
+/**
+ * Map API node type to local node type
+ * API supports 'version' type which we don't show in graph
+ */
+function mapApiNodeType(apiType: string): GraphNodeType | null {
+  const typeMap: Record<string, GraphNodeType> = {
+    document: "document",
+    concept: "concept",
+    page: "page",
+    tag: "tag",
+  };
+  return typeMap[apiType] || null;
+}
+
+/**
+ * Map API edge type to local edge type
+ */
+function mapApiEdgeType(apiType: string): GraphEdgeType {
+  const typeMap: Record<string, GraphEdgeType> = {
+    LINKS_TO: "doc-doc",
+    USES_CONCEPT: "doc-concept",
+    HAS_TAG: "doc-tag",
+    DISPLAYS: "doc-page",
+    SUBTYPE_OF: "concept-concept",
+    IN_VERSION: "doc-doc", // treat as doc-doc for now
+  };
+  return typeMap[apiType] || "doc-doc";
+}
+
+/**
+ * Transform API node to local GraphNode format
+ */
+function transformApiNode(apiNode: ApiGraphNode): GraphNode | null {
+  const nodeType = mapApiNodeType(apiNode.type);
+  if (!nodeType) return null; // Skip unsupported types like 'version'
+
+  const props = apiNode.properties || {};
+
+  return {
+    id: apiNode.id,
+    label: apiNode.label,
+    type: nodeType,
+    description: props.description as string | undefined,
+    tags: props.tags as string[] | undefined,
+    status: props.status as string | undefined,
+  };
+}
+
+/**
+ * Transform API edge to local GraphEdge format
+ */
+function transformApiEdge(apiEdge: ApiGraphEdge): GraphEdge {
+  return {
+    id: apiEdge.id,
+    from: apiEdge.source,
+    to: apiEdge.target,
+    type: mapApiEdgeType(apiEdge.type),
+    label: apiEdge.label,
+  };
+}
+
+// ========================================
 // Props
 // ========================================
 
 interface GraphViewProps {
   initialNodes?: GraphNode[];
   initialEdges?: GraphEdge[];
+  useMockData?: boolean;
   className?: string;
 }
 
@@ -217,6 +293,7 @@ const MIN_LOADING_TIME = 800;
 export function GraphView({
   initialNodes,
   initialEdges,
+  useMockData = false,
   className,
 }: GraphViewProps) {
   // ----------------------------------------
@@ -239,13 +316,60 @@ export function GraphView({
     return () => clearTimeout(timer);
   }, []);
 
-  // 그래프 데이터
-  const [allNodes] = useState<GraphNode[]>(
-    () => initialNodes || generateMockNodes()
-  );
-  const [allEdges] = useState<GraphEdge[]>(
-    () => initialEdges || generateMockEdges(allNodes)
-  );
+  // ----------------------------------------
+  // API Queries
+  // ----------------------------------------
+
+  const {
+    data: apiNodesData,
+    isLoading: isLoadingNodes,
+    isError: isNodesError,
+    error: nodesError,
+    refetch: refetchNodes,
+  } = useGraphNodes({ limit: 500 });
+
+  const {
+    data: apiEdgesData,
+    isLoading: isLoadingEdges,
+    isError: isEdgesError,
+    error: edgesError,
+    refetch: refetchEdges,
+  } = useGraphEdges({ limit: 1000 });
+
+  const { data: statsData } = useGraphStats();
+
+  const isLoading = isLoadingNodes || isLoadingEdges;
+  const isError = isNodesError || isEdgesError;
+  const error = nodesError || edgesError;
+
+  const refetch = useCallback(() => {
+    refetchNodes();
+    refetchEdges();
+  }, [refetchNodes, refetchEdges]);
+
+  // ----------------------------------------
+  // Transform API Data or Use Mock
+  // ----------------------------------------
+
+  const allNodes = useMemo<GraphNode[]>(() => {
+    if (initialNodes) return initialNodes;
+    if (useMockData) return generateMockNodes();
+
+    if (!apiNodesData?.items) return [];
+
+    return apiNodesData.items
+      .map(transformApiNode)
+      .filter((n): n is GraphNode => n !== null);
+  }, [initialNodes, useMockData, apiNodesData]);
+
+  const allEdges = useMemo<GraphEdge[]>(() => {
+    if (initialEdges) return initialEdges;
+    if (useMockData) return generateMockEdges(allNodes);
+
+    if (!apiEdgesData?.items) return [];
+
+    return apiEdgesData.items.map(transformApiEdge);
+  }, [initialEdges, useMockData, apiEdgesData, allNodes]);
 
   // 선택된 노드
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -419,15 +543,25 @@ export function GraphView({
   // Node Stats
   // ----------------------------------------
 
-  const nodeStats = useMemo(
-    () => ({
+  const nodeStats = useMemo(() => {
+    // Use API stats if available
+    if (statsData?.nodesByType && !useMockData) {
+      return {
+        documents: statsData.nodesByType.document || 0,
+        concepts: statsData.nodesByType.concept || 0,
+        pages: statsData.nodesByType.page || 0,
+        tags: statsData.nodesByType.tag || 0,
+      };
+    }
+
+    // Fallback to computed stats
+    return {
       documents: allNodes.filter((n) => n.type === "document").length,
       concepts: allNodes.filter((n) => n.type === "concept").length,
       pages: allNodes.filter((n) => n.type === "page").length,
       tags: allNodes.filter((n) => n.type === "tag").length,
-    }),
-    [allNodes]
-  );
+    };
+  }, [allNodes, statsData, useMockData]);
 
   // ----------------------------------------
   // Handlers
@@ -551,6 +685,32 @@ export function GraphView({
   // Render
   // ----------------------------------------
 
+  // Error state (only for API mode)
+  if (isError && !useMockData) {
+    return (
+      <div
+        className={cn(
+          "flex-1 bg-surface-sunken flex items-center justify-center",
+          className
+        )}
+      >
+        <div className="text-center">
+          <AlertCircle size={48} className="mx-auto text-destructive mb-4" />
+          <h2 className="text-lg font-semibold text-foreground mb-2">
+            그래프를 불러오는데 실패했습니다
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4 max-w-md">
+            {error?.message || "서버와의 연결에 문제가 발생했습니다."}
+          </p>
+          <Button onClick={refetch}>
+            <RefreshCw size={16} className="mr-2" />
+            다시 시도
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       data-graph-container
@@ -630,15 +790,27 @@ export function GraphView({
             onClick={handleFullscreen}
             tooltip="전체화면"
             tooltipSide="right"
-            className="rounded-none"
+            className="rounded-none border-b border-border"
           >
             <Maximize2 size={18} />
           </IconButton>
+          {!useMockData && (
+            <IconButton
+              variant="dark"
+              size="lg"
+              onClick={refetch}
+              tooltip="새로고침"
+              tooltipSide="right"
+              className="rounded-none"
+            >
+              <RefreshCw size={18} />
+            </IconButton>
+          )}
         </div>
 
         {/* NVL 그래프 캔버스 */}
         <div className="flex-1 relative">
-          {isMounted && isReady && (
+          {isMounted && isReady && !isLoading && (
             <InteractiveNvlWrapper
               ref={nvlRef as React.RefObject<NVL>}
               nodes={nvlNodes}
@@ -666,7 +838,7 @@ export function GraphView({
               }}
             />
           )}
-          {(!isMounted || !isReady) && <GraphLoadingInline />}
+          {(!isMounted || !isReady || isLoading) && <GraphLoadingInline />}
         </div>
 
         {/* 통계 푸터 */}
