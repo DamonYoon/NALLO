@@ -4,11 +4,12 @@
 **Created**: 2025-12-10
 **Status**: Done
 **Depends On**: `001-backend-api-foundation`
-**Version**: 1.1.0
+**Version**: 1.2.0
 **Last Updated**: 2025-12-10
 
 **Changes**:
 
+- v1.2.0: User Layout 리팩토링 - Figma 디자인 적용, AdminLayout 패턴 기반 구조 개선
 - v1.1.0: Graph, GlossaryList 컴포넌트 디자인 시스템 적용 완료
 - v1.0.0: 최초 작성 (디자인 토큰, 기초 UI, 레이아웃, DocumentList)
 

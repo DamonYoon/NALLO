@@ -399,23 +399,71 @@ Frontend 디자인 시스템 구축을 위한 작업 목록입니다.
 
 ---
 
+## Phase 6: 사용자 레이아웃 시스템
+
+### TASK-015: User Layout 리팩토링 (Figma 디자인 적용) ✅
+
+**Status**: ✅ 완료
+**Priority**: P1
+**Completed**: 2025-12-10
+
+**Description**: Figma Make 디자인을 참고하여 User Layout을 AdminLayout 패턴으로 재구성
+
+**Reference**: Figma Make URL - `NALLO 구현_사용자`
+
+**Subtasks**:
+
+- [x] UserLayout 구조 변경 - AdminLayout 패턴 적용 (라이트 배경 + 카드)
+- [x] UserGlobalBar 라이트 테마로 변경 (Pill 버튼 스타일)
+- [x] ServiceNavigation을 카드 내부로 이동
+- [x] CSS 변수 활용하여 하드코딩 제거
+- [x] UserSidebar 디자인 토큰 적용
+- [x] UserAskAIPanel 브랜드 색상 및 CSS 변수 적용
+
+**Changes**:
+
+- `user-layout.tsx` - AdminLayout 패턴 적용 (bg-input + card + shadow-xl)
+- `user-global-bar.tsx` - 라이트 테마, PillButton 서브컴포넌트 추출
+- `service-navigation.tsx` - NALLO 로고 적용, CSS 변수 적용
+- `user-sidebar.tsx` - w-sidebar, bg-card, border-border 토큰 적용
+- `user-ask-ai-panel.tsx` - 브랜드 색상 그라데이션, CSS 변수 전면 적용
+
+**Layout Structure**:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ bg-input (라이트 그레이), padding: px-5 pb-5                      │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ UserGlobalBar (투명, 컴팩트 h-10)                             │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+│ ┌──────────────────────────────────────────┐ ┌───────────────┐ │
+│ │ Card (bg-card, rounded-lg, shadow-xl)    │ │ AI Panel      │ │
+│ │ ├── ServiceNavigation (문서 뷰만)         │ │ (push layout) │ │
+│ │ └── Sidebar + Content                    │ │               │ │
+│ └──────────────────────────────────────────┘ └───────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Task Summary
 
-| Task      | Description                         | Status | Priority |
-| --------- | ----------------------------------- | ------ | -------- |
-| TASK-001  | 색상 토큰 확장                      | ✅     | P0       |
-| TASK-002  | 타이포그래피 토큰 정의              | ✅     | P0       |
-| TASK-003  | 스페이싱/레이아웃 토큰              | ✅     | P0       |
-| TASK-004  | shadcn/ui 컴포넌트 커스터마이징     | ✅     | P1       |
-| TASK-005  | 공통 컴포넌트 추출                  | ✅     | P1       |
-| TASK-006  | GlobalHeader 리팩토링               | ✅     | P1       |
-| TASK-007  | Sidebar 리팩토링                    | ✅     | P1       |
-| TASK-007b | FunctionHeader & AppLayout 리팩토링 | ✅     | P1       |
-| TASK-008  | DocumentList 리팩토링               | ✅     | P2       |
-| TASK-009  | Graph 컴포넌트 정리                 | ✅     | P2       |
-| TASK-010  | GlossaryList 리팩토링               | ✅     | P2       |
-| TASK-011  | DocumentEditor 리팩토링             | ✅     | P2       |
-| TASK-011  | App Router 라우팅 설정              | ✅     | P1       |
-| TASK-012  | Dashboard 리팩토링                  | ✅     | P2       |
-| TASK-013  | CategoryBadge 컴포넌트 생성         | ✅     | P2       |
-| TASK-014  | 페이지-컴포넌트 맵 문서화           | ✅     | P1       |
+| Task      | Description                              | Status | Priority |
+| --------- | ---------------------------------------- | ------ | -------- |
+| TASK-001  | 색상 토큰 확장                           | ✅     | P0       |
+| TASK-002  | 타이포그래피 토큰 정의                   | ✅     | P0       |
+| TASK-003  | 스페이싱/레이아웃 토큰                   | ✅     | P0       |
+| TASK-004  | shadcn/ui 컴포넌트 커스터마이징          | ✅     | P1       |
+| TASK-005  | 공통 컴포넌트 추출                       | ✅     | P1       |
+| TASK-006  | GlobalHeader 리팩토링                    | ✅     | P1       |
+| TASK-007  | Sidebar 리팩토링                         | ✅     | P1       |
+| TASK-007b | FunctionHeader & AppLayout 리팩토링      | ✅     | P1       |
+| TASK-008  | DocumentList 리팩토링                    | ✅     | P2       |
+| TASK-009  | Graph 컴포넌트 정리                      | ✅     | P2       |
+| TASK-010  | GlossaryList 리팩토링                    | ✅     | P2       |
+| TASK-011a | DocumentEditor 리팩토링                  | ✅     | P2       |
+| TASK-011b | App Router 라우팅 설정                   | ✅     | P1       |
+| TASK-012  | Dashboard 리팩토링                       | ✅     | P2       |
+| TASK-013  | CategoryBadge 컴포넌트 생성              | ✅     | P2       |
+| TASK-014  | 페이지-컴포넌트 맵 문서화                | ✅     | P1       |
+| TASK-015  | User Layout 리팩토링 (Figma 디자인 적용) | ✅     | P1       |

@@ -22,15 +22,40 @@
 
 ## 레이아웃 구조
 
+### Admin Layout (관리자 모드)
+
 ```
 RootLayout (app/layout.tsx)
 └── MainLayout (app/(main)/layout.tsx)
-    └── AppLayout (components/layout/app-layout.tsx)
-        ├── GlobalHeader
-        ├── FunctionHeader (탭 네비게이션)
-        ├── Sidebar (문서 탭에서만 표시)
-        └── Main Content (페이지별 컴포넌트)
+    └── AdminLayout (components/layout/admin-layout.tsx)
+        ├── AdminHeader (다크 테마)
+        └── Main Container (flex, gap)
+            ├── Card (rounded-lg, shadow-xl)
+            │   ├── AdminFunctionHeader (탭 네비게이션)
+            │   └── Sidebar + Content
+            └── AdminAIPanel (push layout)
 ```
+
+### User Layout (사용자 모드) - v1.2.0 추가
+
+```
+RootLayout (app/layout.tsx)
+└── UserLayout (components/layout/user-layout.tsx)
+    ├── bg-input (라이트 그레이 배경), padding: px-5 pb-5
+    ├── UserGlobalBar (투명, 컴팩트 h-10)
+    │   └── [Logo] ... [Bookmarks][Graph][Profile][Ask AI]
+    └── Main Container (flex, gap)
+        ├── Card (bg-card, rounded-lg, shadow-xl)
+        │   ├── ServiceNavigation (문서 뷰에서만)
+        │   └── UserSidebar + Content
+        └── UserAskAIPanel (push layout)
+```
+
+**User Layout 특징**:
+- Figma Make 디자인 기반
+- AdminLayout 패턴 적용 (라이트 배경 + 카드형 콘텐츠)
+- 조건부 로고 표시 (그래프 뷰에서만)
+- CSS 변수 기반 스타일링
 
 ---
 
@@ -80,14 +105,25 @@ RootLayout (app/layout.tsx)
 
 ## 컴포넌트 의존성
 
-### 레이아웃 컴포넌트 (`components/layout/`)
+### Admin 레이아웃 컴포넌트 (`components/layout/admin/`)
 
 | 컴포넌트 | 파일 | 역할 | 의존성 |
 |---------|------|------|--------|
-| `AppLayout` | `app-layout.tsx` | 메인 레이아웃, 탭-URL 동기화 | GlobalHeader, FunctionHeader, Sidebar |
-| `GlobalHeader` | `global-header.tsx` | 상단 헤더, AI 버튼 | IconButton |
-| `FunctionHeader` | `function-header.tsx` | 탭 네비게이션 | - |
-| `Sidebar` | `sidebar.tsx` | 문서 네비게이션 | NavItem, IconButton |
+| `AdminLayout` | `admin-layout.tsx` | 관리자 메인 레이아웃, 탭-URL 동기화 | AdminHeader, AdminFunctionHeader, AdminSidebar, AdminAIPanel |
+| `AdminHeader` | `admin-header.tsx` | 상단 헤더, AI 버튼 (다크 테마) | IconButton |
+| `AdminFunctionHeader` | `admin-function-header.tsx` | 탭 네비게이션 | - |
+| `AdminSidebar` | `admin-sidebar.tsx` | 문서 네비게이션 | NavItem, IconButton |
+| `AdminAIPanel` | `admin-ai-panel.tsx` | AI 어시스턴트 패널 | - |
+
+### User 레이아웃 컴포넌트 (`components/layout/user/`)
+
+| 컴포넌트 | 파일 | 역할 | 의존성 |
+|---------|------|------|--------|
+| `UserLayout` | `user-layout.tsx` | 사용자 메인 레이아웃 | UserGlobalBar, ServiceNavigation, UserSidebar, UserAskAIPanel |
+| `UserGlobalBar` | `user-global-bar.tsx` | 상단 바 (라이트 테마, Pill 버튼) | PillButton (서브컴포넌트) |
+| `ServiceNavigation` | `service-navigation.tsx` | 서비스 네비게이션 (Getting Started, Recipes 등) | Select |
+| `UserSidebar` | `user-sidebar.tsx` | 문서 트리 네비게이션 | TreeItem (서브컴포넌트), Input, ScrollArea |
+| `UserAskAIPanel` | `user-ask-ai-panel.tsx` | AI 어시스턴트 패널 (라이트 테마) | Button, motion |
 
 ### 페이지 컴포넌트
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Book, Lightbulb, Code2, Bell, Megaphone, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -24,7 +25,7 @@ interface ServiceNavigationProps {
   activeItem?: string;
   onItemClick?: (item: string) => void;
   serviceName?: string;
-  serviceInitial?: string;
+  serviceLogo?: string;
   className?: string;
 }
 
@@ -54,29 +55,48 @@ export function ServiceNavigation({
   activeItem = "Getting Started",
   onItemClick,
   serviceName = "NODIT",
-  serviceInitial = "N",
+  serviceLogo,
   className,
 }: ServiceNavigationProps) {
   return (
     <nav
       className={cn(
-        "h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6",
+        "h-12 bg-card border-b border-border flex items-center px-5",
         className
       )}
     >
       {/* Service Logo */}
-      <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-          <span className="text-white text-xs font-medium">{serviceInitial}</span>
-        </div>
-        <span className="text-base font-medium text-gray-900">{serviceName}</span>
-        <span className="ml-2 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[11px] font-medium">
-          Docs
-        </span>
+      <div className="flex items-center gap-6 mr-6">
+        {serviceLogo ? (
+          <Image
+            src={serviceLogo}
+            alt={serviceName}
+            width={80}
+            height={24}
+            className="h-6 w-auto"
+          />
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <div className="relative w-[11px] h-[15px]">
+              <Image
+                src="/nallo_logo.svg"
+                alt="NALLO Logo"
+                width={11}
+                height={15}
+              />
+            </div>
+            <Image
+              src="/nallo_logo_text.svg"
+              alt="NALLO Logo Text"
+              width={60}
+              height={15}
+            />
+          </div>
+        )}
       </div>
 
       {/* Navigation Items */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 flex-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = activeItem === item.label;
@@ -86,13 +106,13 @@ export function ServiceNavigation({
               key={item.id}
               onClick={() => onItemClick?.(item.label)}
               className={cn(
-                "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[13px] transition-all",
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-all",
                 isActive
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  ? "bg-muted text-text-primary"
+                  : "text-text-secondary hover:text-text-primary hover:bg-muted"
               )}
             >
-              <Icon size={15} />
+              <Icon size={14} />
               <span>{item.label}</span>
             </button>
           );
@@ -102,7 +122,7 @@ export function ServiceNavigation({
       {/* Right - Version Selector */}
       <div className="flex items-center gap-2">
         <Select defaultValue="v2.4.0">
-          <SelectTrigger className="w-[100px] h-8 text-xs">
+          <SelectTrigger className="w-[90px] h-7 text-xs">
             <SelectValue placeholder="Version" />
           </SelectTrigger>
           <SelectContent>

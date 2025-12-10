@@ -144,59 +144,59 @@ Would you like me to elaborate on any specific aspect?`,
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 500, opacity: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="w-[420px] bg-white border-l border-gray-200 flex flex-col h-full shadow-2xl flex-shrink-0"
+      className="w-panel bg-card rounded-lg flex flex-col h-full shadow-xl flex-shrink-0 overflow-hidden"
     >
       {/* Header */}
-      <div className="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-gradient-to-r from-emerald-500 to-emerald-600">
+      <div className="h-14 border-b border-border flex items-center justify-between px-5 bg-gradient-to-r from-brand to-brand-hover">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <Sparkles size={18} className="text-white" />
+          <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <Sparkles size={16} className="text-white" />
           </div>
           <div>
-            <h3 className="text-base font-medium text-white">Ask NALLO AI</h3>
-            <p className="text-xs text-white/80">Context-aware coding guide</p>
+            <h3 className="text-sm font-medium text-white">Ask NALLO AI</h3>
+            <p className="text-2xs text-white/80">Context-aware coding guide</p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+          className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
         >
-          <X size={18} />
+          <X size={16} />
         </button>
       </div>
 
       {/* Context Info */}
       {(selectedDocument || connectedDocuments.length > 0) && (
-        <div className="border-b border-gray-200 p-5 bg-gradient-to-br from-blue-50 to-indigo-50">
-          <p className="text-xs text-blue-900 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+        <div className="border-b border-border p-4 bg-accent">
+          <p className="text-2xs text-text-secondary uppercase tracking-wide mb-2.5 flex items-center gap-1.5">
             <FileText size={12} />
             Current Context
           </p>
 
           {selectedDocument && (
-            <div className="mb-2.5 text-[13px] text-blue-800 flex items-start gap-2.5 bg-white/60 rounded-lg p-2.5">
-              <Bookmark size={14} className="mt-0.5 flex-shrink-0" />
+            <div className="mb-2 text-xs text-text-primary flex items-start gap-2 bg-card/60 rounded-md p-2">
+              <Bookmark size={14} className="mt-0.5 flex-shrink-0 text-brand" />
               <span className="flex-1">{selectedDocument}</span>
             </div>
           )}
 
           {connectedDocuments.length > 0 && (
-            <div className="text-xs text-blue-700">
+            <div className="text-xs text-text-secondary">
               <div className="flex items-center gap-1.5 mb-2">
                 <Link2 size={12} />
                 <span>{connectedDocuments.length} connected documents</span>
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 {connectedDocuments.slice(0, 3).map((doc, idx) => (
                   <div
                     key={idx}
-                    className="text-[11px] text-blue-600 bg-white/40 rounded-md px-2 py-1"
+                    className="text-2xs text-text-secondary bg-card/40 rounded-md px-2 py-1"
                   >
                     • {doc}
                   </div>
                 ))}
                 {connectedDocuments.length > 3 && (
-                  <div className="text-[11px] text-blue-500 px-2">
+                  <div className="text-2xs text-text-tertiary px-2">
                     +{connectedDocuments.length - 3} more
                   </div>
                 )}
@@ -207,7 +207,7 @@ Would you like me to elaborate on any specific aspect?`,
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-muted">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -218,19 +218,19 @@ Would you like me to elaborate on any specific aspect?`,
           >
             <div
               className={cn(
-                "max-w-[88%] rounded-xl px-4 py-3",
+                "max-w-[88%] rounded-lg px-3.5 py-2.5",
                 message.role === "user"
-                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20"
-                  : "bg-white text-gray-900 border border-gray-200 shadow-sm"
+                  ? "bg-gradient-to-r from-brand to-brand-hover text-white shadow-lg shadow-brand/20"
+                  : "bg-card text-text-primary border border-border shadow-sm"
               )}
             >
-              <div className="text-sm whitespace-pre-wrap leading-relaxed">
+              <div className="text-xs whitespace-pre-wrap leading-relaxed">
                 {message.content}
               </div>
               <div
                 className={cn(
-                  "text-[11px] mt-2",
-                  message.role === "user" ? "text-white/70" : "text-gray-500"
+                  "text-2xs mt-1.5",
+                  message.role === "user" ? "text-white/70" : "text-text-tertiary"
                 )}
               >
                 {message.timestamp.toLocaleTimeString("en-US", {
@@ -244,20 +244,20 @@ Would you like me to elaborate on any specific aspect?`,
 
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 shadow-sm">
-              <div className="flex gap-2">
+            <div className="bg-card border border-border rounded-lg px-3.5 py-2.5 shadow-sm">
+              <div className="flex gap-1.5">
                 <motion.div
-                  className="w-2 h-2 rounded-full bg-emerald-500"
+                  className="w-1.5 h-1.5 rounded-full bg-brand"
                   animate={{ opacity: [0.3, 1, 0.3] }}
                   transition={{ duration: 1.2, repeat: Infinity, delay: 0 }}
                 />
                 <motion.div
-                  className="w-2 h-2 rounded-full bg-emerald-500"
+                  className="w-1.5 h-1.5 rounded-full bg-brand"
                   animate={{ opacity: [0.3, 1, 0.3] }}
                   transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }}
                 />
                 <motion.div
-                  className="w-2 h-2 rounded-full bg-emerald-500"
+                  className="w-1.5 h-1.5 rounded-full bg-brand"
                   animate={{ opacity: [0.3, 1, 0.3] }}
                   transition={{ duration: 1.2, repeat: Infinity, delay: 0.4 }}
                 />
@@ -270,23 +270,23 @@ Would you like me to elaborate on any specific aspect?`,
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-gray-200 p-5 bg-white">
+      <div className="border-t border-border p-4 bg-card">
         {/* Quick Prompts */}
         {messages.length <= 1 && (
-          <div className="mb-4">
-            <p className="text-[11px] text-gray-500 uppercase tracking-wide mb-2.5">
+          <div className="mb-3">
+            <p className="text-2xs text-text-tertiary uppercase tracking-wide mb-2">
               Quick Actions
             </p>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {QUICK_PROMPTS.map((prompt, idx) => {
                 const Icon = prompt.icon;
                 return (
                   <button
                     key={idx}
                     onClick={() => setInputValue(prompt.query)}
-                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-gray-50 text-gray-700 text-[13px] hover:bg-gray-100 transition-colors text-left"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-muted text-text-primary text-xs hover:bg-surface-hover transition-colors text-left"
                   >
-                    <Icon size={16} className="text-emerald-600 flex-shrink-0" />
+                    <Icon size={14} className="text-brand flex-shrink-0" />
                     <span>{prompt.label}</span>
                   </button>
                 );
@@ -303,20 +303,20 @@ Would you like me to elaborate on any specific aspect?`,
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask me anything about your documents..."
-            className="w-full h-24 px-4 py-3 pr-14 rounded-xl border-2 border-gray-200 text-sm resize-none outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+            className="w-full h-20 px-3 py-2.5 pr-12 rounded-lg border border-border text-xs resize-none outline-none focus:border-brand focus:ring-2 focus:ring-brand/10 transition-all"
           />
           <Button
             onClick={handleSend}
             disabled={!inputValue.trim() || isLoading}
             variant="brand"
             size="icon"
-            className="absolute bottom-3 right-3 w-10 h-10 rounded-lg"
+            className="absolute bottom-2 right-2 w-8 h-8 rounded-md"
           >
-            <Send size={16} />
+            <Send size={14} />
           </Button>
         </div>
 
-        <p className="text-[11px] text-gray-500 mt-3 text-center">
+        <p className="text-2xs text-text-tertiary mt-2.5 text-center">
           AI analyzes your selected documents to provide contextual guides
         </p>
       </div>

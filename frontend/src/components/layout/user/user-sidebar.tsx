@@ -118,22 +118,22 @@ function TreeItem({
       <button
         onClick={handleClick}
         className={cn(
-          "w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] transition-all",
+          "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-all",
           isActive
-            ? "bg-emerald-50 text-emerald-700"
-            : "text-gray-700 hover:bg-gray-50 hover:text-gray-900",
-          level === 0 && "font-medium text-[11px] text-gray-500 uppercase tracking-wide"
+            ? "bg-success-bg text-success"
+            : "text-text-primary hover:bg-muted hover:text-text-primary",
+          level === 0 && "font-medium text-2xs text-text-secondary uppercase tracking-wide"
         )}
-        style={{ paddingLeft: `${12 + level * 16}px` }}
+        style={{ paddingLeft: `${8 + level * 14}px` }}
       >
         {hasChildren ? (
           isExpanded ? (
-            <ChevronDown size={14} className="flex-shrink-0" />
+            <ChevronDown size={14} className="flex-shrink-0 text-text-secondary" />
           ) : (
-            <ChevronRight size={14} className="flex-shrink-0" />
+            <ChevronRight size={14} className="flex-shrink-0 text-text-secondary" />
           )
         ) : (
-          <FileText size={14} className="flex-shrink-0 text-gray-400" />
+          <FileText size={14} className="flex-shrink-0 text-text-tertiary" />
         )}
         <span className="flex-1 text-left truncate">{item.label}</span>
       </button>
@@ -183,30 +183,30 @@ export function UserSidebar({ className, onItemClick }: UserSidebarProps) {
   return (
     <aside
       className={cn(
-        "w-[280px] bg-white border-r border-gray-200 flex flex-col",
+        "w-sidebar bg-card border-r border-border flex flex-col",
         className
       )}
     >
-      <div className="p-4">
+      <div className="p-4 border-b border-border">
         {/* Search in sidebar */}
-        <div className="relative mb-4">
+        <div className="relative">
           <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={14}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-secondary"
           />
           <Input
             type="text"
-            placeholder="Search in docs..."
+            placeholder="문서 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9 text-[13px]"
+            className="pl-8 h-8 text-xs"
           />
         </div>
       </div>
 
       {/* Sidebar Items */}
       <ScrollArea className="flex-1">
-        <div className="px-2 pb-4 space-y-1">
+        <div className="px-4 py-4 space-y-1">
           {SIDEBAR_DATA.map((item) => (
             <TreeItem
               key={item.id}
