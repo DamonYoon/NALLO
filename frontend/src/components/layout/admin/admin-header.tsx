@@ -79,9 +79,12 @@ export function AdminHeader({
               height={15}
             />
           </div>
-          <span className="text-sm font-semibold text-white tracking-wide">
-            NALLO
-          </span>
+          <Image
+            src="/nallo_logo_text.svg"
+            alt="NALLO Logo Text"
+            width={60}
+            height={15}
+          />
         </div>
 
         {/* Project Selector */}
@@ -118,4 +121,3 @@ export function AdminHeader({
     </header>
   );
 }
-
