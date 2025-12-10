@@ -2,10 +2,13 @@
 
 import { useState, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { AdminHeader, AdminFunctionHeader, AdminSidebar } from "./admin";
+import {
+  AdminHeader,
+  AdminFunctionHeader,
+  AdminSidebar,
+  AdminAIPanel,
+} from "./admin";
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
-import { IconButton } from "@/components/ui/icon-button";
 
 /* ============================================
    Types
@@ -110,26 +113,10 @@ export function AdminLayout({
         </div>
 
         {/* AI Panel */}
-        {isAIPanelOpen && (
-          <div className="w-[400px] bg-card rounded-lg shadow-xl flex flex-col flex-shrink-0">
-            <div className="p-4 border-b border-border flex items-center justify-between">
-              <span className="font-medium text-card-foreground">ASK AI</span>
-              <IconButton
-                variant="muted"
-                size="sm"
-                onClick={() => setIsAIPanelOpen(false)}
-                tooltip="닫기"
-              >
-                <X size={16} />
-              </IconButton>
-            </div>
-            <div className="flex-1 p-4">
-              <p className="text-sm text-muted-foreground">
-                AI 기능은 추후 구현 예정입니다.
-              </p>
-            </div>
-          </div>
-        )}
+        <AdminAIPanel
+          isOpen={isAIPanelOpen}
+          onClose={() => setIsAIPanelOpen(false)}
+        />
       </div>
     </div>
   );
