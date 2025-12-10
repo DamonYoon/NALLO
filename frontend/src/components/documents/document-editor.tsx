@@ -226,7 +226,7 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
               </div>
             </div>
 
-            {/* Editor Tips - Only show in edit mode */}
+            {/* Editor Tips - Only show in edit mode
             {viewMode === "edit" && (
               <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
                 <div className="flex items-start gap-3">
@@ -256,7 +256,7 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Title */}
             <div className="mb-4">
@@ -494,10 +494,8 @@ export function DocumentEditor({ documentId, onBack }: DocumentEditorProps) {
                           const angle =
                             (idx * 360) / Math.min(linkedTerms.length, 4);
                           const radius = 60;
-                          const x =
-                            Math.cos((angle * Math.PI) / 180) * radius;
-                          const y =
-                            Math.sin((angle * Math.PI) / 180) * radius;
+                          const x = Math.cos((angle * Math.PI) / 180) * radius;
+                          const y = Math.sin((angle * Math.PI) / 180) * radius;
 
                           return (
                             <div

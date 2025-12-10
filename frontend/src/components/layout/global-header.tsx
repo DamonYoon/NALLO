@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
-import { Settings, User, Sparkles, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Settings, User, Sparkles, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface GlobalHeaderProps {
   onAskAIClick?: () => void;
@@ -15,18 +16,12 @@ export function GlobalHeader({ onAskAIClick }: GlobalHeaderProps) {
         {/* NALLO Logo */}
         <div className="flex items-center gap-[6px]">
           <div className="relative w-[11px] h-[15px]">
-            <svg
-              className="block size-full"
-              fill="none"
-              preserveAspectRatio="none"
-              viewBox="0 0 16 22"
-            >
-              <path
-                d="M8 0C3.58 0 0 3.58 0 8c0 6.5 8 14 8 14s8-7.5 8-14c0-4.42-3.58-8-8-8z"
-                fill="#FC8658"
-              />
-              <ellipse cx="8" cy="8.4" fill="#FEF4F2" rx="1.75" ry="1.75" />
-            </svg>
+            <Image
+              src="/nallo_logo.svg"
+              alt="NALLO Logo"
+              width={11}
+              height={15}
+            />
           </div>
           <span className="text-[14px] font-semibold text-white tracking-wide">
             NALLO
@@ -85,4 +80,3 @@ export function GlobalHeader({ onAskAIClick }: GlobalHeaderProps) {
     </header>
   );
 }
-
